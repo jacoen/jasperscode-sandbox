@@ -9,11 +9,24 @@
         </div>
 
         <div class="card-body">
+            <div class="mb-3">
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="d-flex justify-content-start ms-2">
+                            <a href="{{ route('users.create') }}" class="btn btn-block btn-success fw-semibold text-white">
+                                Create user
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <table class="table">
                 <thead>
                 <tr>
                     <th scope="col">Name</th>
                     <th scope="col">Email</th>
+                    <th scope="col">Role</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -22,6 +35,7 @@
                     <tr>
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
+                        <td>{{ $user->roles()->first()->name }}</td>
                         <td class="d-flex align-items-center">
                             <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-info text-white fw-semibold">
                                 Edit

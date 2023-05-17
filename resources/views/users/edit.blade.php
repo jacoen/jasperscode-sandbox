@@ -22,6 +22,20 @@
                     <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="user@email.com" value="{{ old('email', $user->email) }}" required>
                 </div>
 
+                <div class="mb-3">
+                    <label for="role" class="form-label">Role</label>
+                    <select id="role" name="role" class="form-select @error('role') is-invalid @enderror" @if($user->hasRole('Super Admin')) disabled @endif>
+                        @if($user->roles->isEmpty())
+                            <option value="" selected>Select a role...</option>
+                        @endif
+                        @foreach($roles as $role)     
+                                    <option value="{{ $role->id }}" {{ old('role', $user->roles)->contains($role->id) ? 'selected' : '' }}>
+                                        {{ $role->name }}
+                                    </option>
+                                @endforeach
+                    </select>
+                </div>
+
                 <div>
                     <button type="submit" class="btn btn-primary btn-block text-white fw-semibold">
                         Submit
