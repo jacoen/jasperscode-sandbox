@@ -8,14 +8,13 @@
         </a>
     </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="{{ route('users.index') }}">
-            <svg class="nav-icon">
-                <use xlink:href="{{ asset('icons/coreui.svg#cil-user') }}"></use>
-            </svg>
-            {{ __('Users') }}
-        </a>
-    </li>
+    @can('read user')      
+        <li class="nav-item">
+            <a class="nav-link ps-4" href="{{ route('users.index') }}">
+                {{ __('Users') }}
+            </a>
+        </li>
+    @endcan
 
     <li class="nav-item">
         <a class="nav-link" href="{{ route('about') }}">

@@ -21,6 +21,18 @@
                     <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="user@email.com" value="{{ old('email') }}" required>
                 </div>
 
+                <div class="mb-3">
+                    <label for="role" class="form-label">Role</label>
+                    <select id="role" name="role" class="form-select @error('role') is-invalid @enderror">
+                        <option value="" selected>Select a role...</option>
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->id }}" {{ old('role') == $role->id ? 'selected' : ''}}>
+                                {{ $role->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div>
                     <button type="submit" class="btn btn-primary btn-block text-white fw-semibold">
                         Submit
