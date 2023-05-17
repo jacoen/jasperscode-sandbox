@@ -8,9 +8,15 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(User::class, 'user');
+    }
+
     public function index(): View
     {
         $users = User::paginate();
@@ -20,7 +26,13 @@ class UserController extends Controller
 
     public function create(): View
     {
-        return view('users.create');
+        if (auth()->user()->hasRole('Super Admin')) {
+            $roles = Role::all();
+        } else {
+            $roles = Role::whereIn('name', ['employee', 'user'])->get(['id', 'name']);
+        }
+
+        return view('users.create', compact('roles'));
     }
 
     public function store(StoreUserRequest $request)
@@ -29,18 +41,28 @@ class UserController extends Controller
         $user->password = Hash::make(Str::password(64));
         $user->save();
 
+        $user->assignRole($request->role);
+
         return redirect()->route('users.index')
             ->with('success', 'New user was created!');
     }
 
     public function edit(User $user)
     {
-        return view('users.edit', compact('user'));
+        if (auth()->user()->hasRole('Super Admin')) {
+            $roles = Role::all();
+        } else {
+            $roles = Role::whereIn('name', ['employee', 'user'])->get(['id', 'name']);
+        }
+
+        return view('users.edit', compact(['user', 'roles']));
     }
 
     public function update(UpdateUserRequest $request, User $user)
     {
         $user->update($request->validated());
+
+        $user->syncRoles($request->role);
 
         return redirect()->route('users.index')
             ->with('success', $user->name.'\'s account has been updated!');

@@ -23,9 +23,10 @@ class PermissionRoleSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'edit user']);
         Permission::firstOrCreate(['name' => 'delete user']);
 
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $employee = Role::firstOrCreate(['name' => 'employee']);
-        $user = Role::firstOrcreate(['name' => 'user']);
+        $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
+        $admin = Role::firstOrCreate(['name' => 'Admin']);
+        $employee = Role::firstOrCreate(['name' => 'Employee']);
+        $user = Role::firstOrcreate(['name' => 'User']);
 
         $admin->givePermissionTo([
             'read user', 'create user', 'edit user', 'delete user',
