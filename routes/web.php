@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AccountActivationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 
@@ -22,6 +23,11 @@ Route::get('/', function () {
 Auth::routes(['register' => false]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+Route::controller(AccountActivationController::class)->prefix('/change-password')->middleware('guest')->group(function () {
+    Route::post('/', 'store')->name('activate-account.store');
+    Route::get('/{password_token}', 'create')->name('activate-account.create');
+});
 
 Route::middleware('auth')->group(function () {
     Route::view('about', 'about')->name('about');

@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -22,6 +23,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'password_token',
+        'token_expires_at',
+        'password_changed_at',
     ];
 
     /**
@@ -32,6 +36,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'password_token',
+        'token_expires_at',
+        'password_changed_at',
     ];
 
     /**
@@ -41,5 +48,26 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'token_expires_at' => 'datetime',
+        'password_changed_at' => 'datetime',
     ];
+
+    public function generatePasswordToken()
+    {
+        $this->timestamps = false;
+        $this->password_token = Str::random(32);
+        $this->token_expires_at = now()->addHour();
+        $this->save();
+    }
+
+    public function getHasTokenExpiredAttribute()
+    {
+        return $this->token_expires_at->lt(now());
+    }
+
+    public function getHasChangedPasswordAttribute()
+    {
+        return $this->password_changed_at !== null;
+    }
+
 }

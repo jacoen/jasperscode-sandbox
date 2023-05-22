@@ -5,6 +5,7 @@
         <div class="d-flex justify-content-center">
             <div class="col-md-8 col-lg-6">
                 <x-errors :errors="$errors" />
+                <x-flash-success :message="session('success')" />
 
                 <div class="card mb-4 mx-4">
                     <div class="card-body p-4">
