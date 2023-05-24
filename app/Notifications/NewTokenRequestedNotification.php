@@ -3,21 +3,13 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewTokenRequestedNotification extends Notification
+class NewTokenRequestedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
-
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct()
-    {
-        //
-    }
-
     /**
      * Get the notification's delivery channels.
      *
@@ -41,17 +33,5 @@ class NewTokenRequestedNotification extends Notification
             ->line('Click on the button below to activate your account by following the steps on the page.')
             ->action('Notification Action', route('activate-account.create', $notifiable->password_token))
             ->line('Thank you for using our application!');
-    }
-
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
-    {
-        return [
-            //
-        ];
     }
 }
