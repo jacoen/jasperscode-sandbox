@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use Illuminate\View\View;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -45,7 +45,6 @@ class UserController extends Controller
         $user->generatePasswordToken();
         $user->assignRole($request->role);
         $user->notify(new AccountCreatedNotification());
-
 
         return redirect()->route('users.index')
             ->with('success', 'New user was created!');

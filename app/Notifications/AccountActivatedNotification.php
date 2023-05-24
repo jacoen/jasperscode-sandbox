@@ -35,12 +35,12 @@ class AccountActivatedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject('Account activated')
-                    ->greeting('Dear '.$notifiable->name)
-                    ->line('Via this message we notify you that your account has been activated.')
-                    ->line('If you did activate your account no further action is required.')
-                    ->line('If you did not activate your account, please contact us.')
-                    ->line('Thank you for using our application!');
+            ->subject('Account activated')
+            ->greeting('Dear '.$notifiable->name)
+            ->line('Via this message we notify you that your account has been activated.')
+            ->line('If you did activate your account no further action is required.')
+            ->line('If you did not activate your account, please contact us.')
+            ->line('Thank you for using our application!');
     }
 
     /**

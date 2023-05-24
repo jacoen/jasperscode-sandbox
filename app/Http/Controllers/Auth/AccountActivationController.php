@@ -31,7 +31,7 @@ class AccountActivationController extends Controller
     public function store(AccountActivationRequest $request): RedirectResponse
     {
         $user = User::where([
-            ['password_token', $request->password_token ],
+            ['password_token', $request->password_token],
         ])->first();
 
         if ($user->has_token_expired) {

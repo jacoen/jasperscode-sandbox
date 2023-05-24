@@ -24,9 +24,9 @@ class RequestNewTokenController extends Controller
             ]);
         }
 
-        if (!$user->has_token_expired) {
+        if (! $user->has_token_expired) {
             return redirect()->route('activate-account.create', $token)->withErrors([
-                'error' => 'The current token has not expired yet.'
+                'error' => 'The current token has not expired yet.',
             ]);
         }
 
