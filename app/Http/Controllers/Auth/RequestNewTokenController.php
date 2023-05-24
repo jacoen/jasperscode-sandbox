@@ -19,9 +19,8 @@ class RequestNewTokenController extends Controller
         $user = User::where('password_token', $token)->first();
 
         if (! $user) {
-            return redirect()->route('login')->withErrors([
-                'error' => 'Invalid token.',
-            ]);
+            return redirect()->route('login')
+                ->withErrors(['error' => 'Invalid token.']);
         }
 
         if (! $user->has_token_expired) {
