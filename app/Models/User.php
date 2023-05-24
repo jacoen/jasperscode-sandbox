@@ -62,7 +62,7 @@ class User extends Authenticatable
 
     public function getHasTokenExpiredAttribute()
     {
-        return $this->token_expires_at->lt(now());
+        return ! empty($this->token_expires_at) && $this->token_expires_at->lt(now());
     }
 
     public function getHasChangedPasswordAttribute()

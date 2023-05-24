@@ -16,18 +16,14 @@ class AccountActivationController extends Controller
     {
         $token = $request->route()->parameter('password_token');
 
-        $user = User::where('password_token', $request->password_token)->first();
-        $token_expired = $user->has_token_expired;
+        $user = User::where('password_token', $token)->first();
 
-        if (! $user) {
+        if (! $user || $user->password_changed_at != null) {
             return redirect()->route('login')
                 ->withErrors(['error' => 'The selected token is invalid.']);
         }
 
-        if ($user->has_changed_password) {
-            return redirect()->route('login')
-                ->withErrors(['error' => 'Password has already been changed']);
-        }
+        $token_expired = $user->has_token_expired;
 
         return view('auth.account-activation', compact(['token', 'token_expired']));
     }

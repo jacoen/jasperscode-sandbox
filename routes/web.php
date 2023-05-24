@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AccountActivationController;
+use App\Http\Controllers\Auth\RequestNewTokenController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 
@@ -25,8 +26,13 @@ Auth::routes(['register' => false]);
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::controller(AccountActivationController::class)->prefix('/change-password')->middleware('guest')->group(function () {
-    Route::post('/', 'store')->name('activate-account.store');
     Route::get('/{password_token}', 'create')->name('activate-account.create');
+    Route::post('/', 'store')->name('activate-account.store');
+});
+
+Route::controller(RequestNewTokenController::class)->prefix('/request-token')->middleware('guest')->group(function () {
+    Route::get('/{password_token}', 'create')->name('request-token.create');
+    Route::post('/', 'store')->name('request-token.store');
 });
 
 Route::middleware('auth')->group(function () {

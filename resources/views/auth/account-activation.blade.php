@@ -28,7 +28,15 @@
                         </div>
                     
                         <div class="mb-3">
-                            <button type="submit" class="btn btn-success text-white fw-semibold">Submit</button>
+                            <div class="d-flex justify-content-between">
+                                <button type="submit" class="btn btn-success text-white fw-semibold">Submit</button>
+
+                                @if ($token_expired)
+                                    <a href="{{ route('request-token.create', $token) }}" class="btn btn-info text-white fw-semibold">
+                                        Request new token
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </form>
                 </div>
