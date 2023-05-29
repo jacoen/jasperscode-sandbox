@@ -69,12 +69,12 @@
             </ul>
         </div>
     </header>
-    <div class="body flex-grow-1 px-3">
+    <main class="body flex-grow-1 px-3">
         <div class="container-lg">
             @yield('content')
         </div>
-    </div>
-    <footer class="footer">
+    </main>
+    <footer class="footer mt-auto py-3 bg-light">
         <div><a href="https://coreui.io">CoreUI </a><a href="https://coreui.io">Bootstrap Admin Template</a> &copy; 2021
             creativeLabs.
         </div>
