@@ -39,7 +39,7 @@ class UserFactory extends Factory
 
     public function superAdmin()
     {
-        return $this->state(function (){
+        return $this->state(function () {
             return [];
         })->afterCreating(function (User $user) {
             $user->assignRole('super-admin');
