@@ -9,7 +9,7 @@
         </div>
 
         <div class="card-body">
-            <form action="#" method="POST" class="px-4">
+            <form action="{{ route('users.store') }}" method="POST" class="px-4">
                 @csrf
                 <div class="mb-3">
                     <label for="name" class="form-label">Name</label>
