@@ -69,4 +69,9 @@ class User extends Authenticatable
     {
         return $this->password_changed_at !== null;
     }
+    
+    public function projects()
+    {
+        $this->hasMany(Project::class, 'manager_id');
+    }
 }

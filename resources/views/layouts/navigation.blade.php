@@ -18,10 +18,10 @@
     @endcan
 
     <li class="nav-item">
-        <a class="nav-link" href="{{ route('about') }}">
+        <a class="nav-link" href="{{ route('projects.index') }}">
             <svg class="nav-icon">
             </svg>
-            {{ __('About us') }}
+            {{ __('Projects') }}
         </a>
     </li>
 
