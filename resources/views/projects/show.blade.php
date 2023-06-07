@@ -1,17 +1,25 @@
 @extends('layouts.app')
 
 @section('content')
+    <div>
+        <a class="btn btn-link" href="{{ route('projects.index') }}">
+            &#xab; Return to project overview
+        </a>
+    </div>
+
     <div class="card mb-4">
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="card-title">{{ $project->title }}</h3>
                 </div>
-                <div class="justify-content-end me-2">
-                    <a href="{{ route('projects.edit', $project) }}" class="btn btn-info fw-semibold text-white">
-                        Edit project
-                    </a>
-                </div>
+                @can('edit project')
+                    <div class="justify-content-end me-2">
+                        <a href="{{ route('projects.edit', $project) }}" class="btn btn-info fw-semibold text-white">
+                            Edit project
+                        </a>
+                    </div>
+                @endcan
             </div>
         </div>
 

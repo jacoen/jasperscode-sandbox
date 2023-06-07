@@ -44,10 +44,18 @@
                     </div>
                 </div>
 
-                <div>
-                    <button type="submit" class="btn btn-primary fw-semibold text-white">
-                        Update
-                    </button>
+                <div class="row justify-content-between">
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary fw-semibold text-white">
+                            Update
+                        </button>
+                    </div>
+                    <div class="col-md-9"></div>
+                    <div class="col-md-1">
+                        <a href="{{ route('projects.show', $project) }}" class="btn btn-outline-info fw-semibold">
+                            Cancel
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>

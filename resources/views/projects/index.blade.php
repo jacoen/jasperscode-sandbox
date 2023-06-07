@@ -9,15 +9,17 @@
         </div>
 
         <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-2">
-                    <div class="d-flex justify-content-start">
-                        <a href="{{ route('projects.create') }}" class="btn btn-block btn-success fw-semibold text-white">
-                            Create project
-                        </a>
+            @can('create project')
+                <div class="row mb-3">
+                    <div class="col-md-2">
+                        <div class="d-flex justify-content-start">
+                            <a href="{{ route('projects.create') }}" class="btn btn-block btn-success fw-semibold text-white">
+                                Create project
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endcan
 
             @if(! $projects->count())
                 <p class="ms-2">No projects yet.</p>
@@ -28,7 +30,9 @@
                             <th scope="col">Title</th>
                             <th scope="col">Manager</th>
                             <th scope="col">Due date</th>
-                            <th></th>
+                            @if (auth()->user()->can('edit project') || auth()->user()->can('delete project'))
+                                <th></th>
+                            @endif
                         </tr>
                     </thead>
 
@@ -38,23 +42,25 @@
                                 <td><a href="{{ route('projects.show', $project)}}" class="text-decoration-none text-reset fw-semibold">{{ $project->title }}</a></td>
                                 <td>{{ $project->manager ? $project->manager->name : 'Not assigned' }}</td>
                                 <td>{{ $project->due_date->format('d-m-Y') }}</td>
-                                <td class="d-flex align-items-center">
-                                    @can('edit project')
-                                        <a class="btn btn-sm btn-info fw-semibold text-white" href="{{ route('projects.edit', $project) }}">
-                                            Edit
-                                        </a>
-                                    @endcan
+                                @if (auth()->user()->can('edit project') || auth()->user()->can('delete project'))
+                                    <td class="d-flex align-items-center">
+                                        @can('edit project')
+                                            <a class="btn btn-sm btn-info fw-semibold text-white" href="{{ route('projects.edit', $project) }}">
+                                                Edit
+                                            </a>
+                                        @endcan
 
-                                    @can('delete project')
-                                        <form action="{{ route ('projects.destroy', $project) }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger text-white fw-semibold ms-2">
-                                                Delete
-                                            </button>
-                                        </form>    
-                                    @endcan
-                                </td>
+                                        @can('delete project')
+                                            <form action="{{ route ('projects.destroy', $project) }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger text-white fw-semibold ms-2">
+                                                    Delete
+                                                </button>
+                                            </form>    
+                                        @endcan
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
