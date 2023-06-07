@@ -13,11 +13,13 @@
                 <div>
                     <h3 class="card-title">{{ $project->title }}</h3>
                 </div>
-                <div class="justify-content-end me-2">
-                    <a href="{{ route('projects.edit', $project) }}" class="btn btn-info fw-semibold text-white">
-                        Edit project
-                    </a>
-                </div>
+                @can('edit project')
+                    <div class="justify-content-end me-2">
+                        <a href="{{ route('projects.edit', $project) }}" class="btn btn-info fw-semibold text-white">
+                            Edit project
+                        </a>
+                    </div>
+                @endcan
             </div>
         </div>
 
