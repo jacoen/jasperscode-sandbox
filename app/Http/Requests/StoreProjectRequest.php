@@ -26,7 +26,7 @@ class StoreProjectRequest extends FormRequest
             'manager_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
             'title' => ['required', 'string', 'min:3', 'max:255'],
             'description' => ['nullable', 'string', 'min:3', 'max:255'],
-            'due_date' => ['nullable', 'date', 'after:today', 'before:2030-12-31'],
+            'due_date' => ['required', 'date', 'after:today', 'before:2030-12-31'],
         ];
     }
 }
