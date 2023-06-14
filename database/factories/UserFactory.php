@@ -42,7 +42,19 @@ class UserFactory extends Factory
         return $this->state(function () {
             return [];
         })->afterCreating(function (User $user) {
-            $user->assignRole('super-admin');
+            $user->assignRole('Super admin');
+        });
+    }
+
+    public function expiredToken()
+    {
+        return $this->state(function () {
+            return [
+                'password_token' => Str::random(32),
+                'created_at' => now()->subHour(),
+                'updated_at' =>now()->subHour(),
+                'token_expires_at' => now()->subHour(),
+            ];
         });
     }
 }

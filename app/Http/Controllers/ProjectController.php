@@ -34,7 +34,7 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        $managers = User::role(['admin', 'manager'])->pluck('name', 'id');
+        $managers = User::role(['Admin', 'Manager'])->pluck('name', 'id');
 
         return view('projects.create', compact('managers'));
     }
@@ -51,7 +51,7 @@ class ProjectController extends Controller
         }
 
         return redirect()->route('projects.index')
-            ->with('success', 'A new project has been created');
+            ->with('success', 'A new project has been created.');
     }
 
     /**
@@ -67,7 +67,7 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        $managers = User::role(['admin', 'manager'])->pluck('name', 'id');
+        $managers = User::role(['Admin', 'Manager'])->pluck('name', 'id');
 
         return view('projects.edit', compact(['project', 'managers']));
     }
@@ -84,7 +84,7 @@ class ProjectController extends Controller
         }
 
         return redirect()->route('projects.show', $project)
-            ->with('success', 'The project has been updated');
+            ->with('success', 'The project has been updated.');
     }
 
     /**
@@ -95,6 +95,6 @@ class ProjectController extends Controller
         $project->delete();
 
         return redirect()->route('projects.index')
-            ->with('success', 'A project has been deleted');
+            ->with('success', 'The project has been deleted.');
     }
 }
