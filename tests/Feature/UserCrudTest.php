@@ -42,7 +42,7 @@ class UserCrudTest extends TestCase
         $this->actingAs($this->employee)->post(route('users.store'), $data)
             ->assertForbidden();
 
-        $this->assertDatabaseCount('users', 3);
+        $this->assertDatabaseCount('users', 4);
         $this->assertDatabaseMissing('users', $data);
     }
 
@@ -122,7 +122,7 @@ class UserCrudTest extends TestCase
             ->assertRedirect(route('users.index'))
             ->assertSessionHas('success', 'A new user was created.');
 
-        $this->assertDatabaseCount('users', 4);
+        $this->assertDatabaseCount('users', 5);
         $this->assertDatabaseHas('users', [
             'name' => $data['name'],
             'email' => $data['email'],
@@ -182,7 +182,7 @@ class UserCrudTest extends TestCase
         $data = [
             'name' => 'Bob Brouwer',
             'email' => 'bob.brouwer@example.com',
-            'role' => $user->role,
+            'role' => $user->roles->first()->id,
         ];
 
         $this->actingAs($this->admin)->put(route('users.update', $user), $data)
