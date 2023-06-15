@@ -47,7 +47,7 @@ class UserController extends Controller
         $user->notify(new AccountCreatedNotification());
 
         return redirect()->route('users.index')
-            ->with('success', 'New user was created!');
+            ->with('success', 'A new user was created.');
     }
 
     public function edit(User $user)

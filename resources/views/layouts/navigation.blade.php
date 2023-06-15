@@ -17,13 +17,15 @@
         </li>
     @endcan
 
-    <li class="nav-item">
-        <a class="nav-link" href="{{ route('about') }}">
-            <svg class="nav-icon">
-            </svg>
-            {{ __('About us') }}
-        </a>
-    </li>
+    @can('read project')
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('projects.index') }}">
+                <svg class="nav-icon">
+                </svg>
+                {{ __('Projects') }}
+            </a>
+        </li>
+    @endcan
 
     <li class="nav-group" aria-expanded="false">
         <a class="nav-link nav-group-toggle" href="#">
