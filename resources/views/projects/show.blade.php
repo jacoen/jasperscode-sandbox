@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
+    <x-flash-success :message="session('success')" />
+
     <div>
         <a class="btn btn-link" href="{{ route('projects.index') }}">
             &#xab; Return to project overview
@@ -13,7 +15,7 @@
                 <div>
                     <h3 class="card-title">{{ $project->title }}</h3>
                 </div>
-                @can('edit project')
+                @can('update project')
                     <div class="justify-content-end me-2">
                         <a href="{{ route('projects.edit', $project) }}" class="btn btn-info fw-semibold text-white">
                             Edit project
@@ -34,7 +36,7 @@
                 </div>
                 <div class="row gx-1">
                     <div class="col-1"><span class="fw-bold">Assigned to</span></div>
-                    <div class="col-9"><span>{{ $project->manager ? $project->manager->name : 'Not assigned'}}</span></div>
+                    <div class="col-9"><span>{{ $project->manager->name ?? 'Not assigned'}}</span></div>
                 </div>
                 <div class="row gx-1">
                     <div class="col-1"><span class="fw-bold">Due date</span></div>
@@ -42,7 +44,28 @@
                 </div>
                 <hr>
                 <h5>Tasks</h5>
-                <p>No tasks yet.</p>
+                @if (! $project->tasks->count())
+                    <p>No tasks in this project yet.</p>
+                @else
+                    <table class="table px-2">
+                        <thead>
+                            <tr>
+                                <th scope="col">Title</th>
+                                <th scope="col">Author</th>
+                                <th scope="col">Assigned to</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($tasks as $task)
+                                <tr>
+                                    <td><a href="{{ route('tasks.show', $task) }}" class="text-decoration-none text-reset fw-semibold">{{ $task->title }}</a></td>
+                                    <td>{{ $task->author->name }}</td>
+                                    <td>{{ $task->user->name ?? 'Unassigned' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
             </div>
         </div>
     </div>

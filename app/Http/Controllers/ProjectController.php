@@ -59,7 +59,13 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        return view('projects.show', compact('project'));
+        $tasks = $project->tasks()
+            ->with('author', 'user')
+            ->latest('updated_at')
+            ->orderBy('id', 'desc')
+            ->paginate();
+
+        return view('projects.show', compact('project', 'tasks'));
     }
 
     /**

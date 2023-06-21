@@ -2,26 +2,26 @@
 
 namespace App\Policies;
 
-use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class ProjectPolicy
+class TaskPolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('read project');
+        return $user->can('view task');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Project $project): bool
+    public function view(User $user, Task $task): bool
     {
-        return $user->can('read project');
+        return $user->can('view task');
     }
 
     /**
@@ -29,30 +29,38 @@ class ProjectPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create project');
+        return $user->can('create task');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Project $project): bool
+    public function update(User $user, Task $task): bool
     {
-        return $user->can('update project');
+        return $user->can('update task');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Project $project): bool
+    public function delete(User $user, Task $task): bool
     {
-        return $user->can('delete project');
+        return $user->can('delete task');
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Project $project): bool
+    public function restore(User $user, Task $task): bool
     {
-        // Will implement this feature soon
+        //
+    }
+
+    /**
+     * Determine whether the user can permanently delete the model.
+     */
+    public function forceDelete(User $user, Task $task): bool
+    {
+        //
     }
 }

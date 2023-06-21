@@ -30,7 +30,7 @@
                             <th scope="col">Title</th>
                             <th scope="col">Manager</th>
                             <th scope="col">Due date</th>
-                            @if (auth()->user()->can('edit project') || auth()->user()->can('delete project'))
+                            @if (auth()->user()->can('update project') || auth()->user()->can('delete project'))
                                 <th></th>
                             @endif
                         </tr>
@@ -42,9 +42,9 @@
                                 <td><a href="{{ route('projects.show', $project)}}" class="text-decoration-none text-reset fw-semibold">{{ $project->title }}</a></td>
                                 <td>{{ $project->manager ? $project->manager->name : 'Not assigned' }}</td>
                                 <td>{{ $project->due_date->format('d-m-Y') }}</td>
-                                @if (auth()->user()->can('edit project') || auth()->user()->can('delete project'))
+                                @if (auth()->user()->can('update project') || auth()->user()->can('delete project'))
                                     <td class="d-flex align-items-center">
-                                        @can('edit project')
+                                        @can('update project')
                                             <a class="btn btn-sm btn-info fw-semibold text-white" href="{{ route('projects.edit', $project) }}">
                                                 Edit
                                             </a>
@@ -65,6 +65,8 @@
                         @endforeach
                     </tbody>
                 </table>
+
+                <x-pagination :records="$projects" />
             @endif
         </div>
     </div>
