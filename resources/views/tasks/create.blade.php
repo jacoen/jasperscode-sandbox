@@ -9,7 +9,7 @@
         </div>
 
         <div class="card-body">
-            <form action="{{ route('tasks.store') }}" method="POST" class="px-4">
+            <form action="{{ route('tasks.store', $project) }}" method="POST" class="px-4">
                 @csrf
                 <div class="mb-3">
                     <label for="title" class="form-label">Title</label>
@@ -30,18 +30,6 @@
                             @foreach ($employees as $id => $name)
                                 <option value="{{ $id }}" {{ old('user_id') == $id ? 'selected' : ''}}>
                                     {{ $name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="project_id" class="form-label">Project</label>
-                        <select id="project_id" name="project_id" class="form-select @error('project_id') is-invalid @enderror">
-                            <option value="" selected>Assign to project</option>
-                            @foreach ($projects as $id => $title)
-                                <option value="{{ $id }}" {{ old('project_id') == $id ? 'selected' : ''}}>
-                                    {{ $title }}
                                 </option>
                             @endforeach
                         </select>

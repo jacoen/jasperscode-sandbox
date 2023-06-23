@@ -6,6 +6,7 @@ use App\Http\Requests\TaskRequest;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\TaskAssignedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
 use Illuminate\View\View;
@@ -17,9 +18,15 @@ class TaskController extends Controller
         $this->authorizeResource(Task::class, 'task');
     }
 
-    public function index(): View
-    { 
-        $tasks = Task::with(['project', 'author', 'user'])
+    public function index()
+    {
+        $query = Task::query();
+        
+        if (! auth()->user()->hasRole('Admin')) {
+            $query = $query->where('user_id', auth()->id());
+        }
+        
+        $tasks = $query->with('project', 'author', 'user')
             ->latest('updated_at')
             ->orderBy('id', 'desc')
             ->paginate();
@@ -27,21 +34,24 @@ class TaskController extends Controller
         return view('tasks.index', compact('tasks'));
     }
 
-    public function create(): View
+    public function create(Project $project): View
     {
-        $projects = Project::all()->pluck('title', 'id');
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
 
-        return view('tasks.create', compact(['projects', 'employees']));
+        return view('tasks.create', compact(['employees', 'project']));
     }
 
-    public function store(TaskRequest $request): RedirectResponse
+    public function store(Project $project, TaskRequest $request): RedirectResponse
     {
-        $data = Arr::add($request->validated(), 'author_id', $request->user()->id);
+        $data = Arr::add($request->validated(), 'author_id', auth()->id());
 
-        Task::create($data);
+        $task = $project->tasks()->create($data);
 
-        return redirect()->route('tasks.index')
+        if (isset($request->user_id) && auth()->id() != $request->user_id) {
+            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
+        }
+
+        return redirect()->route('projects.show', $project)
             ->with('success', 'A new task has been created.');
     }
 
@@ -50,12 +60,11 @@ class TaskController extends Controller
         return view('tasks.show', compact('task'));
     }
 
-    public function edit(Task $task): View
+    public function edit(Project $project, Task $task): View
     {
-        $projects = Project::all()->pluck('title', 'id');
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
 
-        return view('tasks.edit', compact(['task', 'projects', 'employees']));
+        return view('tasks.edit', compact(['task', 'project', 'employees']));
     }
 
     public function update(Task $task, TaskRequest $request): RedirectResponse
@@ -64,6 +73,10 @@ class TaskController extends Controller
 
         if ($task->wasChanged('title')) {
             $task = $task->fresh();
+        }
+
+        if ($task->wasChanged('user_id') && isset($request->user_id) && auth()->id() != $request->user_id) {
+            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
         }
 
         return redirect()->route('tasks.show', $task)

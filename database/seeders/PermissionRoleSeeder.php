@@ -6,8 +6,6 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Support\Facades\DB;
 
 class PermissionRoleSeeder extends Seeder
 {
@@ -22,10 +20,16 @@ class PermissionRoleSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'create user']);
         Permission::firstOrCreate(['name' => 'edit user']);
         Permission::firstOrCreate(['name' => 'delete user']);
+        
         Permission::firstOrCreate(['name' => 'read project']);
         Permission::firstOrCreate(['name' => 'create project']);
-        Permission::firstOrCreate(['name' => 'edit project']);
+        Permission::firstOrCreate(['name' => 'update project']);
         Permission::firstOrCreate(['name' => 'delete project']);
+
+        Permission::firstOrCreate(['name' => 'read task']);
+        Permission::firstOrCreate(['name' => 'create task']);
+        Permission::firstOrCreate(['name' => 'update task']);
+        Permission::firstOrCreate(['name' => 'delete task']);
 
         $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
         $admin = Role::firstOrCreate(['name' => 'Admin']);
@@ -35,15 +39,19 @@ class PermissionRoleSeeder extends Seeder
 
         $admin->givePermissionTo([
             'read user', 'create user', 'edit user', 'delete user',
-            'read project', 'create project', 'edit project', 'delete project',
+            'read project', 'create project', 'update project', 'delete project',
+            'read task', 'create task', 'update task', 'delete task',
         ]);
 
         $manager->givePermissionTo([
-            'read project', 'create project', 'edit project', 'delete project'
+            'read project', 'create project', 'update project', 'delete project',
+            'read task', 'create task', 'update task', 'delete task',
         ]);
 
         $employee->givePermissionTo([
-            'read project'
+            'read project',
+            'read task', 'create task', 'update task', 'delete task',
         ]);
+
     }
 }

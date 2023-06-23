@@ -13,7 +13,7 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h3 class="card-title">{{ $project->title }}</h3>
+                    <h2 class="card-title">{{ $project->title }}</h2>
                 </div>
                 @can('update project')
                     <div class="justify-content-end me-2">
@@ -32,7 +32,7 @@
                     <hr />
                 </div>
                 <div class="mb-1">
-                    <h5>Project details</h5>
+                    <h3>Project details</h3>
                 </div>
                 <div class="row gx-1">
                     <div class="col-1"><span class="fw-bold">Assigned to</span></div>
@@ -43,7 +43,17 @@
                     <div class="col-9"><span>{{ $project->due_date->format('d M Y') }}</span></div>
                 </div>
                 <hr>
-                <h5>Tasks</h5>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4>Tasks</h4>
+                    </div>
+                    <div class="justify-content-end me-2">
+                        <a href="{{ route('tasks.create', $project) }}" class="btn btn-block btn-success fw-semibold text-white">
+                            New task
+                        </a>
+                    </div>
+                </div>
                 @if (! $project->tasks->count())
                     <p>No tasks in this project yet.</p>
                 @else

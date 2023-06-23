@@ -4,8 +4,8 @@
     <x-flash-success :message="session('success')" />
 
     <div>
-        <a class="btn btn-link" href="{{ route('tasks.index') }}">
-            &#xab; Return to task overview
+        <a class="btn btn-link" href="{{ route('projects.show', $task->project) }}">
+            &#xab; Return to project
         </a>
 
         <div class="card mb-4">
@@ -14,7 +14,7 @@
                     <div>
                         <h3 class="card-title">{{ $task->title }}</h3>
                     </div>
-                    @can('edit task')
+                    @can('update task')
                         <div class="justify-content-end me-2">
                             <a href="{{ route('tasks.edit', $task) }}" class="btn btn-info fw-semibold text-white">
                                 Edit task

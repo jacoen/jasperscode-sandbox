@@ -1,11 +1,12 @@
 <?php
 
-use App\Http\Controllers\Auth\AccountActivationController;
-use App\Http\Controllers\Auth\RequestNewTokenController;
-use App\Http\Controllers\ProjectController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\UserTaskController;
+use App\Http\Controllers\Auth\RequestNewTokenController;
+use App\Http\Controllers\Auth\AccountActivationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,5 +47,20 @@ Route::middleware('auth')->group(function () {
     
     Route::resource('/projects', ProjectController::class);
 
-    Route::resource('/tasks', TaskController::class);
+    // Route::resource('/tasks', UserTaskController::class);
+
+    Route::controller(TaskController::class)->group(function () {
+        Route::prefix('/projects/{project}/tasks')->group(function () {
+            Route::get('/create', 'create')->name('tasks.create');
+            Route::post('/', 'store')->name('tasks.store');
+        });
+
+        Route::prefix('/tasks')->group(function () {
+            Route::get('/', 'index')->name('tasks.index');
+            Route::get('/tasks/{task}', 'show')->name('tasks.show');
+            Route::get('/tasks/{task}/edit', 'edit')->name('tasks.edit');
+            Route::put('/tasks/{task}', 'update')->name('tasks.update');
+            Route::delete('/{task}', 'destroy')->name('tasks.destroy');
+        });
+    });
 });

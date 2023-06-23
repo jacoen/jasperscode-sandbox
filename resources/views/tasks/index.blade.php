@@ -5,19 +5,14 @@
 
     <div class="card mb-4">
         <div class="card-header">
-            Tasks
+            @hasanyrole('Admin|Super Admin')
+                Tasks
+            @else
+                My tasks
+            @endhasanyrole
         </div>
 
         <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-2">
-                    <div class="justify-content-start">
-                        <a href="{{ route('tasks.create') }}" class="btn btn-block btn-success fw-semibold text-white">
-                            Create task
-                        </a>
-                    </div>
-                </div>
-            </div>
 
             @if(! $tasks->count())
                 <p class="mb-2">No tasks yet.</p>
@@ -26,9 +21,11 @@
                     <thead>
                         <tr>
                             <th scope="col">Title</th>
-                            <th scope="col">project</th>
+                            <th scope="col">Project</th>
                             <th scope="col">Author</th>
-                            <th scope="col">Assigned to</th>
+                            @hasanyrole('Admin|Super Admin')
+                                <th scope="col">Assigned to</th>
+                            @endhasanyrole
                             <td scope="col"></td>
                         </tr>
                     </thead>
@@ -38,7 +35,9 @@
                                 <td><a href="{{ route('tasks.show', $task) }}" class="text-decoration-none text-reset fw-semibold">{{ $task->title }}</a></td>
                                 <td><a href="{{ route('projects.show', $task->project) }}" class="text-decoration-none text-reset fw-semibold">{{ $task->project->title }}</a></td>
                                 <td>{{ $task->author->name }}</td>
-                                <td>{{ $task->user->name ?? 'Unassigned' }}</td>
+                                @hasanyrole('Admin|Super Admin')
+                                    <td>{{ $task->user->name ?? 'Unassigned' }}</td>
+                                @endhasanyrole
                                 <td class="d-flex align-items-center">
                                     <a class="btn btn-sm btn-info fw-semibold text-white" href="{{ route('tasks.edit', $task) }}">
                                         Edit
