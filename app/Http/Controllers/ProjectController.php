@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
-use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {

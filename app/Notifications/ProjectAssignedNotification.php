@@ -17,7 +17,7 @@ class ProjectAssignedNotification extends Notification implements ShouldQueue
      */
     public function __construct(protected Project $project)
     {
-        
+        //
     }
 
     /**
@@ -36,13 +36,13 @@ class ProjectAssignedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject('A project has been assigned to you')
-                    ->greeting('Hello '.$notifiable->name.', ')
-                    ->line('With this mail we want to notify you that the following project has been assigned to you:')
-                    ->line($this->project->title)
-                    ->line('Click on the button below to visit this project')
-                    ->action('Notification Action', route('projects.show', $this->project))
-                    ->line('Thank you for using our application!');
+            ->subject('A project has been assigned to you')
+            ->greeting('Hello '.$notifiable->name.', ')
+            ->line('With this mail we want to notify you that the following project has been assigned to you:')
+            ->line($this->project->title)
+            ->line('Click on the button below to visit this project')
+            ->action('Notification Action', route('projects.show', $this->project))
+            ->line('Thank you for using our application!');
     }
 
     /**

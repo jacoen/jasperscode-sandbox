@@ -6,7 +6,6 @@ use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -157,7 +156,7 @@ class ProjectCrudTest extends TestCase
         $this->actingAs($this->employee)->get(route('projects.edit', $project))
             ->assertForbidden();
 
-        $this->actingAs($this->employee)->put(route('projects.update',$project), $data)
+        $this->actingAs($this->employee)->put(route('projects.update', $project), $data)
             ->assertForbidden();
 
         $this->assertDatabaseMissing('projects', [
@@ -201,7 +200,7 @@ class ProjectCrudTest extends TestCase
 
         $this->assertNotSoftDeleted('projects', [
             'id' => $project->id,
-            'title' => $project->title
+            'title' => $project->title,
         ]);
     }
 
@@ -212,7 +211,5 @@ class ProjectCrudTest extends TestCase
         $this->actingAs($this->manager)->delete(route('projects.destroy', $project))
             ->assertRedirect(route('projects.index'))
             ->assertSessionHas('success', 'The project has been deleted.');
-
-        
     }
 }

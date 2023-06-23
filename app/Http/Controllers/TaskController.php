@@ -21,11 +21,11 @@ class TaskController extends Controller
     public function index()
     {
         $query = Task::query();
-        
+
         if (! auth()->user()->hasRole('Admin')) {
             $query = $query->where('user_id', auth()->id());
         }
-        
+
         $tasks = $query->with('project', 'author', 'user')
             ->latest('updated_at')
             ->orderBy('id', 'desc')

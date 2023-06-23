@@ -1,12 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AccountActivationController;
+use App\Http\Controllers\Auth\RequestNewTokenController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\UserTaskController;
-use App\Http\Controllers\Auth\RequestNewTokenController;
-use App\Http\Controllers\Auth\AccountActivationController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,7 +43,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
     Route::put('profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    
+
     Route::resource('/projects', ProjectController::class);
 
     // Route::resource('/tasks', UserTaskController::class);
