@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -47,7 +46,7 @@ class UserCrudTest extends TestCase
     }
 
     public function test_fields_are_required()
-    {   
+    {
         $data = [
             'name' => '',
             'email' => '',
@@ -58,7 +57,7 @@ class UserCrudTest extends TestCase
             ->assertSessionHasErrors([
                 'name' => 'The name field is required.',
                 'email' => 'The email field is required.',
-                'role' => 'The role field is required.'
+                'role' => 'The role field is required.',
             ]);
 
         $this->assertDatabaseMissing('users', [
@@ -69,12 +68,12 @@ class UserCrudTest extends TestCase
 
     public function test_the_email_of_a_user_must_be_unique()
     {
-        $user = User::factory()->create(['name' => 'John Doe Senior', 'email' => 'john@example.com']);
+        User::factory()->create(['name' => 'John Doe Senior', 'email' => 'john@example.com']);
 
         $data = [
             'name' => 'John Doe Junior',
             'email' => 'john@example.com',
-            'role' => 4
+            'role' => 4,
         ];
 
         $this->actingAs($this->admin)->post(route('users.store'), $data)
@@ -93,12 +92,12 @@ class UserCrudTest extends TestCase
         $data = [
             'name' => 'New User',
             'email' => 'new.user@example.com',
-            'role' => 99
+            'role' => 99,
         ];
 
         $this->actingAs($this->admin)->post(route('users.store'), $data)
             ->assertSessionHasErrors([
-                'role' => 'The selected role is invalid.'
+                'role' => 'The selected role is invalid.',
             ]);
 
         $this->assertDatabaseMissing('users', [
@@ -139,12 +138,11 @@ class UserCrudTest extends TestCase
 
         Notification::fake();
 
-        
         $this->actingAs($this->admin)->post(route('users.store'), $data)
             ->assertRedirect(route('users.index'));
 
         $user = User::where('email', $data['email'])->get();
-        
+
         Notification::assertSentTo($user, AccountCreatedNotification::class);
     }
 
@@ -192,7 +190,7 @@ class UserCrudTest extends TestCase
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'name' => $data['name'],
-            'email' => $data['email']
+            'email' => $data['email'],
         ]);
     }
 
@@ -205,7 +203,7 @@ class UserCrudTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'name' => $user->name,
-            'email' => $user->email
+            'email' => $user->email,
         ]);
     }
 }

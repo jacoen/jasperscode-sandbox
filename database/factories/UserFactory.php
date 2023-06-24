@@ -52,7 +52,7 @@ class UserFactory extends Factory
             return [
                 'password_token' => Str::random(32),
                 'created_at' => now()->subHour(),
-                'updated_at' =>now()->subHour(),
+                'updated_at' => now()->subHour(),
                 'token_expires_at' => now()->subHour(),
             ];
         });

@@ -27,6 +27,16 @@
         </li>
     @endcan
 
+    @can('read task')
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('tasks.index') }}">
+                <svg class="nav-icon">
+                </svg>
+                {{ __('Tasks') }}
+            </a>
+        </li>
+    @endcan
+
     <li class="nav-group" aria-expanded="false">
         <a class="nav-link nav-group-toggle" href="#">
             <svg class="nav-icon">

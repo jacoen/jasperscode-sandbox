@@ -13,7 +13,7 @@
                 <div class="row">
                     <div class="col-md-2">
                         <div class="d-flex justify-content-start ms-2">
-                            <a href="{{ route('users.create') }}" class="btn btn-block btn-success fw-semibold text-white">
+                            <a href="{{ route('users.create') }}" class="btn btn-success fw-semibold text-white">
                                 Create user
                             </a>
                         </div>

@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notification;
 class NewTokenRequestedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
     /**
      * Get the notification's delivery channels.
      *
