@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
@@ -20,7 +19,7 @@ class UserPolicy
      */
     public function view(User $user, User $model)
     {
-        // 
+        //
     }
 
     /**

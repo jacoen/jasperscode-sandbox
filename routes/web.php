@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +43,23 @@ Route::middleware('auth')->group(function () {
 
     Route::get('profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
     Route::put('profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    
+
     Route::resource('/projects', ProjectController::class);
+
+    // Route::resource('/tasks', UserTaskController::class);
+
+    Route::controller(TaskController::class)->group(function () {
+        Route::prefix('/projects/{project}/tasks')->group(function () {
+            Route::get('/create', 'create')->name('tasks.create');
+            Route::post('/', 'store')->name('tasks.store');
+        });
+
+        Route::prefix('/tasks')->group(function () {
+            Route::get('/', 'index')->name('tasks.index');
+            Route::get('/tasks/{task}', 'show')->name('tasks.show');
+            Route::get('/tasks/{task}/edit', 'edit')->name('tasks.edit');
+            Route::put('/tasks/{task}', 'update')->name('tasks.update');
+            Route::delete('/{task}', 'destroy')->name('tasks.destroy');
+        });
+    });
 });

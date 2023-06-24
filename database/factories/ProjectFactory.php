@@ -23,7 +23,7 @@ class ProjectFactory extends Factory
             'manager_id' => $user,
             'title' => fake()->sentence(4),
             'description' => fake()->text(),
-            'due_date' => now()->addMonths(4)
+            'due_date' => now()->addMonths(4),
         ];
     }
 }
