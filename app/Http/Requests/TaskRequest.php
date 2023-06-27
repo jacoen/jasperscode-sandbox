@@ -28,4 +28,12 @@ class TaskRequest extends FormRequest
             'description' => ['nullable', 'string'],
         ];
     }
+
+
+    public function prepareForValidation()
+    {
+        $this->merge([
+            'description' => strip_tags($this->description),
+        ]);
+    }
 }

@@ -27,7 +27,7 @@
             <div class="card-body">
                 <div class="ms-2">
                     <div class="mb-1">
-                        <p>{{ $task->description }}</p>
+                        <p>{!! nl2br($task->description) !!}</p>
                         <hr />
                     </div>
                     <div class="mb-1">
