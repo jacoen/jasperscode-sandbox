@@ -10,31 +10,18 @@
     @vite('resources/sass/app.scss')
 </head>
 <body>
-    <div class="bg-light min-vh-100">
+    <div class="bg-info bg-opacity-10 min-vh-100">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm mb-4">
             <div class="container">
                 <a class="navbar-brand" href="#">
                     {{ config('app.name', 'Laravel') }}
                 </a>
 
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            Home
-                        </a>
-                    </li>
-                </ul>
                 <ul class="navbar-nav ms-auto">
                     @guest
                         @if (Route::has('login'))
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                            </li>
-                        @endif
-
-                        @if (Route::has('register'))
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
                             </li>
                         @endif
                     @else
