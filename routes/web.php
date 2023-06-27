@@ -1,11 +1,13 @@
 <?php
 
-use App\Http\Controllers\Auth\AccountActivationController;
-use App\Http\Controllers\Auth\RequestNewTokenController;
-use App\Http\Controllers\ProjectController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\Auth\RequestNewTokenController;
+use App\Http\Controllers\Auth\AccountActivationController;
+use App\Http\Controllers\PageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +26,7 @@ Route::get('/', function () {
 
 Auth::routes(['register' => false]);
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 Route::controller(AccountActivationController::class)->prefix('/change-password')->middleware('guest')->group(function () {
     Route::get('/{password_token}', 'create')->name('activate-account.create');
@@ -37,7 +39,7 @@ Route::controller(RequestNewTokenController::class)->prefix('/request-token')->m
 });
 
 Route::middleware('auth')->group(function () {
-    Route::view('about', 'about')->name('about');
+    Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
 
     Route::resource('/users', UserController::class)->except('show');
 
@@ -45,8 +47,6 @@ Route::middleware('auth')->group(function () {
     Route::put('profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 
     Route::resource('/projects', ProjectController::class);
-
-    // Route::resource('/tasks', UserTaskController::class);
 
     Route::controller(TaskController::class)->group(function () {
         Route::prefix('/projects/{project}/tasks')->group(function () {
