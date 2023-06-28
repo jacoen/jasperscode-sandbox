@@ -45,7 +45,7 @@ class ProjectController extends Controller
     {
         $project = Project::create($request->validated());
 
-        if (auth()->id() != $project->manager_id) {
+        if (isset($request->manager_id) && auth()->id() != $project->manager_id) {
             User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
         }
 
