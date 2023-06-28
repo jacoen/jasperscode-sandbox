@@ -4,11 +4,11 @@
     <x-flash-success :message="session('success')" />
 
     <div class="card mb-4">
-        <div class="card-header">
+        <div class="card-header fw-bold">
             @hasanyrole('Admin|Super Admin')
                 Tasks
             @else
-                My tasks
+                {{ auth()->user()->name.'\'s tasks'}}
             @endhasanyrole
         </div>
 
@@ -26,18 +26,20 @@
                             @hasanyrole('Admin|Super Admin')
                                 <th scope="col">Assigned to</th>
                             @endhasanyrole
+                            <th scope="col">Last updated</th>
                             <td scope="col"></td>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($tasks as $task)
                             <tr>
-                                <td><a href="{{ route('tasks.show', $task) }}" class="text-decoration-none text-reset fw-semibold">{{ $task->title }}</a></td>
-                                <td><a href="{{ route('projects.show', $task->project) }}" class="text-decoration-none text-reset fw-semibold">{{ $task->project->title }}</a></td>
+                                <td><a href="{{ route('tasks.show', $task) }}" class="text-decoration-none text-reset fw-semibold"><span title="{{ $task->title }}"> {{ Str::limit($task->title, 25) }} </span></a></td>
+                                <td><a href="{{ route('projects.show', $task->project) }}" class="text-decoration-none text-reset fw-semibold">{{ Str::limit($task->project->title, 25) }}</a></td>
                                 <td>{{ $task->author->name }}</td>
                                 @hasanyrole('Admin|Super Admin')
                                     <td>{{ $task->user->name ?? 'Unassigned' }}</td>
                                 @endhasanyrole
+                                <td>{{ $task->updated_at->format('d-m-Y') }}</td>
                                 <td class="d-flex align-items-center">
                                     <a class="btn btn-sm btn-info fw-semibold text-white" href="{{ route('tasks.edit', $task) }}">
                                         Edit

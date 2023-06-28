@@ -34,13 +34,20 @@
                 <div class="mb-1">
                     <h3>Project details</h3>
                 </div>
+
                 <div class="row gx-1">
-                    <div class="col-1"><span class="fw-bold">Assigned to</span></div>
+                    <div class="col-2"><span class="fw-bold">Assigned to</span></div>
                     <div class="col-9"><span>{{ $project->manager->name ?? 'Not assigned'}}</span></div>
                 </div>
+
                 <div class="row gx-1">
-                    <div class="col-1"><span class="fw-bold">Due date</span></div>
+                    <div class="col-2"><span class="fw-bold">Due date</span></div>
                     <div class="col-9"><span>{{ $project->due_date->format('d M Y') }}</span></div>
+                </div>
+
+                <div class="row gx-1">
+                    <div class="col-2"><span class="fw-bold">Last updated</span></div>
+                    <div class="col-9"><span>{{ $project->last_updated }}</span></div>
                 </div>
                 <hr>
 

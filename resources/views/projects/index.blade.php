@@ -29,6 +29,7 @@
                         <tr>
                             <th scope="col">Title</th>
                             <th scope="col">Manager</th>
+                            <th scope="col">Last updated</th>
                             <th scope="col">Due date</th>
                             @if (auth()->user()->can('update project') || auth()->user()->can('delete project'))
                                 <th></th>
@@ -39,8 +40,9 @@
                     <tbody>
                         @foreach ($projects as $project)
                             <tr>
-                                <td><a href="{{ route('projects.show', $project)}}" class="text-decoration-none text-reset fw-semibold">{{ $project->title }}</a></td>
+                                <x-table-link route="projects.show" :param="$project" :content="$project->title" :limit="35"/>
                                 <td>{{ $project->manager ? $project->manager->name : 'Not assigned' }}</td>
+                                <td>{{ $project->updated_at->format('d-m-Y') }}</td>
                                 <td>{{ $project->due_date->format('d-m-Y') }}</td>
                                 @if (auth()->user()->can('update project') || auth()->user()->can('delete project'))
                                     <td class="d-flex align-items-center">
