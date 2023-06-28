@@ -18,6 +18,15 @@ class Project extends Model
         'due_date' => 'date',
     ];
 
+    public static function booted()
+    {
+        static::deleted(function (Project $project) {
+            $project->tasks()->each( function ($task) {
+                $task->delete();  
+            });
+        });
+    }
+
     public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -26,5 +35,14 @@ class Project extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function getLastUpdatedAttribute(): string
+    {
+        if ($this->updated_at->gt(now()->subDay())) {
+            return $this->updated_at->diffForHumans();
+        }
+
+        return $this->updated_at->format('d M Y H:m');
     }
 }
