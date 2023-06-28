@@ -37,12 +37,4 @@ class Project extends Model
         return $this->hasMany(Task::class);
     }
 
-    public function getLastUpdatedAttribute(): string
-    {
-        if ($this->updated_at->gt(now()->subDay())) {
-            return $this->updated_at->diffForHumans();
-        }
-
-        return $this->updated_at->format('d M Y H:m');
-    }
 }
