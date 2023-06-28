@@ -10,7 +10,7 @@
     @vite('resources/sass/app.scss')
 </head>
 <body>
-    <div class="bg-info bg-opacity-10 min-vh-100">
+    <div class="bg-light min-vh-100">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm mb-4">
             <div class="container">
                 <a class="navbar-brand" href="#">

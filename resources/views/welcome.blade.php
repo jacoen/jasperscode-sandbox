@@ -5,7 +5,7 @@
         <div class="col-md-10">
             <div class="card shadow-sm border-white mb-4 px-4">
                 <div>
-                    <h1 class="fs-1 card-title mb-3 text-center">Welcome by {{ config('app.name') }}</h1>
+                    <h1 class="fs-1 card-title mb-3 text-center">Welkom op {{ config('app.name') }}</h1>
                 </div>
         
                     <p class="text-break">
