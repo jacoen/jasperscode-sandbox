@@ -29,8 +29,8 @@
                         <tr>
                             <th scope="col">Title</th>
                             <th scope="col">Manager</th>
-                            <th scope="col">Last updated</th>
                             <th scope="col">Due date</th>
+                            <th scope="col">Last updated</th>
                             @if (auth()->user()->can('update project') || auth()->user()->can('delete project'))
                                 <th></th>
                             @endif
@@ -42,8 +42,8 @@
                             <tr>
                                 <x-table-link route="projects.show" :param="$project" :content="$project->title" :limit="35"/>
                                 <td>{{ $project->manager ? $project->manager->name : 'Not assigned' }}</td>
-                                <td>{{ $project->updated_at->format('d-m-Y') }}</td>
-                                <td>{{ $project->due_date->format('d-m-Y') }}</td>
+                                <td>{{ $project->due_date->format('d M Y') }}</td>
+                                <td>{{ lastUpdated($project->updated_at) }}</td>
                                 @if (auth()->user()->can('update project') || auth()->user()->can('delete project'))
                                     <td class="d-flex align-items-center">
                                         @can('update project')
@@ -53,7 +53,7 @@
                                         @endcan
 
                                         @can('delete project')
-                                            <form action="{{ route ('projects.destroy', $project) }}" method="POST">
+                                            <form action="{{ route ('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Are you sure your want to delete this task?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger text-white fw-semibold ms-2">

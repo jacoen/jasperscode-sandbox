@@ -33,24 +33,24 @@
                     <div class="mb-1">
                         <h5>Task Details</h5>
                         <div class="row gx-1">
-                            <div class="col-md-1"><span class="fw-bold">Project</div>
+                            <div class="col-md-2"><span class="fw-bold">Project</div>
                             <div class="col-md-9">{{ $task->project->title }}</div>
                         </div>
 
                         <div class="row gx-1">
-                            <div class="col-md-1"><span class="fw-bold">Author</div>
+                            <div class="col-md-2"><span class="fw-bold">Author</div>
                             <div class="col-md-9">{{ $task->author->name }}</div>
                         </div>
                         
                         <div class="row gx-1">
-                            <div class="col-md-1"><span class="fw-bold">Assigned to</div>
+                            <div class="col-md-2"><span class="fw-bold">Assigned to</div>
                             <div class="col-md-9">{{ $task->user->name ?? 'Unassigned' }}</div>
                         </div>
 
-                        {{-- <div class="row gx-1">
-                            <div class="col-md-1"><span class="fw-bold"></div>
-                            <div class="col-md-9">{{ $task }}</div>
-                        </div> --}}
+                        <div class="row gx-1">
+                            <div class="col-md-2"><span class="fw-bold">Last updated</div>
+                            <div class="col-md-9">{{ lastUpdated($task->updated_at) }}</div>
+                        </div>
                     </div>
 
                 </div>

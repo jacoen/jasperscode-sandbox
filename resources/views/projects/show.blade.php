@@ -47,7 +47,7 @@
 
                 <div class="row gx-1">
                     <div class="col-2"><span class="fw-bold">Last updated</span></div>
-                    <div class="col-9"><span>{{ $project->last_updated }}</span></div>
+                    <div class="col-9"><span>{{ lastUpdated($project->updated_at) }}</span></div>
                 </div>
                 <hr>
 
@@ -70,6 +70,8 @@
                                 <th scope="col">Title</th>
                                 <th scope="col">Author</th>
                                 <th scope="col">Assigned to</th>
+                                <th scope="col">Last updated</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,6 +80,22 @@
                                     <td><a href="{{ route('tasks.show', $task) }}" class="text-decoration-none text-reset fw-semibold">{{ $task->title }}</a></td>
                                     <td>{{ $task->author->name }}</td>
                                     <td>{{ $task->user->name ?? 'Unassigned' }}</td>
+                                    <td> {{ lastUpdated($task->updated_at) }}</td>
+                                    @can('update task')
+                                        <td class="d-flex align-items-center">
+                                            <a href="{{ route('tasks.edit', $task) }}" class="btn btn-info fw-semibold text-white">
+                                                Edit
+                                            </a>
+
+                                            <form action="{{ route('tasks.destroy', $task) }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger text-white fw-semibold ms-2">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    @endcan
                                 </tr>
                             @endforeach
                         </tbody>
