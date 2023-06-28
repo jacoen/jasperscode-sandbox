@@ -13,6 +13,20 @@ class Task extends Model
 
     protected $fillable = ['title', 'description', 'author_id', 'user_id', 'project_id'];
 
+    public static function booted()
+    {
+        // TODO: when a task has restored touch project updated at,
+        //  refactor to model observer
+        
+        static::created(function ($task) {
+            $task->project->touch();
+        });
+
+        static::updated(function ($task) {
+            $task->project->touch();
+        });
+    }
+
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class);
