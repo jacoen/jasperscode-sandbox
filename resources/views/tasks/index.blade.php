@@ -27,7 +27,9 @@
                                 <th scope="col">Assigned to</th>
                             @endhasanyrole
                             <th scope="col">Last updated</th>
-                            <td scope="col"></td>
+                            @if (auth()->user()->can('update task') || auth()->user()->can('delete task'))
+                                <td scope="col"></td>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -39,20 +41,22 @@
                                 @hasanyrole('Admin|Super Admin')
                                     <td>{{ $task->user->name ?? 'Unassigned' }}</td>
                                 @endhasanyrole
-                                <td>{{ $task->updated_at->format('d-m-Y') }}</td>
-                                <td class="d-flex align-items-center">
-                                    <a class="btn btn-sm btn-info fw-semibold text-white" href="{{ route('tasks.edit', $task) }}">
-                                        Edit
-                                    </a>
+                                <td>{{ lastUpdated($task->updated_at) }}</td>
+                                @if (auth()->user()->can('update task') || auth()->user()->can('delete task'))
+                                    <td class="d-flex align-items-center">
+                                        <a class="btn btn-sm btn-info fw-semibold text-white" href="{{ route('tasks.edit', $task) }}">
+                                            Edit
+                                        </a>
 
-                                    <form action="{{ route('tasks.destroy', $task) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger text-white fw-semibold ms-2">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </td>
+                                        <form action="{{ route('tasks.destroy', $task) }}" method="POST">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger text-white fw-semibold ms-2">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
