@@ -7,7 +7,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
 use App\Http\Controllers\Auth\AccountActivationController;
-use App\Http\Controllers\PageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,7 +38,6 @@ Route::controller(RequestNewTokenController::class)->prefix('/request-token')->m
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
 
     Route::resource('/users', UserController::class)->except('show');
 
