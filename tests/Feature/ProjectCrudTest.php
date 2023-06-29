@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ProjectCrudTest extends TestCase
@@ -29,7 +30,11 @@ class ProjectCrudTest extends TestCase
 
         $this->actingAs($this->employee)->get(route('projects.index'))
             ->assertOk()
-            ->assertSeeText([$project->title, $this->manager->name, $project->due_date->format('d-m-Y')]);
+            ->assertSeeText([
+                Str::limit($project->title, 35), 
+                $this->manager->name, 
+                $project->due_date->format('d M Y')
+            ]);
     }
 
     public function a_user_without_the_read_project_permission_cannot_visit_the_project_detail_page()
