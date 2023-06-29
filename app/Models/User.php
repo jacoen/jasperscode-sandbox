@@ -52,6 +52,16 @@ class User extends Authenticatable
         'password_changed_at' => 'datetime',
     ];
 
+    public function projects()
+    {
+        $this->hasMany(Project::class, 'manager_id');
+    }
+
+    public function tasks()
+    {
+        $this->hasMany(Task::class, 'author_id');
+    }
+
     public function generatePasswordToken()
     {
         $this->timestamps = false;
@@ -68,10 +78,5 @@ class User extends Authenticatable
     public function getHasChangedPasswordAttribute()
     {
         return $this->password_changed_at !== null;
-    }
-    
-    public function projects()
-    {
-        $this->hasMany(Project::class, 'manager_id');
     }
 }

@@ -30,7 +30,8 @@
                             <th scope="col">Title</th>
                             <th scope="col">Manager</th>
                             <th scope="col">Due date</th>
-                            @if (auth()->user()->can('edit project') || auth()->user()->can('delete project'))
+                            <th scope="col">Last updated</th>
+                            @if (auth()->user()->can('update project') || auth()->user()->can('delete project'))
                                 <th></th>
                             @endif
                         </tr>
@@ -39,19 +40,20 @@
                     <tbody>
                         @foreach ($projects as $project)
                             <tr>
-                                <td><a href="{{ route('projects.show', $project)}}" class="text-decoration-none text-reset fw-semibold">{{ $project->title }}</a></td>
+                                <x-table-link route="projects.show" :param="$project" :content="$project->title" :limit="35"/>
                                 <td>{{ $project->manager ? $project->manager->name : 'Not assigned' }}</td>
-                                <td>{{ $project->due_date->format('d-m-Y') }}</td>
-                                @if (auth()->user()->can('edit project') || auth()->user()->can('delete project'))
+                                <td>{{ $project->due_date->format('d M Y') }}</td>
+                                <td>{{ lastUpdated($project->updated_at) }}</td>
+                                @if (auth()->user()->can('update project') || auth()->user()->can('delete project'))
                                     <td class="d-flex align-items-center">
-                                        @can('edit project')
+                                        @can('update project')
                                             <a class="btn btn-sm btn-info fw-semibold text-white" href="{{ route('projects.edit', $project) }}">
                                                 Edit
                                             </a>
                                         @endcan
 
                                         @can('delete project')
-                                            <form action="{{ route ('projects.destroy', $project) }}" method="POST">
+                                            <form action="{{ route ('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Are you sure your want to delete this task?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger text-white fw-semibold ms-2">
@@ -65,6 +67,8 @@
                         @endforeach
                     </tbody>
                 </table>
+
+                <x-pagination :records="$projects" />
             @endif
         </div>
     </div>

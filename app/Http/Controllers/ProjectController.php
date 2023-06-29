@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
-use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
@@ -46,7 +45,7 @@ class ProjectController extends Controller
     {
         $project = Project::create($request->validated());
 
-        if (auth()->id() != $project->manager_id) {
+        if (isset($request->manager_id) && auth()->id() != $project->manager_id) {
             User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
         }
 
@@ -59,7 +58,13 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        return view('projects.show', compact('project'));
+        $tasks = $project->tasks()
+            ->with('author', 'user')
+            ->latest('updated_at')
+            ->orderBy('id', 'desc')
+            ->paginate();
+
+        return view('projects.show', compact('project', 'tasks'));
     }
 
     /**

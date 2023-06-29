@@ -29,4 +29,11 @@ class StoreProjectRequest extends FormRequest
             'due_date' => ['required', 'date', 'after:today', 'before:2030-12-31'],
         ];
     }
+
+    public function prepareForValidation()
+    {
+        $this->merge([
+            'description' => strip_tags($this->description),
+        ]);
+    }
 }
