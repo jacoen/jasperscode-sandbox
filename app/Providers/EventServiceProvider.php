@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Observers\ProjectObserver;
 use App\Observers\TaskObserver;
 use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;
@@ -32,6 +34,7 @@ class EventServiceProvider extends ServiceProvider
     protected $observers = [
         Task::class => [TaskObserver::class],
         User::class => [UserObserver::class],
+        Project::class => [ProjectObserver::class],
     ];
 
     /**

@@ -24,6 +24,7 @@ class UpdateProjectRequest extends FormRequest
             'title' => ['required', 'string', 'min:3', 'max:255'],
             'description' => ['nullable', 'string', 'min:3', 'max:255'],
             'due_date' => ['required', 'date', 'after:today', 'before:2030-12-31'],
+            'status' => ['required', 'string', Rule::in(config('definitions.statuses'))],
         ];
     }
 
