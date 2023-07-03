@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Task;
 use App\Models\User;
+use App\Observers\TaskObserver;
 use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -23,11 +25,21 @@ class EventServiceProvider extends ServiceProvider
     ];
 
     /**
+     * The model observers for your application
+     * 
+     * @var array
+     */
+    protected $observers = [
+        Task::class => [TaskObserver::class],
+        User::class => [UserObserver::class],
+    ];
+
+    /**
      * Register any events for your application.
      */
     public function boot(): void
     {
-        User::observe(UserObserver::class);
+        //
     }
 
     /**
