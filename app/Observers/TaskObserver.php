@@ -19,6 +19,7 @@ class TaskObserver
      */
     public function updated(Task $task): void
     {
+        $task->load('project');
         $task->project->touch();
     }
 
@@ -28,6 +29,7 @@ class TaskObserver
     public function deleted(Task $task): void
     {
         $task->status = 'closed';
+        $task->user_id = null;
         $task->save();
     }
 
