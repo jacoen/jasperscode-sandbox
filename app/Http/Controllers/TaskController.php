@@ -14,6 +14,9 @@ use Illuminate\View\View;
 
 class TaskController extends Controller
 {
+    /**
+     * @see app\Observers\TaskObserver for the model events
+     */  
     public function __construct()
     {
         $this->authorizeResource(Task::class, 'task');
@@ -86,10 +89,13 @@ class TaskController extends Controller
 
     public function destroy(Task $task): RedirectResponse
     {
+        $project = Project::findOrFail($task->project_id);
+        
         $taskTitle = $task->title;
 
         $task->delete();
 
-        return redirect()->route('tasks.index')->with('success', 'The task '.$taskTitle.' has been deleted');
+        return redirect()->route('projects.show', $project)
+            ->with('success', 'The task '.$taskTitle.' has been deleted');
     }
 }
