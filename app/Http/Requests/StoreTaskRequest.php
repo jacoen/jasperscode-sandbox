@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class TaskRequest extends FormRequest
+class StoreTaskRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,8 +28,7 @@ class TaskRequest extends FormRequest
             'description' => ['nullable', 'string'],
         ];
     }
-
-
+ 
     public function prepareForValidation()
     {
         $this->merge([

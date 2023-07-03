@@ -23,6 +23,7 @@
                             <th scope="col">Title</th>
                             <th scope="col">Project</th>
                             <th scope="col">Author</th>
+                            <th scope="col">Status</th>
                             @hasanyrole('Admin|Super Admin')
                                 <th scope="col">Assigned to</th>
                             @endhasanyrole
@@ -35,9 +36,10 @@
                     <tbody>
                         @foreach ($tasks as $task)
                             <tr>
-                                <td><a href="{{ route('tasks.show', $task) }}" class="text-decoration-none text-reset fw-semibold"><span title="{{ $task->title }}"> {{ Str::limit($task->title, 25) }} </span></a></td>
-                                <td><a href="{{ route('projects.show', $task->project) }}" class="text-decoration-none text-reset fw-semibold">{{ Str::limit($task->project->title, 25) }}</a></td>
+                                <x-table-link route="tasks.show"  :param="$task" :content="$task->title" limit="30" />
+                                <x-table-link route="projects.show" :param="$task->project" :content="$task->project->title" limit="30" />
                                 <td>{{ $task->author->name }}</td>
+                                <td>{{ $task->status }}</td>
                                 @hasanyrole('Admin|Super Admin')
                                     <td>{{ $task->user->name ?? 'Unassigned' }}</td>
                                 @endhasanyrole

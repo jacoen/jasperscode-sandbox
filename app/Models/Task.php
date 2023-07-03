@@ -11,21 +11,7 @@ class Task extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['title', 'description', 'author_id', 'user_id', 'project_id'];
-
-    public static function booted()
-    {
-        // TODO: when a task has restored touch project updated at,
-        //  refactor to model observer
-        
-        static::created(function ($task) {
-            $task->project->touch();
-        });
-
-        static::updated(function ($task) {
-            $task->project->touch();
-        });
-    }
+    protected $fillable = ['title', 'description', 'author_id', 'user_id', 'project_id', 'status'];
 
     public function author(): BelongsTo
     {
