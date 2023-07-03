@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TaskRequest;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -22,7 +23,7 @@ class TaskController extends Controller
     {
         $query = Task::query();
 
-        if (! auth()->user()->hasRole('Admin')) {
+        if (! auth()->user()->hasRole(['Admin', 'Super Admin'])) {
             $query = $query->where('user_id', auth()->id());
         }
 
@@ -41,7 +42,7 @@ class TaskController extends Controller
         return view('tasks.create', compact(['employees', 'project']));
     }
 
-    public function store(Project $project, TaskRequest $request): RedirectResponse
+    public function store(Project $project, StoreTaskRequest $request): RedirectResponse
     {
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
 
@@ -67,7 +68,7 @@ class TaskController extends Controller
         return view('tasks.edit', compact(['task', 'project', 'employees']));
     }
 
-    public function update(Task $task, TaskRequest $request): RedirectResponse
+    public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
         $task->update($request->validated());
 
@@ -80,7 +81,7 @@ class TaskController extends Controller
         }
 
         return redirect()->route('tasks.show', $task)
-            ->with('success', 'The task has been updated.');
+            ->with('success', 'The task '.$task->title  .' has been updated.');
     }
 
     public function destroy(Task $task): RedirectResponse

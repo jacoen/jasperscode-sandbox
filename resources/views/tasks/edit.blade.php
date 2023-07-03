@@ -41,6 +41,17 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="status">Status</label>
+                        <select class="form-select @error('status') is-invalid @enderror" name="status" required>
+                            @foreach(config('definitions.statuses') as $name => $value)
+                                <option value="{{ $value }}" {{ old('status', $task->status) == $value ? 'selected' : '' }}>
+                                    {{ $name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <div>

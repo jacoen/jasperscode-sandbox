@@ -51,6 +51,11 @@
                             <div class="col-md-2"><span class="fw-bold">Last updated</div>
                             <div class="col-md-9">{{ lastUpdated($task->updated_at) }}</div>
                         </div>
+
+                        <div class="row gx-1">
+                            <div class="col-md-2"><span class="fw-bold">Status</div>
+                            <div class="col-md-9">{{ $task->status }}</div>
+                        </div>
                     </div>
 
                 </div>
