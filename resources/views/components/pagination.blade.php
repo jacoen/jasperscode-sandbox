@@ -1,3 +1,5 @@
+@props(['records'])
+
 <div class="d-flex justify-content-between align-items-center clearfix">
     <div class="pl-2">
         <span class="fw-semibold">
