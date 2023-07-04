@@ -54,10 +54,18 @@
                     </div>
                 </div>
 
-                <div>
-                    <button type="submit" class="btn btn-success fw-semibold text-white">
-                        Update
-                    </button>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-success fw-semibold text-white">
+                            Update
+                        </button>
+                    </div>
+    
+                    <div class="justify-content-end">
+                        <a href="{{ route('projects.show', $task->project) }}" class="btn btn-outline-info fw-semibold">
+                            Cancel
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>
