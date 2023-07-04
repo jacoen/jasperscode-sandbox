@@ -41,12 +41,31 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="status">Status</label>
+                        <select class="form-select @error('status') is-invalid @enderror" name="status" required>
+                            @foreach(config('definitions.statuses') as $name => $value)
+                                <option value="{{ $value }}" {{ old('status', $task->status) == $value ? 'selected' : '' }}>
+                                    {{ $name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
-                <div>
-                    <button type="submit" class="btn btn-success fw-semibold text-white">
-                        Update
-                    </button>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-success fw-semibold text-white">
+                            Update
+                        </button>
+                    </div>
+    
+                    <div class="justify-content-end">
+                        <a href="{{ route('projects.show', $task->project) }}" class="btn btn-outline-info fw-semibold">
+                            Cancel
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>

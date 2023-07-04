@@ -5,8 +5,11 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateProjectRequest extends FormRequest
+class UpdateTaskRequest extends FormRequest
 {
+    /**
+     * Determine if the user is authorized to make this request.
+     */
     public function authorize(): bool
     {
         return true;
@@ -20,10 +23,10 @@ class UpdateProjectRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'manager_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
+            'project' => ['missing'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'min:3', 'max:255'],
-            'description' => ['nullable', 'string', 'min:3', 'max:255'],
-            'due_date' => ['required', 'date', 'after:today', 'before:2030-12-31'],
+            'description' => ['nullable', 'string'],
             'status' => ['required', 'string', Rule::in(config('definitions.statuses'))],
         ];
     }

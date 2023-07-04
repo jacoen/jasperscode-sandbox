@@ -10,6 +10,9 @@ use App\Notifications\ProjectAssignedNotification;
 
 class ProjectController extends Controller
 {
+    /**
+     * @see app\Observers\ProjectObserver for the model events
+     */
     public function __construct()
     {
         $this->authorizeResource(Project::class, 'project');

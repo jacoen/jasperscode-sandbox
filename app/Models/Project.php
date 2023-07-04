@@ -12,20 +12,11 @@ class Project extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['manager_id', 'title', 'description', 'due_date'];
+    protected $fillable = ['manager_id', 'title', 'description', 'due_date', 'status'];
 
     protected $casts = [
         'due_date' => 'date',
     ];
-
-    public static function booted()
-    {
-        static::deleted(function (Project $project) {
-            $project->tasks()->each( function ($task) {
-                $task->delete();  
-            });
-        });
-    }
 
     public function manager(): BelongsTo
     {

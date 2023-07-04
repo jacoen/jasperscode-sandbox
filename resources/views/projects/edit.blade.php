@@ -29,13 +29,19 @@
 
                 <div class="row gx-3 mb-3">
                     <div class="col-md-6">
-                        <label for="due_date" class="form-label">Due date</label>
-                        <input type="date" id="due_date" name="due_date" class="form-control @error('due_date') is-invalid @enderror" value="{{ old('due_date', $project->due_date->format('Y-m-d')) }}">
+                        <label for="status" class="form-label">Status</label>
+                        <select id="status" name="status" class="form-select @error('status') is-invalid @enderror">
+                            @foreach (config('definitions.statuses') as $name => $value)
+                                <option value="{{ $value }}" {{ old('status', $project->status) == $value ? 'selected' : '' }}>
+                                    {{ $name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="col-md-6">
                         <label for="manager_id" class="form-label">Project manager</label>
-                        <select class="form-select @error('manager_id') is-invalid @enderror" id="manager_id" name="manager_id">
+                        <select id="manager_id" name="manager_id" class="form-select @error('manager_id') is-invalid @enderror">
                             <option value="" selected>Select a project manager</option>
                             @foreach ($managers as $id => $name)
                                 <option value="{{ $id }}" {{ old('manager_id', $project->manager_id) == $id ? 'selected' : '' }}>{{ $name }}</option>
@@ -44,14 +50,20 @@
                     </div>
                 </div>
 
-                <div class="row justify-content-between">
-                    <div class="col-md-1">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="due_date" class="form-label">Due date</label>
+                        <input type="date" id="due_date" name="due_date" class="form-control @error('due_date') is-invalid @enderror" value="{{ old('due_date', $project->due_date->format('Y-m-d')) }}">
+                    </div>    
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
                         <button type="submit" class="btn btn-primary fw-semibold text-white">
                             Update
                         </button>
                     </div>
-                    <div class="col-md-9"></div>
-                    <div class="col-md-1">
+                    <div class="justify-content-end me-2">
                         <a href="{{ route('projects.show', $project) }}" class="btn btn-outline-info fw-semibold">
                             Cancel
                         </a>

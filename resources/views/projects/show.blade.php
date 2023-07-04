@@ -46,6 +46,11 @@
                 </div>
 
                 <div class="row gx-1">
+                    <div class="col-2"><span class="fw-bold">Status</span></div>
+                    <div class="col-9"><span>{{ $project->status }}</span></div>
+                </div>
+
+                <div class="row gx-1">
                     <div class="col-2"><span class="fw-bold">Last updated</span></div>
                     <div class="col-9"><span>{{ lastUpdated($project->updated_at) }}</span></div>
                 </div>
@@ -70,6 +75,7 @@
                                 <th scope="col">Title</th>
                                 <th scope="col">Author</th>
                                 <th scope="col">Assigned to</th>
+                                <th scope="col">Status</th>
                                 <th scope="col">Last updated</th>
                                 <th></th>
                             </tr>
@@ -80,9 +86,10 @@
                                     <td><a href="{{ route('tasks.show', $task) }}" class="text-decoration-none text-reset fw-semibold">{{ $task->title }}</a></td>
                                     <td>{{ $task->author->name }}</td>
                                     <td>{{ $task->user->name ?? 'Unassigned' }}</td>
+                                    <td>{{ $task->status }}</td>
                                     <td> {{ lastUpdated($task->updated_at) }}</td>
                                     @can('update task')
-                                        <td class="d-flex align-items-center">
+                                        <td class="d-flex justify-content-end align-items-center">
                                             <a href="{{ route('tasks.edit', $task) }}" class="btn btn-info fw-semibold text-white">
                                                 Edit
                                             </a>
@@ -100,6 +107,8 @@
                             @endforeach
                         </tbody>
                     </table>
+
+                    <x-pagination :records="$tasks" />
                 @endif
             </div>
         </div>
