@@ -28,13 +28,33 @@
     @endcan
 
     @can('read task')
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('tasks.index') }}">
-                <svg class="nav-icon">
-                </svg>
-                {{ __('Tasks') }}
-            </a>
-        </li>
+        @hasanyrole('Admin|Super Admin')
+            <li class="nav-group" aria-expanded="false">
+                <a class="nav-link nav-group-toggle" href="#">
+                    <svg class="nav-icon"></svg>
+                    Tasks
+                </a>
+                <ul class="nav-group-items">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('tasks.index') }}">
+                            All tasks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('tasks.index')}}">
+                            My tasks
+                        </a>
+                    </li>
+                </ul>
+        @else
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('tasks.index') }}">
+                    <svg class="nav-icon">
+                    </svg>
+                    {{ __('Tasks') }}
+                </a>
+            </li>
+        @endhasanyrole
     @endcan
 
     <li class="nav-group" aria-expanded="false">

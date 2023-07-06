@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AccountActivationController;
+use App\Http\Controllers\Auth\RequestNewTokenController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\Auth\RequestNewTokenController;
-use App\Http\Controllers\Auth\AccountActivationController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,9 +54,9 @@ Route::middleware('auth')->group(function () {
 
         Route::prefix('/tasks')->group(function () {
             Route::get('/', 'index')->name('tasks.index');
-            Route::get('/tasks/{task}', 'show')->name('tasks.show');
-            Route::get('/tasks/{task}/edit', 'edit')->name('tasks.edit');
-            Route::put('/tasks/{task}', 'update')->name('tasks.update');
+            Route::get('/{task}', 'show')->name('tasks.show');
+            Route::get('/{task}/edit', 'edit')->name('tasks.edit');
+            Route::put('/{task}', 'update')->name('tasks.update');
             Route::delete('/{task}', 'destroy')->name('tasks.destroy');
         });
     });

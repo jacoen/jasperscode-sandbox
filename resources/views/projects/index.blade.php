@@ -40,7 +40,7 @@
                     </thead>
 
                     <tbody>
-                        @if ($pinned_project)
+                        @if ($pinned_project && auth()->user()->hasAnyRole('Admin|Super Admin'))
                             <x-pinned-project :record="$pinned_project"/>
                         @endif
 
