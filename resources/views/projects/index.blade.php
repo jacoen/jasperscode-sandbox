@@ -2,6 +2,7 @@
 
 @section('content')
     <x-flash-success :message="session('success')" />
+    <x-errors :errors="$errors" />
 
     <div class="card mb-4">
         <div class="card-header">
@@ -39,6 +40,10 @@
                     </thead>
 
                     <tbody>
+                        @if ($pinned_project)
+                            <x-pinned-project :record="$pinned_project"/>
+                        @endif
+
                         @foreach ($projects as $project)
                             <tr>
                                 <x-table-link route="projects.show" :param="$project" :content="$project->title" :limit="35"/>
