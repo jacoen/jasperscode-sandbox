@@ -26,6 +26,7 @@ class UpdateProjectRequest extends FormRequest
             'due_date' => ['required', 'date', 'after:today', 'before:2030-12-31'],
             'status' => ['required', 'string', Rule::in(config('definitions.statuses'))],
             'is_pinned' => ['boolean'],
+
         ];
     }
 
