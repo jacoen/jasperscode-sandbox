@@ -57,6 +57,11 @@
                     </div>    
                 </div>
 
+                <div class="form-check mb-3">
+                    <input type="checkbox" name="is_pinned" id="is_pinned" class="form-check-input"  value="1" {{ $project->is_pinned == 1 ? 'checked' : ''}}>
+                    <label for="is_pinned" class="form-check-label">Pin project</label>
+                </div>
+
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <button type="submit" class="btn btn-primary fw-semibold text-white">

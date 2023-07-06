@@ -23,12 +23,19 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $projects = Project::with('manager')
+        $pinned_project = Project::where('is_pinned', true)
+            ->with('manager')
+            ->first();
+
+        $projects = Project::query()
+            ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
+                return $query->where('is_pinned', false);
+            })->with('manager')
             ->latest('updated_at')
             ->orderBy('id', 'desc')
-            ->paginate();
+            ->paginate(15);
 
-        return view('projects.index', compact('projects'));
+        return view('projects.index', compact(['pinned_project', 'projects']));
     }
 
     /**
@@ -85,9 +92,19 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project)
     {
+        if (! auth()->user()->can('pin project') && $request->is_pinned) {
+            return back()->withErrors(['error' => 'User is not authorized to pin a project']);
+        }
+
+        if (Project::where('is_pinned', true)->count() > 1) {
+            return back()
+                ->withErrors(['error' => 'There is a pinned project already.
+             If you want to pin this project you will have to unpin the other project.']);
+        }
+
         $project->update($request->validated());
 
-        if ($project->wasChanged('manager_id') && auth()->id() != $project->manager_id) {
+        if (isset($request->manager_id) && $project->wasChanged('manager_id') && auth()->id() != $project->manager_id) {
             User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
         }
 
@@ -100,6 +117,12 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+        if ($project->is_pinned) {
+            return back()
+                ->withErrors(['error' => 'Project could not be deleted because it was pinned.
+                Remove the pin from the project before deleting it.']);
+        }
+
         $project->delete();
 
         return redirect()->route('projects.index')
