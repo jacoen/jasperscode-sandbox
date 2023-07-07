@@ -23,19 +23,16 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $pinned_project = Project::where('is_pinned', true)
-            ->with('manager')
-            ->first();
-
         $projects = Project::query()
+            ->with('manager')
             ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
-                return $query->where('is_pinned', false);
-            })->with('manager')
+                return $query->orderBy('is_pinned', 'desc');
+            })
             ->latest('updated_at')
             ->orderBy('id', 'desc')
             ->paginate(15);
 
-        return view('projects.index', compact(['pinned_project', 'projects']));
+        return view('projects.index', compact(['projects']));
     }
 
     /**
