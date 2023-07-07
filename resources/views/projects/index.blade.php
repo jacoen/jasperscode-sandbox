@@ -40,10 +40,6 @@
                     </thead>
 
                     <tbody>
-                        @if ($pinned_project && auth()->user()->hasAnyRole('Admin|Super Admin'))
-                            <x-pinned-project :record="$pinned_project"/>
-                        @endif
-
                         @foreach ($projects as $project)
                             <tr>
                                 <x-table-link route="projects.show" :param="$project" :content="$project->title" :limit="35"/>
