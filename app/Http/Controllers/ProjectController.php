@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class ProjectController extends Controller
 {
@@ -21,7 +23,7 @@ class ProjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): View
     {
         $projects = Project::query()
             ->with('manager')
@@ -38,7 +40,7 @@ class ProjectController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): View
     {
         $managers = User::role(['Admin', 'Manager'])->pluck('name', 'id');
 
@@ -48,7 +50,7 @@ class ProjectController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreProjectRequest $request)
+    public function store(StoreProjectRequest $request): RedirectResponse
     {
         $project = Project::create($request->validated());
 
@@ -63,7 +65,7 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Project $project)
+    public function show(Project $project): View
     {
         $tasks = $project->tasks()
             ->with('author', 'user')
@@ -77,7 +79,7 @@ class ProjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Project $project)
+    public function edit(Project $project): View
     {
         $managers = User::role(['Admin', 'Manager'])->pluck('name', 'id');
 
@@ -87,7 +89,7 @@ class ProjectController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateProjectRequest $request, Project $project)
+    public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
         if (! auth()->user()->can('pin project') && $request->is_pinned) {
             return back()->withErrors(['error' => 'User is not authorized to pin a project']);
@@ -112,7 +114,7 @@ class ProjectController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Project $project)
+    public function destroy(Project $project): RedirectResponse
     {
         if ($project->is_pinned) {
             return back()
@@ -124,5 +126,15 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.index')
             ->with('success', 'The project has been deleted.');
+    }
+
+    public function restore(Project $project): RedirectResponse
+    {
+        $this->authorize('restore', $project);
+
+        $project->restore();
+
+        return redirect()->route('projects.trashed')
+            ->with('success', 'The project '.$project->title.' has been restored.');
     }
 }

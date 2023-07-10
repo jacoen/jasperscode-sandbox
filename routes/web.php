@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\RequestNewTokenController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TrashedProjectController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::put('profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 
     Route::resource('/projects', ProjectController::class);
+    Route::patch('projects/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('projects.restore');
 
     Route::controller(TaskController::class)->group(function () {
         Route::prefix('/projects/{project}/tasks')->group(function () {
@@ -59,5 +61,9 @@ Route::middleware('auth')->group(function () {
             Route::put('/{task}', 'update')->name('tasks.update');
             Route::delete('/{task}', 'destroy')->name('tasks.destroy');
         });
+    });
+
+    Route::prefix('trashed')->group(function () {
+        Route::get('/projects', TrashedProjectController::class)->middleware('can:restore project')->name('projects.trashed');
     });
 });
