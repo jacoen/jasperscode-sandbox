@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Arr;
 use Illuminate\View\View;
 
 class ProjectController extends Controller
@@ -82,8 +83,9 @@ class ProjectController extends Controller
     public function edit(Project $project): View
     {
         $managers = User::role(['Admin', 'Manager'])->pluck('name', 'id');
+        $statuses = Arr::add(config('definitions.statuses'), 'Restored', 'restored');
 
-        return view('projects.edit', compact(['project', 'managers']));
+        return view('projects.edit', compact(['project', 'managers', 'statuses']));
     }
 
     /**
