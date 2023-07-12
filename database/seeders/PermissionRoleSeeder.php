@@ -32,6 +32,7 @@ class PermissionRoleSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'create task']);
         Permission::firstOrCreate(['name' => 'update task']);
         Permission::firstOrCreate(['name' => 'delete task']);
+        Permission::firstOrCreate(['name' => 'restore task']);
 
         $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
         $admin = Role::firstOrCreate(['name' => 'Admin']);
