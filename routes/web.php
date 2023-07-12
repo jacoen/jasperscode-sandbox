@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TrashedProjectController;
+use App\Http\Controllers\TrashedTaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,10 +61,12 @@ Route::middleware('auth')->group(function () {
             Route::get('/{task}/edit', 'edit')->name('tasks.edit');
             Route::put('/{task}', 'update')->name('tasks.update');
             Route::delete('/{task}', 'destroy')->name('tasks.destroy');
+            Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
         });
     });
 
     Route::prefix('trashed')->group(function () {
         Route::get('/projects', TrashedProjectController::class)->middleware('can:restore project')->name('projects.trashed');
+        Route::get('/tasks', TrashedTaskController::class)->name('tasks.trashed');
     });
 });

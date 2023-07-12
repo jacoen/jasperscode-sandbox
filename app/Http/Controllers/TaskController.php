@@ -118,4 +118,19 @@ class TaskController extends Controller
         return redirect()->route('projects.show', $project)
             ->with('success', 'The task '.$taskTitle.' has been deleted');
     }
+
+    public function restore(Task $task) 
+    {
+        if ($task->project->trashed) {
+            return back()->withErrors(['error' => 'Could not restore task because the project has been deleted.']);
+        }
+
+        if ($task->project->status == 'closed' || $task->project->status == 'completed') {
+            return back()->withErrors(['error' => 'Could not restore task becaues the project is either closed or completed.']);
+        }
+
+        $task->restore();
+
+        return redirect()->route('tasks.trashed');
+    }
 }
