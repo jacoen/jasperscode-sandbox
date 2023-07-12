@@ -28,4 +28,9 @@ class Project extends Model
     {
         return $this->hasMany(Task::class);
     }
+
+    public function getIsOpenOrPendingAttribute():bool
+    {
+        return $this->status === 'open' || $this->status === 'pending';
+    }
 }
