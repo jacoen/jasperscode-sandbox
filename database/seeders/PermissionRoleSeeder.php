@@ -44,7 +44,7 @@ class PermissionRoleSeeder extends Seeder
             'read user', 'create user', 'edit user', 'delete user',
             'read project', 'create project', 'update project', 'delete project', 'pin project',
             'restore project',
-            'read task', 'create task', 'update task', 'delete task',
+            'read task', 'create task', 'update task', 'delete task', 'restore task',
         ]);
 
         $manager->givePermissionTo([

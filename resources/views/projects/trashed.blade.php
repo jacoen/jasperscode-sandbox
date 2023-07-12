@@ -34,7 +34,7 @@
                                         <form action="{{ route('projects.restore', $project) }}" method="POST">
                                             @csrf
                                             @method('PATCH')
-                                            <input type="submit" class="btn btn-sm btn-info text-white fw-semibold text-capitalize" value="Restore">
+                                            <button type="submit" class="btn btn-info text-white fw-semibold">Restore</button>
                                         </form>
                                     @endcan
                                 </td>

@@ -121,7 +121,7 @@ class TaskController extends Controller
 
     public function restore(Task $task) 
     {
-        if ($task->project->trashed) {
+        if ($task->project->trashed()) {
             return back()->withErrors(['error' => 'Could not restore task because the project has been deleted.']);
         }
 
@@ -131,6 +131,7 @@ class TaskController extends Controller
 
         $task->restore();
 
-        return redirect()->route('tasks.trashed');
+        return redirect()->route('tasks.trashed')
+            ->with('success', 'The task '.$task->title. 'has been restored');
     }
 }
