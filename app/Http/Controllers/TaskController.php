@@ -38,8 +38,13 @@ class TaskController extends Controller
         return view('tasks.index', compact('tasks'));
     }
 
-    public function create(Project $project): View
+    public function create(Project $project): View|RedirectResponse
     {
+        if(! $project->is_open_or_pending) {
+            return redirect()->route('projects.show', $project)
+                ->withErrors(['error' => 'Cannot create a task when the project is not open or pending']);
+        }
+
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
 
         return view('tasks.create', compact(['employees', 'project']));
@@ -47,6 +52,11 @@ class TaskController extends Controller
 
     public function store(Project $project, StoreTaskRequest $request): RedirectResponse
     {
+        if(! $project->is_open_or_pending) {
+            return redirect()->route('projects.show', $project)
+                ->withErrors(['error' => 'Cannot create a task when the project is not open or pending']);
+        }
+
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
 
         $task = $project->tasks()->create($data);
@@ -64,8 +74,13 @@ class TaskController extends Controller
         return view('tasks.show', compact('task'));
     }
 
-    public function edit(Project $project, Task $task): View
+    public function edit(Project $project, Task $task): View|RedirectResponse
     {
+        if(! $task->project->is_open_or_pending) {
+            return redirect()->route('projects.show', $task->project)
+                ->withErrors(['error' => 'Cannot edit a task when the project is not open or pending']);
+        }
+
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
 
         return view('tasks.edit', compact(['task', 'project', 'employees']));
@@ -73,6 +88,11 @@ class TaskController extends Controller
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
+        if(! $task->project->is_open_or_pending) {
+            return redirect()->route('projects.show', $task->project)
+                ->withErrors(['error' => 'Cannot edit a task when the project is not open or pending']);
+        }
+
         $task->update($request->validated());
 
         if ($task->wasChanged('title')) {
