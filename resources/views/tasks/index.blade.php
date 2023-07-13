@@ -13,7 +13,6 @@
         </div>
 
         <div class="card-body">
-
             @if(! $tasks->count())
                 <p class="mb-2">No tasks yet.</p>
             @else
@@ -36,8 +35,8 @@
                     <tbody>
                         @foreach ($tasks as $task)
                             <tr>
-                                <x-table-link route="tasks.show"  :param="$task" :content="$task->title" limit="30" />
-                                <x-table-link route="projects.show" :param="$task->project" :content="$task->project->title" limit="30" />
+                                <x-table-link route="tasks.show"  :param="$task" :content="$task->title" limit="25" />
+                                <x-table-link route="projects.show" :param="$task->project" :content="$task->project->title" limit="25" />
                                 <td>{{ $task->author->name }}</td>
                                 <td>{{ $task->status }}</td>
                                 @hasanyrole('Admin|Super Admin')

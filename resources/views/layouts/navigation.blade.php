@@ -17,12 +17,23 @@
         </li>
     @endcan
 
+
     @can('read project')
         <li class="nav-item">
             <a class="nav-link" href="{{ route('projects.index') }}">
                 <svg class="nav-icon">
                 </svg>
                 {{ __('Projects') }}
+            </a>
+        </li>
+    @endcan
+
+    @can('restore project')
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('projects.trashed') }}">
+                <svg class="nav-icon">
+                </svg>
+                {{ __('trashed projects') }}
             </a>
         </li>
     @endcan
@@ -55,6 +66,16 @@
                 </a>
             </li>
         @endhasanyrole
+    @endcan
+
+    @can('restore task')
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('tasks.trashed') }}">
+                <svg class="nav-icon">
+                </svg>
+                {{ __('Trashed tasks') }}
+            </a>
+        </li>
     @endcan
 
     <li class="nav-group" aria-expanded="false">

@@ -31,7 +31,7 @@
                     <div class="col-md-6">
                         <label for="status" class="form-label">Status</label>
                         <select id="status" name="status" class="form-select @error('status') is-invalid @enderror">
-                            @foreach (config('definitions.statuses') as $name => $value)
+                            @foreach ($statuses as $name => $value)
                                 <option value="{{ $value }}" {{ old('status', $project->status) == $value ? 'selected' : '' }}>
                                     {{ $name }}
                                 </option>

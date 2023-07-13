@@ -52,6 +52,6 @@ class ProjectPolicy
      */
     public function restore(User $user, Project $project)
     {
-        // Will implement this feature soon
+        return $user->can('restore project');
     }
 }

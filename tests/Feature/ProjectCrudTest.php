@@ -179,6 +179,8 @@ class ProjectCrudTest extends TestCase
             'title' => 'A simple failed updated project',
             'description' => 'This description has not been updated',
             'due_date' => $project->due_date,
+            'status' => 'pending'
+            
         ];
 
         $this->actingAs($this->manager)->get(route('projects.edit', $project))
@@ -193,6 +195,7 @@ class ProjectCrudTest extends TestCase
             'id' => $project->id,
             'title' => $data['title'],
             'description' => $data['description'],
+            'status' => $data['status'],
         ]);
     }
 
