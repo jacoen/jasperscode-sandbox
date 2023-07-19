@@ -134,6 +134,6 @@ class TaskController extends Controller
         $task->restore();
 
         return redirect()->route('tasks.trashed')
-            ->with('success', 'The task '.$task->title. 'has been restored');
+            ->with('success', 'The task '.$task->title. 'has been restored.');
     }
 }
