@@ -171,26 +171,23 @@ class ProjectCrudTest extends TestCase
         ]);
     }
 
-    public function test_the_status_field_is_required_when_editing_a_project()
+    public function test_the_status_and_title_fields_are_required_when_editing_a_project()
     {
         $project = Project::factory()->create(['manager_id' => $this->manager->id]);
 
         $data = [
-            'title' => $project->title,
+            'title' => '',
             'due_date' => $project->due_date,
             'status' => '',
         ];
 
         $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
             ->assertSessionHasErrors([
+                'title' => 'The title field is required.',
                 'status' => 'The status field is required.',
             ]);
 
-        $this->assertDatabaseMissing('projects', [
-            'id' => $project->id,
-            'title' => $project->title,
-            'status' => '',
-        ]);
+        $this->assertDatabaseMissing('projects', array_merge($data, ['id' => $project->id]));
     }
 
     public function test_the_status_field_must_contain_a_valid_value_when_editing_a_project()
@@ -304,7 +301,7 @@ class ProjectCrudTest extends TestCase
 
         $this->actingAs($this->admin)->get(route('projects.trashed'))
             ->assertOk()
-            ->assertSeeText($deletedProject->title)
+            ->assertSeeText(Str::limit($deletedProject->title, 35))
             ->assertDontSeeText($project->title);
     }
 
