@@ -24,6 +24,19 @@ class ProjectFactory extends Factory
             'title' => fake()->sentence(4),
             'description' => fake()->text(),
             'due_date' => now()->addMonths(4),
+            'status' => 'open'
         ];
+    }
+
+    public function trashed(): Factory
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'status' => 'closed',
+                'created_at' => now()->subMinutes(5),
+                'updated_at' => now()->subMinutes(5),
+                'deleted_at' => now(),
+            ];
+        });
     }
 }

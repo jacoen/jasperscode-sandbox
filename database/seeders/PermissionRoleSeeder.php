@@ -49,7 +49,7 @@ class PermissionRoleSeeder extends Seeder
 
         $manager->givePermissionTo([
             'read project', 'create project', 'update project', 'delete project',
-            'read task', 'create task', 'update task', 'delete task',
+            'read task', 'create task', 'update task', 'delete task', 'restore task',
         ]);
 
         $employee->givePermissionTo([
