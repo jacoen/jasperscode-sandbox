@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TrashedProjectController;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome');
 
 Auth::routes(['register' => false]);
 
@@ -40,6 +41,10 @@ Route::controller(RequestNewTokenController::class)->prefix('/request-token')->m
 });
 
 Route::middleware('auth')->group(function () {
+    Route::controller(NewsletterController::class)->prefix('/newsletter')->group(function () {
+        Route::get('/', 'create')->name('newsletter.create');
+        Route::post('/', 'store')->name('newsletter.store');
+    });
 
     Route::resource('/users', UserController::class)->except('show');
 
@@ -70,3 +75,5 @@ Route::middleware('auth')->group(function () {
         Route::get('/tasks', TrashedTaskController::class)->name('tasks.trashed');
     });
 });
+
+
