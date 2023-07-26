@@ -26,11 +26,13 @@ class PermissionRoleSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'update project']);
         Permission::firstOrCreate(['name' => 'delete project']);
         Permission::firstOrCreate(['name' => 'pin project']);
+        Permission::firstOrCreate(['name' => 'restore project']);
 
         Permission::firstOrCreate(['name' => 'read task']);
         Permission::firstOrCreate(['name' => 'create task']);
         Permission::firstOrCreate(['name' => 'update task']);
         Permission::firstOrCreate(['name' => 'delete task']);
+        Permission::firstOrCreate(['name' => 'restore task']);
 
         $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
         $admin = Role::firstOrCreate(['name' => 'Admin']);
@@ -41,12 +43,13 @@ class PermissionRoleSeeder extends Seeder
         $admin->givePermissionTo([
             'read user', 'create user', 'edit user', 'delete user',
             'read project', 'create project', 'update project', 'delete project', 'pin project',
-            'read task', 'create task', 'update task', 'delete task',
+            'restore project',
+            'read task', 'create task', 'update task', 'delete task', 'restore task',
         ]);
 
         $manager->givePermissionTo([
             'read project', 'create project', 'update project', 'delete project',
-            'read task', 'create task', 'update task', 'delete task',
+            'read task', 'create task', 'update task', 'delete task', 'restore task',
         ]);
 
         $employee->givePermissionTo([

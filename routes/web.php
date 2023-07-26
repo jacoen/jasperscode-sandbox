@@ -3,8 +3,11 @@
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TrashedProjectController;
+use App\Http\Controllers\TrashedTaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome');
 
 Auth::routes(['register' => false]);
 
@@ -38,6 +41,10 @@ Route::controller(RequestNewTokenController::class)->prefix('/request-token')->m
 });
 
 Route::middleware('auth')->group(function () {
+    Route::controller(NewsletterController::class)->prefix('/newsletter')->group(function () {
+        Route::get('/', 'create')->name('newsletter.create');
+        Route::post('/', 'store')->name('newsletter.store');
+    });
 
     Route::resource('/users', UserController::class)->except('show');
 
@@ -45,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::put('profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 
     Route::resource('/projects', ProjectController::class);
+    Route::patch('projects/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('projects.restore');
 
     Route::controller(TaskController::class)->group(function () {
         Route::prefix('/projects/{project}/tasks')->group(function () {
@@ -58,6 +66,14 @@ Route::middleware('auth')->group(function () {
             Route::get('/{task}/edit', 'edit')->name('tasks.edit');
             Route::put('/{task}', 'update')->name('tasks.update');
             Route::delete('/{task}', 'destroy')->name('tasks.destroy');
+            Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
         });
     });
+
+    Route::prefix('trashed')->group(function () {
+        Route::get('/projects', TrashedProjectController::class)->middleware('can:restore project')->name('projects.trashed');
+        Route::get('/tasks', TrashedTaskController::class)->name('tasks.trashed');
+    });
 });
+
+

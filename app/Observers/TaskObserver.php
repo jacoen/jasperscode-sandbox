@@ -20,7 +20,10 @@ class TaskObserver
     public function updated(Task $task): void
     {
         $task->load('project');
-        $task->project->touch();
+
+        if (! $task->project->trashed()) {
+            $task->project->touch();
+        }
     }
 
     /**
@@ -38,7 +41,8 @@ class TaskObserver
      */
     public function restored(Task $task): void
     {
-        //
+        $task->status = 'restored';
+        $task->save();
     }
 
     /**

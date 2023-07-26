@@ -171,6 +171,47 @@ class ProjectCrudTest extends TestCase
         ]);
     }
 
+    public function test_the_status_and_title_fields_are_required_when_editing_a_project()
+    {
+        $project = Project::factory()->create(['manager_id' => $this->manager->id]);
+
+        $data = [
+            'title' => '',
+            'due_date' => $project->due_date,
+            'status' => '',
+        ];
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
+            ->assertSessionHasErrors([
+                'title' => 'The title field is required.',
+                'status' => 'The status field is required.',
+            ]);
+
+        $this->assertDatabaseMissing('projects', array_merge($data, ['id' => $project->id]));
+    }
+
+    public function test_the_status_field_must_contain_a_valid_value_when_editing_a_project()
+    {
+        $project = Project::factory()->create(['manager_id' => $this->manager->id]);
+
+        $data = [
+            'title' => $project->title,
+            'due_date' => $project->due_date,
+            'status' => 'restored',
+        ];
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
+            ->assertSessionHasErrors([
+                'status' => 'The selected status is invalid.',
+            ]);
+
+        $this->assertDatabaseMissing('projects', [
+                'id' => $project->id,
+                'title' => $project->title,
+                'status' => $data['status'],
+            ]);
+    }
+
     public function test_a_user_with_the_edit_project_permission_can_edit_a_project()
     {
         $project = Project::factory()->create();
@@ -179,6 +220,8 @@ class ProjectCrudTest extends TestCase
             'title' => 'A simple failed updated project',
             'description' => 'This description has not been updated',
             'due_date' => $project->due_date,
+            'status' => 'pending'
+            
         ];
 
         $this->actingAs($this->manager)->get(route('projects.edit', $project))
@@ -193,6 +236,7 @@ class ProjectCrudTest extends TestCase
             'id' => $project->id,
             'title' => $data['title'],
             'description' => $data['description'],
+            'status' => $data['status'],
         ]);
     }
 
@@ -216,5 +260,79 @@ class ProjectCrudTest extends TestCase
         $this->actingAs($this->manager)->delete(route('projects.destroy', $project))
             ->assertRedirect(route('projects.index'))
             ->assertSessionHas('success', 'The project has been deleted.');
+
+        $this->assertSoftDeleted($project);
+    }
+
+    public function test_when_a_project_has_been_deleted_the_status_has_been_changed_to_closed()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->manager)->delete(route('projects.destroy', $project))
+            ->assertRedirect(route('projects.index'))
+            ->assertSessionHas('success', 'The project has been deleted.');
+
+        $this->assertEquals($project->fresh()->status, 'closed');
+    }
+
+    public function test_when_a_project_has_been_deleted_the_manager_is_unassigned()
+    {
+        $project = Project::factory()->create(['manager_id' => $this->manager]);
+
+        $this->actingAs($this->manager)->delete(route('projects.destroy', $project))
+            ->assertRedirect(route('projects.index'))
+            ->assertSessionHas('success', 'The project has been deleted.');
+
+        $this->assertEmpty($project->fresh()->manager_id);
+    }
+
+    public function test_only_a_user_with_the_restore_project_permission_can_visit_the_trashed_project_overview()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->manager)->get(route('projects.trashed'))
+            ->assertForbidden();
+
+        $this->actingAs($this->admin)->get(route('projects.trashed'))
+            ->assertOk()
+            ->assertSeeText('No trashed projects yet.');
+
+        $deletedProject = Project::factory()->trashed()->create();
+
+        $this->actingAs($this->admin)->get(route('projects.trashed'))
+            ->assertOk()
+            ->assertSeeText(Str::limit($deletedProject->title, 35))
+            ->assertDontSeeText($project->title);
+    }
+
+    public function test_a_user_without_the_restore_project_permission_cannot_restore_a_deleted_project()
+    {
+        $project = project::factory()->trashed()->create();
+
+        $this->actingAs($this->manager)->patch(route('projects.restore', $project))
+            ->assertForbidden();
+
+        $this->assertSoftDeleted($project);
+    }
+
+    public function test_a_user_with_the_restore_project_permission_can_restore_a_deleted_project()
+    {
+        $project = project::factory()->trashed()->create();
+
+        $this->actingAs($this->admin)->patch(route('projects.restore', $project))
+            ->assertRedirect(route('projects.trashed'))
+            ->assertSessionHas('success', 'The project '.$project->title.' has been restored.');
+
+        $this->assertNotSoftDeleted($project);
+    }
+
+    public function test_when_a_project_has_been_restored_the_status_has_been_changed_to_restored()
+    {
+        $project = project::factory()->trashed()->create();
+
+        $this->actingAs($this->admin)->patch(route('projects.restore', $project))
+            ->assertRedirect(route('projects.trashed'));
+
+        $this->assertEquals($project->fresh()->status, 'restored');
     }
 }

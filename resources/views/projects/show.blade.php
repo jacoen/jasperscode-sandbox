@@ -2,6 +2,7 @@
 
 @section('content')
     <x-flash-success :message="session('success')" />
+    <x-errors :errors="$errors" />
 
     @if ($project->is_pinned)
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -67,11 +68,13 @@
                     <div>
                         <h4>Tasks</h4>
                     </div>
-                    <div class="justify-content-end me-2">
-                        <a href="{{ route('tasks.create', $project) }}" class="btn btn-block btn-success fw-semibold text-white">
-                            New task
-                        </a>
-                    </div>
+                    {{-- @if (auth()->user()->can('create task') && $project->is_open_or_pending) --}}
+                        <div class="justify-content-end me-2">
+                            <a href="{{ route('tasks.create', $project) }}" class="btn btn-block btn-success fw-semibold text-white">
+                                New task
+                            </a>
+                        </div>
+                    {{-- @endif --}}
                 </div>
                 @if (! $project->tasks->count())
                     <p>No tasks in this project yet.</p>
@@ -95,7 +98,7 @@
                                     <td>{{ $task->user->name ?? 'Unassigned' }}</td>
                                     <td>{{ $task->status }}</td>
                                     <td> {{ lastUpdated($task->updated_at) }}</td>
-                                    @can('update task')
+                                    @if ($project->is_open_or_pending && auth()->user()->can('update task') || auth()->user()->can('delete task'))
                                         <td class="d-flex justify-content-end align-items-center">
                                             <a href="{{ route('tasks.edit', $task) }}" class="btn btn-info fw-semibold text-white">
                                                 Edit

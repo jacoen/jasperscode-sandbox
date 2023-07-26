@@ -26,4 +26,16 @@ class TaskFactory extends Factory
             'description' => fake()->sentences(6, true),
         ];
     }
+
+    public function trashed(): Factory
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'status' => 'closed',
+                'created_at' => now()->subMinutes(5),
+                'updated_at' => now()->subMinutes(5),
+                'deleted_at' => now(),
+            ];
+        });
+    }
 }

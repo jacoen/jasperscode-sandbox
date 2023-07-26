@@ -38,8 +38,13 @@ class TaskController extends Controller
         return view('tasks.index', compact('tasks'));
     }
 
-    public function create(Project $project): View
+    public function create(Project $project): View|RedirectResponse
     {
+        if(! $project->is_open_or_pending) {
+            return redirect()->route('projects.show', $project)
+                ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+        }
+
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
 
         return view('tasks.create', compact(['employees', 'project']));
@@ -47,6 +52,11 @@ class TaskController extends Controller
 
     public function store(Project $project, StoreTaskRequest $request): RedirectResponse
     {
+        if(! $project->is_open_or_pending) {
+            return redirect()->route('projects.show', $project)
+                ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+        }
+
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
 
         $task = $project->tasks()->create($data);
@@ -64,15 +74,23 @@ class TaskController extends Controller
         return view('tasks.show', compact('task'));
     }
 
-    public function edit(Project $project, Task $task): View
+    public function edit(Task $task): View|RedirectResponse
     {
-        $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
+        $task->load('project');
 
-        return view('tasks.edit', compact(['task', 'project', 'employees']));
+        $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
+        $statuses = Arr::add(config('definitions.statuses'), 'Restored', 'restored');
+
+        return view('tasks.edit', compact(['task','employees', 'statuses']));
     }
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
+        if ($task->status == 'restored') {
+            return redirect()->route('projects.show', $task->project)
+                ->withErrors(['error' => 'You cannot update this task while the status is \'restored\'.']);
+        }
+
         $task->update($request->validated());
 
         if ($task->wasChanged('title')) {
@@ -96,6 +114,26 @@ class TaskController extends Controller
         $task->delete();
 
         return redirect()->route('projects.show', $project)
-            ->with('success', 'The task '.$taskTitle.' has been deleted');
+            ->with('success', 'The task '.$taskTitle.' has been deleted.');
+    }
+
+    public function restore(Task $task) 
+    {
+        $this->authorize('restore', $task);
+
+        if ($task->project->trashed()) {
+            return redirect()->route('tasks.trashed')
+                ->withErrors(['error' => 'Could not restore task because the project has been deleted.']);
+        }
+
+        if ($task->project->status == 'closed' || $task->project->status == 'completed') {
+            return redirect()
+                ->route('tasks.trashed')->withErrors(['error' => 'Could not restore task becaues the project is either closed or completed.']);
+        }
+
+        $task->restore();
+
+        return redirect()->route('tasks.trashed')
+            ->with('success', 'The task '.$task->title. 'has been restored.');
     }
 }
