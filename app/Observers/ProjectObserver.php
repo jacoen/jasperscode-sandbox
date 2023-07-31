@@ -6,6 +6,12 @@ use App\Models\Project;
 
 class ProjectObserver
 {
+    public function created(Project $project): void
+    {
+        $project->status = 'open';
+        $project->save();
+    }
+
     /**
      * Handle the Project "deleted" event.
      */

@@ -9,6 +9,7 @@ use App\Http\Controllers\TrashedProjectController;
 use App\Http\Controllers\TrashedTaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,8 +44,8 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('/users', UserController::class)->except('show');
 
-    Route::get('profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
-    Route::put('profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::resource('/projects', ProjectController::class);
     Route::patch('projects/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('projects.restore');
