@@ -22,14 +22,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::controller(ProjectController::class)->prefix('/projects')->group(function () {
-        Route::get('/', 'index')->name('projects.index');
-        Route::post('/', 'store')->name('projects.store');
-        Route::get('/{project}', 'show')->name('projects.show');
-        Route::put('/{project}', 'update')->name('projects.update');
-    });
+    Route::resource('/projects', ProjectController::class);
     Route::get('/trashed/projects',[ProjectController::class, 'trashed'])->name('projects.trashed');
     
     Route::get('/projects/{project}/tasks', ProjectTaskController::class)
         ->middleware('can: read task');
+
+    Route::controller(TaskController::class)->group(function () {
+        Route::post('/projects/{project}/tasks', 'store');
+
+        Route::prefix('/tasks')->group(function () {
+            Route::get('/', 'index')->name('tasks.index');
+            Route::get('/{task}', 'show')->name('tasks.show');
+        });
+    });
 });
