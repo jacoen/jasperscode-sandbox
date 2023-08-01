@@ -24,13 +24,13 @@ class TaskController extends Controller
 
     public function index()
     {
-        $query = Task::query();
-
-        if (! auth()->user()->hasRole(['Admin', 'Super Admin'])) {
-            $query = $query->where('user_id', auth()->id());
-        }
-
-        $tasks = $query->with('project', 'author', 'user')
+        $tasks = Task::with('project', 'author', 'user')
+            ->when(! auth()->user()->hasRole(['Super Admin', 'Admin']), function ($query) {
+                $query->where('user_id', auth()->id());
+            })
+            ->when(request()->status, function ($query) {
+                $query->where('status', request()->status);
+            })
             ->latest('updated_at')
             ->orderBy('id', 'desc')
             ->paginate();

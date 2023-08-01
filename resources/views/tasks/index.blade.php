@@ -16,6 +16,10 @@
             @if(! $tasks->count())
                 <p class="mb-2">No tasks yet.</p>
             @else
+                <div class="mb-1">
+                    <x-status-dropdown route="tasks.index" />
+                </div>
+
                 <table class="table">
                     <thead>
                         <tr>
