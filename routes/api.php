@@ -23,8 +23,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::resource('/projects', ProjectController::class);
-    Route::get('/trashed/projects',[ProjectController::class, 'trashed'])->name('projects.trashed');
-    
+    Route::get('/trashed/projects', [ProjectController::class, 'trashed'])->name('projects.trashed');
+
     Route::get('/projects/{project}/tasks', ProjectTaskController::class)
         ->middleware('can: read task');
 
