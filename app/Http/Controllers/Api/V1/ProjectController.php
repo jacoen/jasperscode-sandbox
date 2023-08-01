@@ -7,7 +7,7 @@ use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
-use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ProjectController extends Controller
 {
@@ -58,6 +58,13 @@ class ProjectController extends Controller
         $project->update($request->validated());
 
         return new ProjectResource($project);
+    }
+
+    public function destroy(Project $project)
+    {
+        $project->delete();
+
+        return response('', Response::HTTP_NO_CONTENT);
     }
 
     public function trashed()
