@@ -10,22 +10,19 @@
         </div>
 
         <div class="card-body">
-            @can('create project')
-                <div class="row mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        @if($projects->count())
-                            <div class="justify-content-start">
-                                <x-status-dropdown route="projects.index" />
-                            </div>
-                        @endif
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                @can('create project')
+                    <div class="justify-content-start">
+                        <x-status-dropdown route="projects.index" />
+                    </div>
+
                     <div class="justify-content-end">
                         <a href="{{ route('projects.create') }}" class="btn btn-block btn-success fw-semibold text-white">
                             Create project
                         </a>
                     </div>
-                    </div>
-                </div>
-            @endcan
+                @endcan
+            </div>
 
             @if(! $projects->count())
                 <p class="ms-2">No projects yet.</p>
