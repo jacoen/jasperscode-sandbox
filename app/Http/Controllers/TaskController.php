@@ -22,12 +22,9 @@ class TaskController extends Controller
         $this->authorizeResource(Task::class, 'task');
     }
 
-    public function index()
+    public function index(): View
     {
         $tasks = Task::with('project', 'author', 'user')
-            ->when(! auth()->user()->hasRole(['Super Admin', 'Admin']), function ($query) {
-                $query->where('user_id', auth()->id());
-            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
@@ -135,5 +132,21 @@ class TaskController extends Controller
 
         return redirect()->route('tasks.trashed')
             ->with('success', 'The task '.$task->title. 'has been restored.');
+    }
+
+    public function userTasks()
+    {
+        $this->authorize('read task', Task::class);
+
+        $tasks = Task::with('project', 'author', 'user')
+            ->when(request()->status, function ($query) {
+                $query->where('status', request()->status);
+            })
+            ->where('user_id', auth()->id())
+            ->latest('updated_at')
+            ->orderByDesc('id')
+            ->paginate();
+
+        return view('tasks.index', compact('tasks'));
     }
 }
