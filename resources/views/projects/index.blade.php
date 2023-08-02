@@ -12,12 +12,17 @@
         <div class="card-body">
             @can('create project')
                 <div class="row mb-3">
-                    <div class="col-md-2">
-                        <div class="d-flex justify-content-start">
-                            <a href="{{ route('projects.create') }}" class="btn btn-block btn-success fw-semibold text-white">
-                                Create project
-                            </a>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        @if($projects->count())
+                            <div class="justify-content-start">
+                                <x-status-dropdown route="projects.index" />
+                            </div>
+                        @endif
+                    <div class="justify-content-end">
+                        <a href="{{ route('projects.create') }}" class="btn btn-block btn-success fw-semibold text-white">
+                            Create project
+                        </a>
+                    </div>
                     </div>
                 </div>
             @endcan
