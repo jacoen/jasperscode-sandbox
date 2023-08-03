@@ -5,11 +5,11 @@
 
     <div class="card mb-4">
         <div class="card-header fw-bold">
-            @hasanyrole('Admin|Super Admin')
+            @if (auth()->user()->hasAnyRole('Super Admin|Admin') && \Route::currentRouteNamed('tasks.index'))
                 Tasks
             @else
                 {{ auth()->user()->name.'\'s tasks'}}
-            @endhasanyrole
+            @endif
         </div>
 
         <div class="card-body">

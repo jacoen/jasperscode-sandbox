@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\TaskAssignedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\View;
 
 class TaskController extends Controller
@@ -24,6 +25,7 @@ class TaskController extends Controller
 
     public function index(): View
     {
+        $url = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
@@ -32,7 +34,7 @@ class TaskController extends Controller
             ->orderBy('id', 'desc')
             ->paginate();
 
-        return view('tasks.index', compact('tasks'));
+        return view('tasks.index', compact('tasks', 'url'));
     }
 
     public function create(Project $project): View|RedirectResponse
@@ -138,6 +140,7 @@ class TaskController extends Controller
     {
         $this->authorize('read task', Task::class);
 
+        $url = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
@@ -147,6 +150,6 @@ class TaskController extends Controller
             ->orderByDesc('id')
             ->paginate();
 
-        return view('tasks.index', compact('tasks'));
+        return view('tasks.index', compact('tasks', 'url'));
     }
 }

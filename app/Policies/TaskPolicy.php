@@ -12,7 +12,7 @@ class TaskPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('read task');
+        return $user->can('read task') && $user->hasRole(['Super Admin|Admin']);
     }
 
     /**

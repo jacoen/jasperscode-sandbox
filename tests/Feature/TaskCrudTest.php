@@ -439,4 +439,56 @@ class TaskCrudTest extends TestCase
 
         $this->assertNotSoftDeleted($task);
     }
+
+    public function test_an_employee_can_filter_all_assinged_tasks_on_the_status()
+    {
+        $openTask = Task::factory()->for($this->project)->create(['status' => 'open', 'user_id' => $this->employee->id]);
+        $pendingTask = Task::factory()->for($this->project)->create(['status' => 'pending', 'user_id' => $this->employee->id]);
+        $closedTask = Task::factory()->for($this->project)->create(['status' => 'closed', 'user_id' => $this->employee->id]);
+        $completedTask = Task::factory()->for($this->project)->create(['status' => 'completed', 'user_id' => $this->employee->id]);
+
+        $this->actingAs($this->employee)->get(route('tasks.user'))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($openTask->title, 25),
+                Str::limit($pendingTask->title, 25),
+                Str::limit($closedTask->title, 25),
+                Str::limit($completedTask->title, 25),
+            ]);
+
+        $this->actingAs($this->employee)->get(route('tasks.user', ['status' => 'pending']))
+            ->assertOk()
+            ->assertSeeText(Str::limit($pendingTask->title, 25))
+            ->assertDontSeeText([
+                $openTask,
+                $closedTask,
+                $completedTask
+            ]);
+    }
+
+    public function test_an_admin_can_filter_all_tasks_based_on_the_status()
+    {
+        $openTask = Task::factory()->for($this->project)->create(['status' => 'open', 'user_id' => $this->employee->id]);
+        $pendingTask = Task::factory()->for($this->project)->create(['status' => 'pending', 'user_id' => $this->employee->id]);
+        $closedTask = Task::factory()->for($this->project)->create(['status' => 'closed', 'user_id' => $this->employee->id]);
+        $completedTask = Task::factory()->for($this->project)->create(['status' => 'completed', 'user_id' => $this->employee->id]);
+
+        $this->actingAs($this->admin)->get(route('tasks.index'))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($openTask->title, 25),
+                Str::limit($pendingTask->title, 25),
+                Str::limit($closedTask->title, 25),
+                Str::limit($completedTask->title, 25),
+            ]);
+
+        $this->actingAs($this->admin)->get(route('tasks.index', ['status' => 'pending']))
+            ->assertOk()
+            ->assertSeeText(Str::limit($pendingTask->title, 25))
+            ->assertDontSeeText([
+                $openTask,
+                $closedTask,
+                $completedTask
+            ]);
+    }
 }

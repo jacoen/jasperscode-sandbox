@@ -71,6 +71,9 @@ class ProjectController extends Controller
     public function show(Project $project): View
     {
         $tasks = $project->tasks()
+            ->when(request()->status, function ($query) {
+                $query->where('status', request()->status);
+            })
             ->with('author', 'user')
             ->latest('updated_at')
             ->orderBy('id', 'desc')

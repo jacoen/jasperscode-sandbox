@@ -335,4 +335,30 @@ class ProjectCrudTest extends TestCase
 
         $this->assertEquals($project->fresh()->status, 'restored');
     }
+
+    public function test_a_user_can_filter_projects_on_their_status()
+    {
+        $openProject = Project::factory()->create(['status' => 'open']);
+        $pendingProject = Project::factory()->create(['status' => 'pending']);
+        $closedProject = Project::factory()->create(['status' => 'closed']);
+        $completedProject = Project::factory()->create(['status' => 'completed']);
+
+        $this->actingAs($this->manager)->get(route('projects.index'))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($openProject->title, 35) , 
+                Str::limit($pendingProject->title, 35),
+                Str::limit($closedProject->title, 35),
+                Str::limit($completedProject->title, 35)
+            ]);
+
+        $this->actingAs($this->manager)->get(route('projects.index', ['status' => 'pending']))
+            ->assertOk()
+            ->assertSeeText(Str::limit($pendingProject->title, 35))
+            ->assertDontSeeText([
+                Str::limit($openProject->title, 35),
+                Str::limit($closedProject->title, 35),
+                Str::limit($completedProject->title, 35),
+            ]);
+    }
 }
