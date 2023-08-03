@@ -28,7 +28,7 @@ class StoreTaskRequest extends FormRequest
             'description' => ['nullable', 'string'],
         ];
     }
- 
+
     public function prepareForValidation()
     {
         $this->merge([

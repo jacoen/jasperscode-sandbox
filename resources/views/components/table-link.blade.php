@@ -2,7 +2,7 @@
 
 <td>
     <a href="{{ route($route, $param) }}" class="text-decoration-none text-reset fw-semibold">
-        <span title="{{ $content }}" @class(['fw-bold' => $param->is_pinned && auth()->user()->hasRole('Admin|Super Admin')])>
+        <span title="{{ $content }}" @class(['fw-bold' => $param->is_pinned && auth()->user()->hasRole('Admin|Super Admin') && Request::url() == route('projects.index')])>
             {{ Str::limit($content, $limit) }}
         </span>
     </a>

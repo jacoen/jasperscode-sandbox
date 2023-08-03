@@ -5,8 +5,6 @@ namespace Tests;
 use App\Models\User;
 use Database\Seeders\PermissionRoleSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -14,7 +12,7 @@ abstract class TestCase extends BaseTestCase
 
     protected $admin, $manager, $employee;
 
-    public function setUp(): Void
+    public function setUp(): void
     {
         parent::setUp();
 

@@ -24,7 +24,7 @@ class ProjectFactory extends Factory
             'title' => fake()->sentence(4),
             'description' => fake()->text(),
             'due_date' => now()->addMonths(4),
-            'status' => 'open'
+            'status' => 'open',
         ];
     }
 
