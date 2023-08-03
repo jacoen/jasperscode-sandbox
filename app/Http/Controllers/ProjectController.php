@@ -26,10 +26,12 @@ class ProjectController extends Controller
      */
     public function index(): View
     {
-        $projects = Project::query()
-            ->with('manager')
+        $projects = Project::with('manager')
+            ->when(request()->status, function ($query) {
+                $query->where('status', request()->status);
+            })
             ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
-                return $query->orderBy('is_pinned', 'desc');
+                $query->orderBy('is_pinned', 'desc');
             })
             ->latest('updated_at')
             ->orderBy('id', 'desc')
@@ -69,6 +71,9 @@ class ProjectController extends Controller
     public function show(Project $project): View
     {
         $tasks = $project->tasks()
+            ->when(request()->status, function ($query) {
+                $query->where('status', request()->status);
+            })
             ->with('author', 'user')
             ->latest('updated_at')
             ->orderBy('id', 'desc')

@@ -39,7 +39,7 @@ class ProjectObserver
 
         $project->tasks()->onlyTrashed()->each(function ($task) use ($deleted) {
             if ($task->deleted_at->gte($deleted)) {
-                $task->restore(); 
+                $task->restore();
             }
         });
     }
