@@ -17,7 +17,7 @@ class TaskController extends Controller
 {
     /**
      * @see app\Observers\TaskObserver for the model events
-     */  
+     */
     public function __construct()
     {
         $this->authorizeResource(Task::class, 'task');
@@ -39,7 +39,7 @@ class TaskController extends Controller
 
     public function create(Project $project): View|RedirectResponse
     {
-        if(! $project->is_open_or_pending) {
+        if (! $project->is_open_or_pending) {
             return redirect()->route('projects.show', $project)
                 ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
         }
@@ -51,13 +51,12 @@ class TaskController extends Controller
 
     public function store(Project $project, StoreTaskRequest $request): RedirectResponse
     {
-        if(! $project->is_open_or_pending) {
+        if (! $project->is_open_or_pending) {
             return redirect()->route('projects.show', $project)
                 ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
         }
 
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
-
         $task = $project->tasks()->create($data);
 
         if (isset($request->user_id) && auth()->id() != $request->user_id) {
@@ -80,7 +79,7 @@ class TaskController extends Controller
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
         $statuses = Arr::add(config('definitions.statuses'), 'Restored', 'restored');
 
-        return view('tasks.edit', compact(['task','employees', 'statuses']));
+        return view('tasks.edit', compact(['task', 'employees', 'statuses']));
     }
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
@@ -101,13 +100,13 @@ class TaskController extends Controller
         }
 
         return redirect()->route('tasks.show', $task)
-            ->with('success', 'The task '.$task->title  .' has been updated.');
+            ->with('success', 'The task '.$task->title.' has been updated.');
     }
 
     public function destroy(Task $task): RedirectResponse
     {
         $project = Project::findOrFail($task->project_id);
-        
+
         $taskTitle = $task->title;
 
         $task->delete();
@@ -116,7 +115,7 @@ class TaskController extends Controller
             ->with('success', 'The task '.$taskTitle.' has been deleted.');
     }
 
-    public function restore(Task $task) 
+    public function restore(Task $task)
     {
         $this->authorize('restore', $task);
 
@@ -133,7 +132,7 @@ class TaskController extends Controller
         $task->restore();
 
         return redirect()->route('tasks.trashed')
-            ->with('success', 'The task '.$task->title. 'has been restored.');
+            ->with('success', 'The task '.$task->title.'has been restored.');
     }
 
     public function userTasks()

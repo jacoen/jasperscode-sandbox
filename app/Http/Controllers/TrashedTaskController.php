@@ -19,6 +19,6 @@ class TrashedTaskController extends Controller
             ->orderBy('id', 'desc')
             ->paginate();
 
-            return view('tasks.trashed', compact('tasks'));
+        return view('tasks.trashed', compact('tasks'));
     }
 }

@@ -13,7 +13,7 @@ class Project extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['manager_id', 'title', 'description', 'due_date', 'status', 'is_pinned'];
-  
+
     protected $casts = [
         'due_date' => 'date',
         'is_pinned' => 'boolean',
@@ -29,7 +29,7 @@ class Project extends Model
         return $this->hasMany(Task::class);
     }
 
-    public function getIsOpenOrPendingAttribute():bool
+    public function getIsOpenOrPendingAttribute(): bool
     {
         return $this->status === 'open' || $this->status === 'pending';
     }

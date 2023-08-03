@@ -180,7 +180,7 @@ return [
     */
 
     'attributes' => [
-        'user_id' => 'user'
+        'user_id' => 'user',
     ],
 
 ];

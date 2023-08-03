@@ -31,9 +31,9 @@ class ProjectCrudTest extends TestCase
         $this->actingAs($this->employee)->get(route('projects.index'))
             ->assertOk()
             ->assertSeeText([
-                Str::limit($project->title, 35), 
-                $this->manager->name, 
-                $project->due_date->format('d M Y')
+                Str::limit($project->title, 35),
+                $this->manager->name,
+                $project->due_date->format('d M Y'),
             ]);
     }
 
@@ -206,10 +206,10 @@ class ProjectCrudTest extends TestCase
             ]);
 
         $this->assertDatabaseMissing('projects', [
-                'id' => $project->id,
-                'title' => $project->title,
-                'status' => $data['status'],
-            ]);
+            'id' => $project->id,
+            'title' => $project->title,
+            'status' => $data['status'],
+        ]);
     }
 
     public function test_a_user_with_the_edit_project_permission_can_edit_a_project()
@@ -220,8 +220,8 @@ class ProjectCrudTest extends TestCase
             'title' => 'A simple failed updated project',
             'description' => 'This description has not been updated',
             'due_date' => $project->due_date,
-            'status' => 'pending'
-            
+            'status' => 'pending',
+
         ];
 
         $this->actingAs($this->manager)->get(route('projects.edit', $project))
@@ -346,10 +346,10 @@ class ProjectCrudTest extends TestCase
         $this->actingAs($this->manager)->get(route('projects.index'))
             ->assertOk()
             ->assertSeeText([
-                Str::limit($openProject->title, 35) , 
+                Str::limit($openProject->title, 35),
                 Str::limit($pendingProject->title, 35),
                 Str::limit($closedProject->title, 35),
-                Str::limit($completedProject->title, 35)
+                Str::limit($completedProject->title, 35),
             ]);
 
         $this->actingAs($this->manager)->get(route('projects.index', ['status' => 'pending']))
