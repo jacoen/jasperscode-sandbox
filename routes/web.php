@@ -69,7 +69,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('trashed')->group(function () {
-        Route::get('/projects', TrashedProjectController::class)->middleware('can:restore project')->name('projects.trashed');
+        Route::get('/projects', TrashedProjectController::class)->name('projects.trashed');
         Route::get('/tasks', TrashedTaskController::class)->name('tasks.trashed');
     });
 });
