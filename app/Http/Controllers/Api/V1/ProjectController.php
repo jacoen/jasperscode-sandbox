@@ -22,8 +22,11 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = Project::with('manager')
+            ->when(request()->status, function ($query) {
+                $query->where('status', request()->status);
+            })
             ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
-                return $query->orderBy('is_pinned', 'desc');
+                $query->orderBy('is_pinned', 'desc');
             })
             ->latest('updated_at')
             ->orderBy('id', 'desc')
