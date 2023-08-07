@@ -6,10 +6,12 @@ use App\Models\Project;
 
 class ProjectObserver
 {
-    public function created(Project $project): void
+    /**
+     * Handle the Project "creating" event.
+     */
+    public function creating(Project $project): void
     {
-        $project->status = 'open';
-        $project->save();
+        $project->status = config('definitions.statuses.Open');
     }
 
     /**

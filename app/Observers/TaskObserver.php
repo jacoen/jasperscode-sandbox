@@ -7,6 +7,14 @@ use App\Models\Task;
 class TaskObserver
 {
     /**
+     * Handle the Task "creating" event.
+     */
+    public function creating(Task $task): void
+    {
+        $task->status = config('definitions.statuses.Open');
+    }
+
+    /**
      * Handle the Task "created" event.
      */
     public function created(Task $task): void
