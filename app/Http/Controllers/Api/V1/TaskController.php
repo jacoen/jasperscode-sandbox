@@ -9,6 +9,7 @@ use App\Http\Resources\TaskResource;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Support\Arr;
+use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends Controller
 {
@@ -18,6 +19,9 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = Task::with('project', 'project.manager', 'author', 'user')
+            ->when(request()->status, function ($query) {
+                $query->where('status', request()->status);
+            })
             ->when(! auth()->user()->hasRole(['Super Admin', 'Admin']), function ($query) {
                 return $query->where('user_id', auth()->id());
             })
@@ -72,8 +76,21 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Task $task)
     {
-        //
+        $task->delete();
+
+        return response('', Response::HTTP_NO_CONTENT);
+    }
+
+    public function trashed()
+    {
+        $tasks = Task::onlyTrashed()
+            ->with('author', 'user')
+            ->latest('deleted_at')
+            ->orderBy('id', 'desc')
+            ->paginate();
+
+        return TaskResource::collection($tasks);
     }
 }

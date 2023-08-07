@@ -17,13 +17,15 @@ class TaskResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'description' => $this->when($request->routeIs(), function(){
+            'description' => $this->when(! $request->routeIs('tasks.index') || ! $request->routeIs('tasks.trashed'), function(){
                 return $this->description;
             }),
             'status' => $this->status,
             'author' => $this->author->name,
             'user' => $this->user->name ?? 'Not assigned',
-            'project' => new ProjectResource($this->whenLoaded('project')),
+            'project' => $this->when(! $request->routeIs('tasks.trashed'), function () {
+                new ProjectResource($this->whenLoaded('project'));
+            }),
         ];
     }
 }
