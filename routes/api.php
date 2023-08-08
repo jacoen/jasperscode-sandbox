@@ -32,7 +32,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tasks/{task}/restore', [TaskController::class, 'restore'])->withTrashed()->name('tasks.restore');
     
     Route::get('/projects/{project}/tasks', ProjectTaskController::class);
-    
-    
-
 });
