@@ -41,6 +41,11 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request, Project $project)
     {
+        if ($project->trashed()) {
+            return response()
+                ->json(['message' => 'Could not create the task because the related project has been trashed.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
 
         $task = $project->tasks()->create($data);
@@ -92,5 +97,13 @@ class TaskController extends Controller
             ->paginate();
 
         return TaskResource::collection($tasks);
+    }
+
+    public function restore(Task $task)
+    {
+        if ($task->project->trashed()) {
+            return response()
+                ->json(['message' => 'Could not restore this task because the project has been trashed.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
     }
 }

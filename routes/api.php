@@ -29,8 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('/tasks', TaskController::class)->except('store');
     Route::post('/projects/{project}/tasks', [TaskController::class, 'store']);
     Route::get('/trashed/tasks', [TaskController::class, 'trashed'])->name('tasks.trashed');
-    Route::put('/tasks/{task}/restore', [TaskController::class, 'restore'])->name('tasks.restore');
-
+    Route::put('/tasks/{task}/restore', [TaskController::class, 'restore'])->withTrashed()->name('tasks.restore');
+    
     Route::get('/projects/{project}/tasks', ProjectTaskController::class);
     
     
