@@ -23,9 +23,10 @@ class TaskResource extends JsonResource
             'status' => $this->status,
             'author' => $this->author->name,
             'user' => $this->user->name ?? 'Not assigned',
-            'project' => $this->when(! $request->routeIs('tasks.trashed'), function () {
-                new ProjectResource($this->whenLoaded('project'));
+            'project' =>  $this->when(! $request->routeIs('tasks.trashed'), function () {
+                return new ProjectResource($this->whenLoaded('project'));
             }),
+            
         ];
     }
 }

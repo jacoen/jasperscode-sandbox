@@ -18,7 +18,7 @@ class ProjectResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'description' => $this->when($request->routeIs('projects.show'), function () {
+            'description' => $this->when(! $request->routeIs('projects.index') || $request->routeIs('projects.trashed'), function () {
                 return $this->description;
             }),
             'manager' => $this->manager->name ?? 'Not assigned',
@@ -30,7 +30,7 @@ class ProjectResource extends JsonResource
             'deleted_at' => $this->when($request->routeIs('projects.trashed'), function () {
                 return DateTimeResource::make($this->deleted_at);
             }),
-            'is_pinned' => $this->when(Auth::user()->hasRole(['Admin', 'Super Admin']), function () {
+            'is_pinned' => $this->when($request->routeIs('projects.index') && Auth::user()->hasRole(['Admin', 'Super Admin']), function () {
                 return $this->is_pinned;
             }),
             'tasks' => TaskResource::collection($this->whenLoaded('tasks')),
