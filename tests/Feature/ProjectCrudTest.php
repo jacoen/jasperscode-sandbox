@@ -221,7 +221,6 @@ class ProjectCrudTest extends TestCase
             'description' => 'This description has not been updated',
             'due_date' => $project->due_date,
             'status' => 'pending',
-
         ];
 
         $this->actingAs($this->manager)->get(route('projects.edit', $project))

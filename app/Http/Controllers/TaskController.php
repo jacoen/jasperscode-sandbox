@@ -39,6 +39,7 @@ class TaskController extends Controller
 
     public function create(Project $project): View|RedirectResponse
     {
+
         if (! $project->is_open_or_pending) {
             return redirect()->route('projects.show', $project)
                 ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
