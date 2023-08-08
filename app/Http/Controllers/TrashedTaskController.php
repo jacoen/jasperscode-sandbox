@@ -18,7 +18,7 @@ class TrashedTaskController extends Controller
             ->latest('deleted_at')
             ->orderBy('id', 'desc')
             ->paginate();
-
-            return view('tasks.trashed', compact('tasks'));
+      
+        return view('tasks.trashed', compact('tasks'));
     }
 }

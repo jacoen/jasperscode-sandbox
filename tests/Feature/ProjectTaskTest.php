@@ -12,7 +12,9 @@ class ProjectTaskTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $project, $task;
+    protected $project;
+
+    protected $task;
 
     public function setUp(): void
     {
@@ -54,7 +56,8 @@ class ProjectTaskTest extends TestCase
 
         $this->actingAs($this->employee)->put(route('tasks.update', $this->task), $data)
             ->assertRedirect(route('tasks.show', $this->task))
-            ->assertSessionHas('success', 'The task '.$this->task->fresh()->title  .' has been updated.');
+            ->assertSessionHas('success', 'The task '.$this->task->fresh()->title.' has been updated.');
+
 
         $this->assertTrue($this->project->fresh()->updated_at->gte($projectTime));
         $this->assertEquals($this->project->fresh()->updated_at->format('d-m-Y H:i:s'), $this->task->fresh()->updated_at->format('d-m-Y H:i:s'));
@@ -79,7 +82,8 @@ class ProjectTaskTest extends TestCase
     public function test_only_task_that_were_deleted_before_the_project_was_trashed_will_not_be_restored_when_the_project_gets_restored()
     {
         $project = Project::factory()->create(['created_at' => now()->subDays(7)]);
-        $trashedTask = Task::factory()->for($project)->trashed()->create(['deleted_at' =>now()->subMinute()]);
+        $trashedTask = Task::factory()->for($project)->trashed()->create(['deleted_at' => now()->subMinute()]);
+
         $task = Task::factory()->for($project)->create();
 
         $this->actingAs($this->manager)->delete(route('projects.destroy', $project))

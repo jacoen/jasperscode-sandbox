@@ -64,18 +64,23 @@
                 </div>
                 <hr>
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h4>Tasks</h4>
+                <div>
+                    <h4>Tasks</h4>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="justify-content-start">
+                        <x-status-dropdown route="projects.show" text="project" :param="$project" />
                     </div>
-                    {{-- @if (auth()->user()->can('create task') && $project->is_open_or_pending) --}}
+
+                    @if (auth()->user()->can('create task') && $project->is_open_or_pending)
                         <div class="justify-content-end me-2">
                             <a href="{{ route('tasks.create', $project) }}" class="btn btn-block btn-success fw-semibold text-white">
                                 New task
                             </a>
                         </div>
-                    {{-- @endif --}}
+                    @endif
                 </div>
+
                 @if (! $project->tasks->count())
                     <p>No tasks in this project yet.</p>
                 @else

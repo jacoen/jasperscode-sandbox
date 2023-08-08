@@ -68,6 +68,13 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{task}', 'destroy')->name('tasks.destroy');
             Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
         });
+
+        Route::get('user/tasks', 'userTasks')->name('tasks.user');
+    });
+
+    Route::prefix('trashed')->group(function () {
+        Route::get('/projects', TrashedProjectController::class)->middleware('can:restore project')->name('projects.trashed');
+        Route::get('/tasks', TrashedTaskController::class)->name('tasks.trashed');
     });
 
     Route::prefix('trashed')->group(function () {

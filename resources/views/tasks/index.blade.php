@@ -5,17 +5,21 @@
 
     <div class="card mb-4">
         <div class="card-header fw-bold">
-            @hasanyrole('Admin|Super Admin')
+            @if (auth()->user()->hasAnyRole('Super Admin|Admin') && \Route::currentRouteNamed('tasks.index'))
                 Tasks
             @else
                 {{ auth()->user()->name.'\'s tasks'}}
-            @endhasanyrole
+            @endif
         </div>
 
         <div class="card-body">
             @if(! $tasks->count())
                 <p class="mb-2">No tasks yet.</p>
             @else
+                <div class="mb-1">
+                    <x-status-dropdown route="tasks.index" />
+                </div>
+
                 <table class="table">
                     <thead>
                         <tr>
