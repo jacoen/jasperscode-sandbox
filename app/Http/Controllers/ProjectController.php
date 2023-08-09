@@ -104,8 +104,7 @@ class ProjectController extends Controller
 
         if (Project::where('is_pinned', true)->count() > 1) {
             return back()
-                ->withErrors(['error' => 'There is a pinned project already.
-             If you want to pin this project you will have to unpin the other project.']);
+                ->withErrors(['error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.']);
         }
 
         $project->update($request->validated());
