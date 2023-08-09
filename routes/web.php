@@ -56,12 +56,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('projects/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('projects.restore');
 
     Route::resource('/tasks', TaskController::class)->except(['create', 'store']);
-
+  
     Route::controller(TaskController::class)->group(function () {
         Route::prefix('/projects/{project}/tasks')->group(function () {
             Route::get('/create', 'create')->name('tasks.create');
             Route::post('/', 'store')->name('tasks.store');
         });
+      
         Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
         Route::get('user/tasks', 'userTasks')->name('tasks.user');
     });
