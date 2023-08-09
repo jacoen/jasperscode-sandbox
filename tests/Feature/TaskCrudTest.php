@@ -35,37 +35,45 @@ class TaskCrudTest extends TestCase
             ->assertForbidden();
     }
 
-    #[Depends('test_a_user_without_the_read_task_permission_cannot_visit_the_tasks_overview_page')]
     public function test_a_user_without_at_least_the_admin_role_can_only_see_the_tasks_that_are_assigned_to_them()
     {
         $unassignedTask = Task::factory()->for($this->project)->create();
         $adminTask = Task::factory()->for($this->project)->create(['user_id' => $this->admin->id]);
-
-        $this->actingAs($this->employee)->get(route('tasks.index'))
+        
+        $this->actingAs($this->employee)->get(route('tasks.user'))
             ->assertOk()
             ->assertSeeText($this->employee->name.'\'s tasks')
             ->assertSeeText('No tasks yet.');
-
+        
         $assignedTask = Task::factory()->for($this->project)->create(['user_id' => $this->employee->id]);
 
-        $this->actingAs($this->employee)->get(route('tasks.index'))
+        $this->actingAs($this->employee)->get(route('tasks.user'))
             ->assertOk()
             ->assertSeeText(Str::limit($assignedTask->title, 25))
             ->assertDontSeeText([$unassignedTask->title, $adminTask->title]);
     }
 
-    public function test_a_user_with_at_least_the_admin_role_can_see_all_tasks()
+    public function test_a_user_with_at_least_the_admin_role_can_see_all_tasks_and_their_own_tasks()
     {
         $unassignedTask = Task::factory()->for($this->project)->create();
         $adminTask = Task::factory()->for($this->project)->create(['user_id' => $this->admin->id]);
-        $assignedTask = Task::factory()->for($this->project)->create(['user_id' => $this->employee->id]);
+        $employeeTask = Task::factory()->for($this->project)->create(['user_id' => $this->employee->id]);
 
         $this->actingAs($this->admin)->get(route('tasks.index'))
             ->assertOk()
             ->assertSeeText([
                 Str::limit($unassignedTask->title, 25),
                 Str::limit($adminTask->title, 25),
-                Str::limit($assignedTask->title, 25),
+                Str::limit($employeeTask->title, 25),
+            ]);
+
+        $this->actingAs($this->admin)->get(route('tasks.user'))
+            ->assertOk()
+            ->assertSeeText($this->admin->name.'\'s tasks')
+            ->assertSeeText(Str::limit($adminTask->title, 25))
+            ->assertDontSeeText([
+                Str::limit($unassignedTask->title, 25),
+                Str::limit($employeeTask->title, 25),
             ]);
     }
 
