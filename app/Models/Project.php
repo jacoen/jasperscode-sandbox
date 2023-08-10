@@ -30,6 +30,7 @@ class Project extends Model
     }
 
     public function getIsOpenOrPendingAttribute(): bool
+
     {
         return $this->status === 'open' || $this->status === 'pending';
     }

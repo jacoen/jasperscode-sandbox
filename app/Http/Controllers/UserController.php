@@ -43,7 +43,7 @@ class UserController extends Controller
         $user->save();
 
         $user->generatePasswordToken();
-        $user->assignRole($request->role);
+        $user->syncRoles($request->role);
         $user->notify(new AccountCreatedNotification());
 
         return redirect()->route('users.index')

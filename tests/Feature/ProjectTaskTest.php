@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class ProjectTaskTest extends TestCase
@@ -57,6 +58,7 @@ class ProjectTaskTest extends TestCase
             ->assertRedirect(route('tasks.show', $this->task))
             ->assertSessionHas('success', 'The task '.$this->task->fresh()->title.' has been updated.');
 
+
         $this->assertTrue($this->project->fresh()->updated_at->gte($projectTime));
         $this->assertEquals($this->project->fresh()->updated_at->format('d-m-Y H:i:s'), $this->task->fresh()->updated_at->format('d-m-Y H:i:s'));
     }
@@ -81,6 +83,7 @@ class ProjectTaskTest extends TestCase
     {
         $project = Project::factory()->create(['created_at' => now()->subDays(7)]);
         $trashedTask = Task::factory()->for($project)->trashed()->create(['deleted_at' => now()->subMinute()]);
+
         $task = Task::factory()->for($project)->create();
 
         $this->actingAs($this->manager)->delete(route('projects.destroy', $project))

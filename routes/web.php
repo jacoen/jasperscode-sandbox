@@ -3,6 +3,8 @@
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TrashedProjectController;
@@ -24,7 +26,7 @@ use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome');
 
 Auth::routes(['register' => false]);
 
@@ -41,6 +43,10 @@ Route::controller(RequestNewTokenController::class)->prefix('/request-token')->m
 });
 
 Route::middleware('auth')->group(function () {
+    Route::controller(NewsletterController::class)->prefix('/newsletter')->group(function () {
+        Route::get('/', 'create')->name('newsletter.create');
+        Route::post('/', 'store')->name('newsletter.store');
+    });
 
     Route::resource('/users', UserController::class)->except('show');
 
@@ -50,21 +56,15 @@ Route::middleware('auth')->group(function () {
     Route::resource('/projects', ProjectController::class);
     Route::patch('projects/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('projects.restore');
 
+    Route::resource('/tasks', TaskController::class)->except(['create', 'store']);
+  
     Route::controller(TaskController::class)->group(function () {
         Route::prefix('/projects/{project}/tasks')->group(function () {
             Route::get('/create', 'create')->name('tasks.create');
             Route::post('/', 'store')->name('tasks.store');
         });
-
-        Route::prefix('/tasks')->group(function () {
-            Route::get('/', 'index')->name('tasks.index');
-            Route::get('/{task}', 'show')->name('tasks.show');
-            Route::get('/{task}/edit', 'edit')->name('tasks.edit');
-            Route::put('/{task}', 'update')->name('tasks.update');
-            Route::delete('/{task}', 'destroy')->name('tasks.destroy');
-            Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
-        });
-
+      
+        Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
         Route::get('user/tasks', 'userTasks')->name('tasks.user');
     });
 

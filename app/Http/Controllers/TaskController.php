@@ -39,6 +39,7 @@ class TaskController extends Controller
 
     public function create(Project $project): View|RedirectResponse
     {
+
         if (! $project->is_open_or_pending) {
             return redirect()->route('projects.show', $project)
                 ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
@@ -115,7 +116,7 @@ class TaskController extends Controller
             ->with('success', 'The task '.$taskTitle.' has been deleted.');
     }
 
-    public function restore(Task $task)
+    public function restore(Task $task): RedirectResponse
     {
         $this->authorize('restore', $task);
 
@@ -135,7 +136,7 @@ class TaskController extends Controller
             ->with('success', 'The task '.$task->title.'has been restored.');
     }
 
-    public function userTasks()
+    public function userTasks(): View
     {
         $this->authorize('read task', Task::class);
 
