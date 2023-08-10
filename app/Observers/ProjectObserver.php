@@ -7,14 +7,6 @@ use App\Models\Project;
 class ProjectObserver
 {
     /**
-     * Handle the Project "creating" event.
-     */
-    public function creating(Project $project): void
-    {
-        $project->status = config('definitions.statuses.Open');
-    }
-
-    /**
      * Handle the Project "deleted" event.
      */
     public function deleted(Project $project): void
