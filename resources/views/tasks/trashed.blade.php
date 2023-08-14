@@ -24,7 +24,7 @@
                     </thead>
                     <tbody>
                         @foreach ($tasks as $task)
-                            <tr>
+                            <tr class="align-baseline">
                                 <td><span title="{{ $task->title }}">{{ Str::limit($task->title, 30) }}</span></td>
                                 <td><span title="{{ $task->project->title}}">{{ Str::limit($task->project->title, 30) }}</span></td>
                                 <td>{{ lastUpdated($task->deleted_at) }}</td>
