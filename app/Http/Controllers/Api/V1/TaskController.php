@@ -30,7 +30,9 @@ class TaskController extends Controller
             ->paginate();
 
         if (! $tasks->count()) {
-            return 'No tasks yet.';
+            return response()->json([
+                'message' => 'No tasks yet.'
+            ], Response::HTTP_OK);
         }
 
         return TaskResource::collection($tasks);
@@ -42,8 +44,9 @@ class TaskController extends Controller
     public function store(StoreTaskRequest $request, Project $project)
     {
         if ($project->trashed()) {
-            return response()
-                ->json(['message' => 'Could not create the task because the related project has been trashed.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            return response()->json([
+                'message' => 'Could not create the task because the related project has been trashed.'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
@@ -90,6 +93,8 @@ class TaskController extends Controller
 
     public function trashed()
     {
+        $this->authorize('restore task', Task::class);
+
         $tasks = Task::onlyTrashed()
             ->with('author', 'user')
             ->latest('deleted_at')
@@ -101,9 +106,16 @@ class TaskController extends Controller
 
     public function restore(Task $task)
     {
+        $this->authorize('restore task', $task);
+
         if ($task->project->trashed()) {
-            return response()
-                ->json(['message' => 'Could not restore this task because the project has been trashed.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            return response()->json([
+                'message' => 'Could not restore this task because the project has been trashed.'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+
+        $task->restore();
+
+        return new TaskResource($task);
     }
 }

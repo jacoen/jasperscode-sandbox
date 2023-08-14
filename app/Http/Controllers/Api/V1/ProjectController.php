@@ -72,6 +72,8 @@ class ProjectController extends Controller
 
     public function trashed()
     {
+        $this->authorize('restore project', Project::class);
+
         $projects = Project::onlyTrashed()
             ->with('manager')
             ->latest('deleted_at')
@@ -79,5 +81,14 @@ class ProjectController extends Controller
             ->paginate();
 
         return ProjectResource::collection($projects);
+    }
+
+    public function restore(Project $project)
+    {
+        $this->authorize('restore project', $project);
+
+        $project->restore();
+
+        return new ProjectResource($project);
     }
 }
