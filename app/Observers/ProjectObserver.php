@@ -9,12 +9,12 @@ class ProjectObserver
     /**
      * Handle the Project "creating" event.
      */
-    // public function creating(Project $project): void
-    // {
-    //     if (! $project->status) {
-    //         $project->status = config('definitions.statuses.Open');
-    //     }
-    // }
+    public function creating(Project $project): void
+    {
+        if (! $project->status) {
+            $project->status = config('definitions.statuses.Open');
+        }
+    }
 
     /**
      * Handle the Project "deleted" event.
