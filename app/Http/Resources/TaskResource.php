@@ -26,6 +26,12 @@ class TaskResource extends JsonResource
             'project' =>  $this->when(! $request->routeIs('tasks.trashed'), function () {
                 return new ProjectResource($this->whenLoaded('project'));
             }),
+            'updated_at' => $this->when(! $request->routeIs('tasks.trashed'), function () {
+                return new DateTimeResource($this->updated_at);
+            }),
+            'deleted_at' => $this->when($request->routeIs('tasks.trashed'), function () {
+                return new DateTimeResource($this->deleted_at);
+            })
             
         ];
     }
