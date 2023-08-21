@@ -33,12 +33,6 @@ class TaskController extends Controller
             ->orderbyDesc('id')
             ->paginate();
 
-        if (! $tasks->count()) {
-            return response()->json([
-                'message' => 'No tasks yet.'
-            ], Response::HTTP_OK);
-        }
-
         return TaskResource::collection($tasks);
     }
 
