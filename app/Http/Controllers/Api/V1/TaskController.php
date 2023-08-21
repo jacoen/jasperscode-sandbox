@@ -53,12 +53,6 @@ class TaskController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        if ($project->trashed()) {
-            return response()->json([
-                'message' => 'Could not create the task because the related project has been trashed.'
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
         $task = $project->tasks()->create($data);
 
