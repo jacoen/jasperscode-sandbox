@@ -18,7 +18,7 @@ class ProjectResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'description' => $this->when(! $request->routeIs('projects.index') || $request->routeIs('projects.trashed'), function () {
+            'description' => $this->when(! $request->routeIs('projects.index') && ! $request->routeIs('projects.trashed'), function () {
                 return $this->description;
             }),
             'manager' => $this->manager->name ?? 'Not assigned',

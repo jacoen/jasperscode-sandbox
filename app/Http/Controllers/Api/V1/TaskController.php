@@ -8,11 +8,18 @@ use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\User;
+use App\Notifications\TaskAssignedNotification;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Task::class, 'task');
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -21,9 +28,6 @@ class TaskController extends Controller
         $tasks = Task::with('project', 'project.manager', 'author', 'user')
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
-            })
-            ->when(! auth()->user()->hasRole(['Super Admin', 'Admin']), function ($query) {
-                return $query->where('user_id', auth()->id());
             })
             ->latest('updated_at')
             ->orderbyDesc('id')
@@ -43,6 +47,12 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request, Project $project)
     {
+        if (! $project->is_open_or_pending) {
+            return response()->json([
+                'message' => 'Cannot create a task when the project is not open or pending.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         if ($project->trashed()) {
             return response()->json([
                 'message' => 'Could not create the task because the related project has been trashed.'
@@ -50,8 +60,11 @@ class TaskController extends Controller
         }
 
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
-
         $task = $project->tasks()->create($data);
+
+        if (isset($request->user_id) && auth()->id() != $request->user_id) {
+            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
+        }
 
         return new TaskResource($task);
     }
@@ -71,12 +84,11 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, Task $task)
     {
-        if ($task->status == 'restored') {
-            return redirect()->route('projects.show', $task->project)
-                ->withErrors(['error' => 'You cannot update this task while the status is \'restored\'.']);
-        }
-
         $task->update($request->validated());
+        
+        if ($task->wasChanged('user_id') && isset($request->user_id) && auth()->id() != $request->user_id) {
+            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
+        }
 
         return new TaskResource($task);
     }
@@ -108,6 +120,12 @@ class TaskController extends Controller
     {
         $this->authorize('restore task', $task);
 
+        if (! $task->trashed()) {
+            return response()->json([
+                'message' => 'This task cannot be restored, because it has not been deleted.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         if ($task->project->trashed()) {
             return response()->json([
                 'message' => 'Could not restore this task because the project has been trashed.'
@@ -117,5 +135,21 @@ class TaskController extends Controller
         $task->restore();
 
         return new TaskResource($task);
+    }
+
+    public function userTasks()
+    {
+        $this->authorize('read task', Task::class);
+
+        $tasks = Task::with('project', 'project.manager', 'author', 'user')
+            ->when(request()->status, function ($query) {
+                $query->where('status', request()->status);
+            })
+            ->where('user_id', auth()->id())
+            ->latest('updated_at')
+            ->orderByDesc('id')
+            ->paginate();
+
+        return TaskResource::collection($tasks);
     }
 }

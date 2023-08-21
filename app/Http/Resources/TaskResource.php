@@ -17,7 +17,7 @@ class TaskResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'description' => $this->when(! $request->routeIs('tasks.index') || ! $request->routeIs('tasks.trashed'), function(){
+            'description' => $this->when(! $request->routeIs('tasks.index') && ! $request->routeIs('tasks.trashed'), function(){
                 return $this->description;
             }),
             'status' => $this->status,
