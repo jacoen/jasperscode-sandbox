@@ -75,7 +75,7 @@ class TaskController extends Controller
         if (! $task->project->is_open_or_pending)
         {
             return response()->json([
-                'message' => 'Cannot create a task when the project is not open or pending.',
+                'message' => 'Cannot update the task when the project is not open or pending.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
