@@ -12,6 +12,8 @@ class TrashedProjectController extends Controller
      */
     public function __invoke(): View
     {
+        $this->authorize('restore project', Project::class);
+
         $projects = Project::onlyTrashed()
             ->with('manager')
             ->latest('deleted_at')

@@ -11,7 +11,7 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        if (! $user->hasRole(['User', 'Manager', 'Admin'])) {
+        if (! $user->hasRole(['Employee', 'Manager', 'Admin'])) {
             $user->assignRole('User');
         }
     }

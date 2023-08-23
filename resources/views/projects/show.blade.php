@@ -4,7 +4,7 @@
     <x-flash-success :message="session('success')" />
     <x-errors :errors="$errors" />
 
-    @if ($project->is_pinned)
+    @if ($project->is_pinned && auth()->user()->hasRole(['Super Admin', 'Admin']))
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
             <li class="ms-2 fw-semibold">This project has been pinned.</li>
             <button type="button" class="btn-close" data-coreui-dismiss="alert" aria-label="close"></button>

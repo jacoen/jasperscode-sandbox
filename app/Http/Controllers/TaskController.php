@@ -39,7 +39,6 @@ class TaskController extends Controller
 
     public function create(Project $project): View|RedirectResponse
     {
-
         if (! $project->is_open_or_pending) {
             return redirect()->route('projects.show', $project)
                 ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
@@ -85,11 +84,6 @@ class TaskController extends Controller
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
-        if ($task->status == 'restored') {
-            return redirect()->route('projects.show', $task->project)
-                ->withErrors(['error' => 'You cannot update this task while the status is \'restored\'.']);
-        }
-
         $task->update($request->validated());
 
         if ($task->wasChanged('title')) {
@@ -106,7 +100,7 @@ class TaskController extends Controller
 
     public function destroy(Task $task): RedirectResponse
     {
-        $project = Project::findOrFail($task->project_id);
+        $project = $task->project_id;
 
         $taskTitle = $task->title;
 
