@@ -12,7 +12,6 @@ use App\Http\Controllers\TrashedTaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
