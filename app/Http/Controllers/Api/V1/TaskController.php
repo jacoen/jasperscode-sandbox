@@ -78,6 +78,13 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, Task $task)
     {
+        if (! $task->project->is_open_or_pending)
+        {
+            return response()->json([
+                'message' => 'Cannot create a task when the project is not open or pending.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $task->update($request->validated());
         
         if ($task->wasChanged('user_id') && isset($request->user_id) && auth()->id() != $request->user_id) {
