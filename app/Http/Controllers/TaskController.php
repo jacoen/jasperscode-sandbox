@@ -24,9 +24,12 @@ class TaskController extends Controller
     }
 
     public function index(): View
-    {
-        $url = Route::currentRouteName();
+    {   
+        $route = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
+            ->when(request()->search, function ($query) {
+                $query->where('title', 'LIKE', '%'.request()->search.'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
@@ -34,7 +37,7 @@ class TaskController extends Controller
             ->orderBy('id', 'desc')
             ->paginate();
 
-        return view('tasks.index', compact('tasks', 'url'));
+        return view('tasks.index', compact('tasks', 'route'));
     }
 
     public function create(Project $project): View|RedirectResponse
@@ -84,6 +87,14 @@ class TaskController extends Controller
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
+        if (! $task->project->is_open_or_pending)
+        {
+            return redirect()->route('tasks.edit', $task)
+                ->withErrors([
+                    'error' => 'Could no update this task because teh project is not open or pending.',
+                ]);
+        }
+
         $task->update($request->validated());
 
         if ($task->wasChanged('title')) {
@@ -134,8 +145,11 @@ class TaskController extends Controller
     {
         $this->authorize('read task', Task::class);
 
-        $url = Route::currentRouteName();
+        $route = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
+            ->when(request()->search, function ($query) {
+                $query->where('title', 'LIKE', '%'.request()->search.'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
@@ -144,6 +158,6 @@ class TaskController extends Controller
             ->orderByDesc('id')
             ->paginate();
 
-        return view('tasks.index', compact('tasks', 'url'));
+        return view('tasks.index', compact('tasks', 'route'));
     }
 }
