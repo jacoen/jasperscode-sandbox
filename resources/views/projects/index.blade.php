@@ -10,18 +10,22 @@
         </div>
 
         <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="row align-items-center mb-3">
                 @can('create project')
-                    <div class="justify-content-start">
-                        <x-status-dropdown route="projects.index" />
-                    </div>
-
-                    <div class="justify-content-end">
-                        <a href="{{ route('projects.create') }}" class="btn btn-block btn-success fw-semibold text-white">
-                            Create project
-                        </a>
+                    <div class="col-lg-2">
+                        <div class="d-flex justify-content-start">
+                            <a href="{{ route('projects.create') }}" class="btn btn-block btn-success fw-semibold text-white">
+                                Create project
+                            </a>
+                        </div>
                     </div>
                 @endcan
+
+                @if ($projects->count())
+                    <div class="col-lg-10">
+                        <x-filter-form route="projects.index" placeholder="Search for your project by title" />
+                    </div>
+                @endif
             </div>
 
             @if(! $projects->count())

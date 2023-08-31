@@ -67,10 +67,28 @@
                 <div>
                     <h4>Tasks</h4>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="justify-content-start">
-                        <x-status-dropdown route="projects.show" text="project" :param="$project" />
-                    </div>
+                <div class="row align-items-center mb-2">
+                    @if (auth()->user()->can('create task') && $project->is_open_or_pending)
+                        <div class="col-lg-2">
+                            <div class="d-flex justify-content-start">
+                                <a href="{{ route('tasks.create', $project) }}" class="btn btn-block btn-success fw-semibold text-white">
+                                    New task
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if ($project->tasks->count())
+                        <div class="col-lg-10">
+                            <x-filter-form route="projects.show" :param="$project" placeholder="Search task by title" />
+                        </div>
+                    @endif
+                </div>
+
+                {{-- <div class="d-flex justify-content-between align-items-center mb-2">
+                    @if($project->tasks->count())
+                        <x-filter-form route="projects.show" :param="$project" placeholder="Search task by title" />
+                    @endif
 
                     @if (auth()->user()->can('create task') && $project->is_open_or_pending)
                         <div class="justify-content-end me-2">
@@ -79,7 +97,7 @@
                             </a>
                         </div>
                     @endif
-                </div>
+                </div> --}}
 
                 @if (! $project->tasks->count())
                     <p>No tasks in this project yet.</p>
@@ -103,7 +121,7 @@
                                     <td>{{ $task->user->name ?? 'Unassigned' }}</td>
                                     <td>{{ $task->status }}</td>
                                     <td> {{ lastUpdated($task->updated_at) }}</td>
-                                    @if ($project->is_open_or_pending && auth()->user()->can('update task') || auth()->user()->can('delete task'))
+                                    @if (auth()->user()->can('update task') && $pending_or_open || auth()->user()->can('delete task') && $pending_or_open)
                                         <td class="d-flex justify-content-end align-items-center">
                                             <a href="{{ route('tasks.edit', $task) }}" class="btn btn-info fw-semibold text-white">
                                                 Edit
