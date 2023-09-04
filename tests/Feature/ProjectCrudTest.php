@@ -360,4 +360,27 @@ class ProjectCrudTest extends TestCase
                 Str::limit($completedProject->title, 35),
             ]);
     }
+
+    public function test_a_user_can_search_project_by_their_title()
+    {
+        $firstProject = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the first project']);
+        $secondProject = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the second project']);
+        $thirdProject = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the third project']);
+
+        $this->actingAs($this->admin)->get(route('projects.index'))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($firstProject->title, 35),
+                Str::limit($secondProject->title, 35),
+                Str::limit($thirdProject->title, 35),
+            ]);
+
+        $this->actingAs($this->admin)->get(route('projects.index', ['search' => 'second']))
+            ->assertOk()
+            ->assertSeeText([Str::limit($secondProject->title, 35)])
+            ->assertDontSeeText([
+                Str::limit($firstProject->title, 35),
+                Str::limit($thirdProject->title, 35),
+            ]);
+    }
 }
