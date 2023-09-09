@@ -17,6 +17,9 @@ class ProjectTaskController extends Controller
         $this->authorize('read task', Task::class);
         
         $data = $project->tasks()
+            ->when(request()->search, function ($query) {
+                $query->where('title', 'LIKE', '%'.request()->search.'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })

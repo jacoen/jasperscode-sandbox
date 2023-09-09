@@ -30,6 +30,9 @@ class ProjectController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $projects = Project::with('manager')
+            ->when(request()->search, function ($query) {
+                $query->where('title', 'like', '%'.request()->search.'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })

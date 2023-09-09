@@ -26,6 +26,9 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = Task::with('project', 'project.manager', 'author', 'user')
+            ->when(request()->search, function ($query) {
+                $query->where('title', 'LIKE', '%'.request()->search.'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
@@ -137,6 +140,9 @@ class TaskController extends Controller
         $this->authorize('read task', Task::class);
 
         $tasks = Task::with('project', 'project.manager', 'author', 'user')
+            ->when(request()->search, function ($query) {
+                $query->where('title', 'LIKE', '%'.request()->search.'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
