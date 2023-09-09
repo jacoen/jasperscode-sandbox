@@ -26,10 +26,12 @@
 
             <div class="card-body">
                 <div class="ms-2">
-                    <div class="mb-1">
-                        <p>{!! nl2br($task->description) !!}</p>
-                        <hr />
-                    </div>
+                    @if ($task->description)
+                        <div class="mb-1">
+                            <p>{!! nl2br($task->description) !!}</p>
+                            <hr />
+                        </div>
+                    @endif
                     <div class="mb-1">
                         <h5>Task Details</h5>
                         <div class="row gx-1">
