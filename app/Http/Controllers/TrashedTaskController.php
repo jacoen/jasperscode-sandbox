@@ -13,6 +13,8 @@ class TrashedTaskController extends Controller
      */
     public function __invoke(): View
     {
+        $this->authorize('restore task', Task::class);
+
         $tasks = Task::onlyTrashed()
             ->with('project')
             ->latest('deleted_at')

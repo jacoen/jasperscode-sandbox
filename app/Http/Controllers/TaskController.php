@@ -25,8 +25,11 @@ class TaskController extends Controller
 
     public function index(): View
     {
-        $url = Route::currentRouteName();
+        $route = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
+            ->when(request()->search, function ($query) {
+                $query->where('title', 'LIKE', '%'.request()->search.'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
@@ -34,12 +37,11 @@ class TaskController extends Controller
             ->orderBy('id', 'desc')
             ->paginate();
 
-        return view('tasks.index', compact('tasks', 'url'));
+        return view('tasks.index', compact('tasks', 'route'));
     }
 
     public function create(Project $project): View|RedirectResponse
     {
-
         if (! $project->is_open_or_pending) {
             return redirect()->route('projects.show', $project)
                 ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
@@ -85,9 +87,11 @@ class TaskController extends Controller
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
-        if ($task->status == 'restored') {
-            return redirect()->route('projects.show', $task->project)
-                ->withErrors(['error' => 'You cannot update this task while the status is \'restored\'.']);
+        if (! $task->project->is_open_or_pending) {
+            return redirect()->route('tasks.edit', $task)
+                ->withErrors([
+                    'error' => 'Could no update this task because teh project is not open or pending.',
+                ]);
         }
 
         $task->update($request->validated());
@@ -106,7 +110,7 @@ class TaskController extends Controller
 
     public function destroy(Task $task): RedirectResponse
     {
-        $project = Project::findOrFail($task->project_id);
+        $project = $task->project_id;
 
         $taskTitle = $task->title;
 
@@ -140,8 +144,11 @@ class TaskController extends Controller
     {
         $this->authorize('read task', Task::class);
 
-        $url = Route::currentRouteName();
+        $route = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
+            ->when(request()->search, function ($query) {
+                $query->where('title', 'LIKE', '%'.request()->search.'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
@@ -150,6 +157,6 @@ class TaskController extends Controller
             ->orderByDesc('id')
             ->paginate();
 
-        return view('tasks.index', compact('tasks', 'url'));
+        return view('tasks.index', compact('tasks', 'route'));
     }
 }

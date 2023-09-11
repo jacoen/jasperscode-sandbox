@@ -30,7 +30,7 @@ class UserController extends Controller
         if (auth()->user()->hasRole('Super Admin')) {
             $roles = Role::all();
         } else {
-            $roles = Role::whereIn('name', ['employee', 'user'])->get(['id', 'name']);
+            $roles = Role::whereIn('name', ['manager', 'employee', 'user'])->orderBy('id', 'asc')->get(['id', 'name']);
         }
 
         return view('users.create', compact('roles'));
@@ -55,7 +55,7 @@ class UserController extends Controller
         if (auth()->user()->hasRole('Super Admin')) {
             $roles = Role::all();
         } else {
-            $roles = Role::whereIn('name', ['employee', 'user'])->get(['id', 'name']);
+            $roles = Role::whereIn('name', ['manager', 'employee', 'user'])->orderBy('id', 'asc')->get(['id', 'name']);
         }
 
         return view('users.edit', compact(['user', 'roles']));

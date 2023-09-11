@@ -27,6 +27,9 @@ class ProjectController extends Controller
     public function index(): View
     {
         $projects = Project::with('manager')
+            ->when(request('search'), function ($query) {
+                $query->where('title', 'LIKE', '%'.request('search').'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
@@ -70,7 +73,12 @@ class ProjectController extends Controller
      */
     public function show(Project $project): View
     {
+        $pending_or_open = $project->is_open_or_pending;
+
         $tasks = $project->tasks()
+            ->when(request()->search, function ($query) {
+                $query->where('title', 'LIKE', '%'.request()->search.'%');
+            })
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
@@ -79,7 +87,7 @@ class ProjectController extends Controller
             ->orderBy('id', 'desc')
             ->paginate();
 
-        return view('projects.show', compact('project', 'tasks'));
+        return view('projects.show', compact(['project', 'tasks', 'pending_or_open']));
     }
 
     /**

@@ -5,12 +5,13 @@ namespace Tests\Feature;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class ProjectTaskTest extends TestCase
 {
     use RefreshDatabase;
+
+    // TODO: Refactor all the tests in this class
 
     protected $project;
 
@@ -26,21 +27,21 @@ class ProjectTaskTest extends TestCase
 
     public function test_when_a_new_task_get_created_the_timestamp_of_the_related_project_gets_updated()
     {
+        $project = Project::factory()->create(['created_at' => now()->subWeek(), 'updated_at' => now()->subDay()]);
+
         $data = [
             'title' => 'The title for a new task',
             'description' => 'A new sample description',
             'user_id' => $this->employee->id,
         ];
 
-        sleep(1);
-
-        $this->actingAs($this->employee)->post(route('tasks.store', $this->project), $data)
-            ->assertRedirect(route('projects.show', $this->project))
+        $this->actingAs($this->employee)->post(route('tasks.store', $project), $data)
+            ->assertRedirect(route('projects.show', $project))
             ->assertSessionHas('success', 'A new task has been created.');
 
         $task = Task::where('title', $data['title'])->first();
 
-        $this->assertEquals($this->project->fresh()->updated_at->format('d-m-Y H:i:s'), $task->updated_at->format('d-m-Y H:i:s'));
+        $this->assertEquals($project->fresh()->updated_at->format('d-m-Y H:i:s'), $task->updated_at->format('d-m-Y H:i:s'));
     }
 
     public function test_when_a_task_gets_updated_the_timestamp_of_the_related_project_gets_updated()
@@ -57,7 +58,6 @@ class ProjectTaskTest extends TestCase
         $this->actingAs($this->employee)->put(route('tasks.update', $this->task), $data)
             ->assertRedirect(route('tasks.show', $this->task))
             ->assertSessionHas('success', 'The task '.$this->task->fresh()->title.' has been updated.');
-
 
         $this->assertTrue($this->project->fresh()->updated_at->gte($projectTime));
         $this->assertEquals($this->project->fresh()->updated_at->format('d-m-Y H:i:s'), $this->task->fresh()->updated_at->format('d-m-Y H:i:s'));
@@ -79,7 +79,7 @@ class ProjectTaskTest extends TestCase
         $this->assertTrue($task->fresh()->status == 'closed');
     }
 
-    public function test_only_task_that_were_deleted_before_the_project_was_trashed_will_not_be_restored_when_the_project_gets_restored()
+    public function test_only_tasks_that_were_deleted_before_the_project_was_trashed_will_not_be_restored_when_the_project_gets_restored()
     {
         $project = Project::factory()->create(['created_at' => now()->subDays(7)]);
         $trashedTask = Task::factory()->for($project)->trashed()->create(['deleted_at' => now()->subMinute()]);
@@ -103,5 +103,54 @@ class ProjectTaskTest extends TestCase
 
         $this->assertSoftDeleted($trashedTask->fresh());
         $this->assertFalse($trashedTask->fresh()->status == 'restored');
+    }
+
+    public function test_a_user_can_filter_all_tasks_that_belong_to_the_project_based_on_their_status()
+    {
+        $openTask = Task::factory()->for($this->project)->create(['status' => 'open']);
+        $pendingTask = Task::factory()->for($this->project)->create(['status' => 'pending']);
+        $closedTask = Task::factory()->for($this->project)->create(['status' => 'closed']);
+        $completedTask = Task::factory()->for($this->project)->create(['status' => 'completed']);
+
+        $this->actingAs($this->manager)->get(route('projects.show', $this->project))
+            ->assertOk()
+            ->assertSeeText([
+                $openTask->title,
+                $pendingTask->title,
+                $closedTask->title,
+                $completedTask->title,
+            ]);
+
+        $this->actingAs($this->employee)->get(route('projects.show', ['project' => $this->project, 'status' => 'pending']))
+            ->assertOk()
+            ->assertSeeText([$pendingTask->title, $pendingTask->status])
+            ->assertDontSeeText([
+                $openTask->title,
+                $closedTask->title,
+                $completedTask->title,
+            ]);
+    }
+
+    public function test_a_user_can_search_for_a_task_belonging_to_the_project_by_the_title_of_the_task()
+    {
+        $firstTask = Task::factory()->for($this->project)->create(['title' => 'this is the first task']);
+        $secondTask = Task::factory()->for($this->project)->create(['title' => 'this is the second task']);
+        $thirdTask = Task::factory()->for($this->project)->create(['title' => 'this is the third task']);
+
+        $this->actingAs($this->employee)->get(route('projects.show', $this->project))
+            ->assertOk()
+            ->assertSeeText([
+                $firstTask->title,
+                $secondTask->title,
+                $thirdTask->title,
+            ]);
+
+        $this->actingAs($this->employee)->get(route('projects.show', ['project' => $this->project, 'search' => 'third']))
+            ->assertOk()
+            ->assertSeeText($thirdTask->title)
+            ->assertDontSeeText([
+                $firstTask->title,
+                $secondTask->title,
+            ]);
     }
 }

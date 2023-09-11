@@ -7,7 +7,6 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\TestCase;
 
 class TaskCrudTest extends TestCase
@@ -16,7 +15,7 @@ class TaskCrudTest extends TestCase
 
     protected $project;
 
-    public function setUp(): void 
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -39,12 +38,12 @@ class TaskCrudTest extends TestCase
     {
         $unassignedTask = Task::factory()->for($this->project)->create();
         $adminTask = Task::factory()->for($this->project)->create(['user_id' => $this->admin->id]);
-        
+
         $this->actingAs($this->employee)->get(route('tasks.user'))
             ->assertOk()
             ->assertSeeText($this->employee->name.'\'s tasks')
             ->assertSeeText('No tasks yet.');
-        
+
         $assignedTask = Task::factory()->for($this->project)->create(['user_id' => $this->employee->id]);
 
         $this->actingAs($this->employee)->get(route('tasks.user'))
@@ -53,7 +52,7 @@ class TaskCrudTest extends TestCase
             ->assertDontSeeText([$unassignedTask->title, $adminTask->title]);
     }
 
-    public function test_a_user_with_at_least_the_admin_role_can_see_all_tasks_and_their_own_tasks()
+    public function test_an_admin_can_see_an_overview_of_all_tasks()
     {
         $unassignedTask = Task::factory()->for($this->project)->create();
         $adminTask = Task::factory()->for($this->project)->create(['user_id' => $this->admin->id]);
@@ -64,15 +63,6 @@ class TaskCrudTest extends TestCase
             ->assertSeeText([
                 Str::limit($unassignedTask->title, 25),
                 Str::limit($adminTask->title, 25),
-                Str::limit($employeeTask->title, 25),
-            ]);
-
-        $this->actingAs($this->admin)->get(route('tasks.user'))
-            ->assertOk()
-            ->assertSeeText($this->admin->name.'\'s tasks')
-            ->assertSeeText(Str::limit($adminTask->title, 25))
-            ->assertDontSeeText([
-                Str::limit($unassignedTask->title, 25),
                 Str::limit($employeeTask->title, 25),
             ]);
     }
@@ -186,14 +176,14 @@ class TaskCrudTest extends TestCase
             ->assertSessionHasErrors([
                 'title' => 'The title field is required.',
             ]);
-        
+
         $this->assertDatabaseMissing('tasks', $data);
     }
 
     public function test_only_a_valid_user_can_be_assigned_to_a_task()
     {
         $user = User::factory()->create();
-        
+
         $data = [
             'title' => 'Here is a title',
             'description' => 'Some description here',
@@ -271,7 +261,7 @@ class TaskCrudTest extends TestCase
     public function test_a_user_with_the_edit_task_permission_cannot_edit_a_trashed_task()
     {
         $task = Task::factory()->for($this->project)->trashed()->create();
-        
+
         $this->actingAs($this->employee)->get(route('tasks.edit', $task))
             ->assertNotFound();
 
@@ -304,7 +294,7 @@ class TaskCrudTest extends TestCase
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
             ->assertRedirect(route('tasks.show', $task))
-            ->assertSessionHas('success', 'The task '.$task->fresh()->title  .' has been updated.');
+            ->assertSessionHas('success', 'The task '.$task->fresh()->title.' has been updated.');
 
         $this->assertDatabaseHas('tasks', $taskData);
     }
@@ -371,8 +361,8 @@ class TaskCrudTest extends TestCase
     public function test_a_user_with_the_delete_task_permission_can_delete_a_task()
     {
         $task = Task::factory()->for($this->project)->create([
-            'status' => 'pending', 
-            'user_id' => $this->employee->id
+            'status' => 'pending',
+            'user_id' => $this->employee->id,
         ]);
 
         $this->actingAs($this->employee)->delete(route('tasks.destroy', $task))
@@ -443,7 +433,7 @@ class TaskCrudTest extends TestCase
 
         $this->actingAs($this->admin)->patch(route('tasks.restore', $task))
             ->assertRedirect(route('tasks.trashed'))
-            ->assertSessionHas('success', 'The task '.$task->title. 'has been restored.');
+            ->assertSessionHas('success', 'The task '.$task->title.'has been restored.');
 
         $this->assertNotSoftDeleted($task);
     }
@@ -470,7 +460,7 @@ class TaskCrudTest extends TestCase
             ->assertDontSeeText([
                 $openTask,
                 $closedTask,
-                $completedTask
+                $completedTask,
             ]);
     }
 
@@ -496,7 +486,64 @@ class TaskCrudTest extends TestCase
             ->assertDontSeeText([
                 $openTask,
                 $closedTask,
-                $completedTask
+                $completedTask,
+            ]);
+    }
+
+    public function test_an_admin_can_filter_all_tasks_on_their_title()
+    {
+        $project = Project::factory()->create();
+        $firstTask = Task::factory()->for($this->project)->create(['title' => 'This is the first task']);
+        $secondTask = Task::factory()->for($this->project)->create(['title' => 'This is the second task']);
+        $thirdTask = Task::factory()->for($project)->create(['title' => 'This is task belongs to a different project']);
+
+        $this->actingAs($this->admin)->get(route('tasks.index'))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($firstTask->title, 25),
+                Str::limit($firstTask->project->title, 25),
+                Str::limit($secondTask->title, 25),
+                Str::limit($secondTask->project->title, 25),
+                Str::limit($thirdTask->title, 25),
+                Str::limit($thirdTask->project->title, 25),
+            ]);
+
+        $this->actingAs($this->admin)->get(route('tasks.index', ['search' => 'second']))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($secondTask->title, 25),
+                Str::limit($secondTask->project->title, 25),
+            ])
+            ->assertDontSeeText([
+                $firstTask->title,
+                $thirdTask->title,
+            ]);
+    }
+
+    public function test_a_user_can_filter_task_assigned_to_them_by_the_title_of_the_task()
+    {
+        $project = Project::factory()->create();
+        $firstTask = Task::factory()->for($this->project)->create(['title' => 'This is the first task', 'user_id' => $this->employee->id]);
+        $secondTask = Task::factory()->for($this->project)->create(['title' => 'This is the second task', 'user_id' => $this->employee->id]);
+        $thirdTask = Task::factory()->for($project)->create(['title' => 'This is task belongs to a different project', 'user_id' => $this->employee->id]);
+
+        $this->actingAs($this->employee)->get(route('tasks.user'))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($firstTask->title, 25),
+                Str::limit($secondTask->title, 25),
+                Str::limit($thirdTask->title, 25),
+            ]);
+
+        $this->actingAs($this->employee)->get(route('tasks.user', ['search' => 'first']))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($firstTask->title, 25),
+                Str::limit($firstTask->project->title, 25),
+            ])
+            ->assertDontSeeText([
+                $secondTask->title,
+                $thirdTask->title,
             ]);
     }
 }

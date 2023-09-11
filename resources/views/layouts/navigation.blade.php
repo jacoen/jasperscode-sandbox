@@ -78,7 +78,7 @@
         </li>
     @endcan
 
-    <li class="nav-group" aria-expanded="false">
+    {{-- <li class="nav-group" aria-expanded="false">
         <a class="nav-link nav-group-toggle" href="#">
             <svg class="nav-icon">
             </svg>
@@ -93,5 +93,5 @@
                 </a>
             </li>
         </ul>
-    </li>
+    </li> --}}
 </ul>

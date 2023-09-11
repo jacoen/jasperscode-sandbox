@@ -13,11 +13,11 @@
         </div>
 
         <div class="card-body">
-            @if(! $tasks->count())
+            @if(! $tasks->count() && ! request()->query->count()))
                 <p class="mb-2">No tasks yet.</p>
             @else
-                <div class="mb-1">
-                    <x-status-dropdown route="tasks.index" />
+                <div class="float-end col-lg-10 me-4">
+                    <x-filter-form route="{{ $route }}" placeholder="Search the tasks by title" />
                 </div>
 
                 <table class="table">

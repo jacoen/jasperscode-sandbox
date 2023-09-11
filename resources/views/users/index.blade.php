@@ -53,12 +53,8 @@
                 @endforeach
                 </tbody>
             </table>
+            <x-pagination :records="$users" />
         </div>
 
-        <div class="card-footer">
-            <div class="pagination justify-content-center mt-3">
-                {{ $users->links() }}
-            </div>
-        </div>
     </div>
 @endsection

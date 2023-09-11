@@ -21,7 +21,7 @@ class ProjectFactory extends Factory
 
         return [
             'manager_id' => $user,
-            'title' => fake()->sentence(4),
+            'title' => 'Demo - '.fake()->sentence(4),
             'description' => fake()->text(),
             'due_date' => now()->addMonths(4),
             'status' => 'open',
