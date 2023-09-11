@@ -35,7 +35,7 @@ class TaskController extends Controller
                 $query->where('status', request()->status);
             })
             ->latest('updated_at')
-            ->orderbyDesc('id')
+            ->latest('id')
             ->paginate();
 
         return TaskResource::collection($tasks);
@@ -109,7 +109,7 @@ class TaskController extends Controller
         $tasks = Task::onlyTrashed()
             ->with('author', 'user')
             ->latest('deleted_at')
-            ->orderBy('id', 'desc')
+            ->latest('id')
             ->paginate();
 
         return TaskResource::collection($tasks);
@@ -149,7 +149,7 @@ class TaskController extends Controller
             })
             ->where('user_id', auth()->id())
             ->latest('updated_at')
-            ->orderByDesc('id')
+            ->latest('id')
             ->paginate();
 
         return TaskResource::collection($tasks);

@@ -40,7 +40,7 @@ class ProjectController extends Controller
                 $query->orderBy('is_pinned', 'desc');
             })
             ->latest('updated_at')
-            ->orderBy('id', 'desc')
+            ->latest('id', 'desc')
             ->paginate(15);
 
         return ProjectResource::collection($projects);
@@ -96,7 +96,7 @@ class ProjectController extends Controller
         $projects = Project::onlyTrashed()
             ->with('manager')
             ->latest('deleted_at')
-            ->orderByDesc('id')
+            ->latest('id')
             ->paginate();
 
         return ProjectResource::collection($projects);

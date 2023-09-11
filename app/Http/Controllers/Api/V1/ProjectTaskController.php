@@ -26,7 +26,7 @@ class ProjectTaskController extends Controller
             })
             ->with('author', 'user')
             ->latest('updated_at')
-            ->orderByDesc('id')
+            ->latest('id')
             ->paginate();
 
         return TaskResource::collection($data);
