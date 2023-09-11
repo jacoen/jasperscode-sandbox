@@ -10,7 +10,11 @@ abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
 
-    protected $admin, $manager, $employee;
+    protected $admin;
+
+    protected $manager;
+
+    protected $employee;
 
     public function setUp(): void
     {

@@ -11,7 +11,7 @@ class TaskObserver
      */
     public function creating(Task $task): void
     {
-        if (!$task->status) {
+        if (! $task->status) {
             $task->status = config('definitions.statuses.Open');
         }
     }

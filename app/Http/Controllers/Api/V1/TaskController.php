@@ -10,6 +10,8 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\TaskAssignedNotification;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -23,7 +25,7 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): AnonymousResourceCollection
     {
         $tasks = Task::with('project', 'project.manager', 'author', 'user')
             ->when(request()->search, function ($query) {
@@ -42,7 +44,7 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTaskRequest $request, Project $project)
+    public function store(StoreTaskRequest $request, Project $project): TaskResource
     {
         if (! $project->is_open_or_pending) {
             return response()->json([
@@ -63,7 +65,7 @@ class TaskController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Task $task)
+    public function show(Task $task): TaskResource
     {
         $task->load('project', 'author', 'user');
 
@@ -73,17 +75,16 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTaskRequest $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task): TaskResource|JsonResponse
     {
-        if (! $task->project->is_open_or_pending)
-        {
+        if (! $task->project->is_open_or_pending) {
             return response()->json([
                 'message' => 'Cannot update the task when the project is not open or pending.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $task->update($request->validated());
-        
+
         if ($task->wasChanged('user_id') && isset($request->user_id) && auth()->id() != $request->user_id) {
             User::find($request->user_id)->notify(new TaskAssignedNotification($task));
         }
@@ -94,14 +95,14 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Task $task)
+    public function destroy(Task $task): JsonResponse
     {
         $task->delete();
 
-        return response('', Response::HTTP_NO_CONTENT);
+        return response()->json('', Response::HTTP_NO_CONTENT);
     }
 
-    public function trashed()
+    public function trashed(): AnonymousResourceCollection
     {
         $this->authorize('restore task', Task::class);
 
@@ -114,7 +115,7 @@ class TaskController extends Controller
         return TaskResource::collection($tasks);
     }
 
-    public function restore(Task $task)
+    public function restore(Task $task): TaskResource|JsonResponse
     {
         $this->authorize('restore task', $task);
 
@@ -126,7 +127,7 @@ class TaskController extends Controller
 
         if ($task->project->trashed()) {
             return response()->json([
-                'message' => 'Could not restore this task because the project has been trashed.'
+                'message' => 'Could not restore this task because the project has been trashed.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -135,7 +136,7 @@ class TaskController extends Controller
         return new TaskResource($task);
     }
 
-    public function userTasks()
+    public function userTasks(): AnonymousResourceCollection
     {
         $this->authorize('read task', Task::class);
 

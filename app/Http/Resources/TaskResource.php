@@ -17,13 +17,13 @@ class TaskResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'description' => $this->when(! $request->routeIs('tasks.index') && ! $request->routeIs('tasks.trashed'), function(){
+            'description' => $this->when(! $request->routeIs('tasks.index') && ! $request->routeIs('tasks.trashed'), function () {
                 return $this->description;
             }),
             'status' => $this->status,
             'author' => $this->author->name,
             'user' => $this->user->name ?? 'Not assigned',
-            'project' =>  $this->when(! $request->routeIs('tasks.trashed'), function () {
+            'project' => $this->when(! $request->routeIs('tasks.trashed'), function () {
                 return new ProjectResource($this->whenLoaded('project'));
             }),
             'updated_at' => $this->when(! $request->routeIs('tasks.trashed'), function () {
@@ -31,8 +31,7 @@ class TaskResource extends JsonResource
             }),
             'deleted_at' => $this->when($request->routeIs('tasks.trashed'), function () {
                 return new DateTimeResource($this->deleted_at);
-            })
-            
+            }),
         ];
     }
 }

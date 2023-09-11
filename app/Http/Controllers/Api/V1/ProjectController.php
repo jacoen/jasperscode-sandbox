@@ -102,7 +102,7 @@ class ProjectController extends Controller
         return ProjectResource::collection($projects);
     }
 
-    public function restore(Project $project): ProjectResource | JsonResponse
+    public function restore(Project $project): ProjectResource|JsonResponse
     {
         $this->authorize('restore project', $project);
 

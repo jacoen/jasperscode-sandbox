@@ -24,7 +24,7 @@ class TaskController extends Controller
     }
 
     public function index(): View
-    {   
+    {
         $route = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
             ->when(request()->search, function ($query) {
@@ -87,8 +87,7 @@ class TaskController extends Controller
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
-        if (! $task->project->is_open_or_pending)
-        {
+        if (! $task->project->is_open_or_pending) {
             return redirect()->route('tasks.edit', $task)
                 ->withErrors([
                     'error' => 'Could no update this task because teh project is not open or pending.',

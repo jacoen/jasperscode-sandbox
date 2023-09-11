@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class ProjectTaskTest extends TestCase
@@ -59,7 +58,6 @@ class ProjectTaskTest extends TestCase
         $this->actingAs($this->employee)->put(route('tasks.update', $this->task), $data)
             ->assertRedirect(route('tasks.show', $this->task))
             ->assertSessionHas('success', 'The task '.$this->task->fresh()->title.' has been updated.');
-
 
         $this->assertTrue($this->project->fresh()->updated_at->gte($projectTime));
         $this->assertEquals($this->project->fresh()->updated_at->format('d-m-Y H:i:s'), $this->task->fresh()->updated_at->format('d-m-Y H:i:s'));
