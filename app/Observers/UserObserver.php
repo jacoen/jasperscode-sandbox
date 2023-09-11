@@ -12,7 +12,7 @@ class UserObserver
     public function created(User $user): void
     {
         if ($user->doesntHave('roles')) {
-            $user->assignRole('user');
+            $user->assignRole('User');
         }
     }
 
