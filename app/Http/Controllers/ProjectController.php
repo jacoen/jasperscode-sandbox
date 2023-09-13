@@ -110,7 +110,7 @@ class ProjectController extends Controller
             return back()->withErrors(['error' => 'User is not authorized to pin a project']);
         }
 
-        if (Project::where('is_pinned', true)->count() > 1) {
+        if (Project::where('is_pinned', true)->count() >= 1 && $request->is_pinned) {
             return back()
                 ->withErrors(['error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.']);
         }

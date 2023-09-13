@@ -383,4 +383,48 @@ class ProjectCrudTest extends TestCase
                 Str::limit($thirdProject->title, 35),
             ]);
     }
+
+    public function test_only_a_user_with_at_least_the_admin_role_can_pin_a_project()
+    {
+        $project = Project::factory()->create(['manager_id' => $this->manager->id]);
+
+        $data = [
+            'title' => $project->title,
+            'manager_id' => $this->manager->id,
+            'due_date' => $project->due_date,
+            'status' => $project->status,
+            'is_pinned' => 1,
+        ];
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
+        ->assertSessionHasErrors([
+            'error' => 'User is not authorized to pin a project',
+        ]);
+    }
+
+    public function test_only_one_project_can_be_pinned_at_a_time()
+    {
+        $this->withoutExceptionHandling();
+        $firstProject = Project::factory()->create(['manager_id' => $this->manager->id]);
+        $secondProject = Project::factory()->create(['manager_id' => $this->manager->id, 'is_pinned' => 1]);
+
+        $data = [
+            'title' => $firstProject->title,
+            'description' => $firstProject->description,
+            'status' => $firstProject->status,
+            'manager_id' => $firstProject->manager_id,
+            'due_date' => $firstProject->due_date,
+            'is_pinned' => 1,
+        ];
+
+        $this->actingAs($this->admin)->put(route('projects.update', $firstProject), $data)
+            ->assertSessionHasErrors([
+                'error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.'
+            ]);
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $firstProject->id,
+            'is_pinned' => 0,
+        ]);
+    }
 }
