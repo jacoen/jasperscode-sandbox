@@ -44,7 +44,7 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTaskRequest $request, Project $project): TaskResource
+    public function store(StoreTaskRequest $request, Project $project): TaskResource|JsonResponse
     {
         if (! $project->is_open_or_pending) {
             return response()->json([

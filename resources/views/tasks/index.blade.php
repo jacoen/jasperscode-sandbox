@@ -13,7 +13,7 @@
         </div>
 
         <div class="card-body">
-            @if(! $tasks->count() && ! request()->query->count()))
+            @if(! $tasks->count() && ! request()->query->count())
                 <p class="mb-2">No tasks yet.</p>
             @else
                 <div class="float-end col-lg-10 me-4">

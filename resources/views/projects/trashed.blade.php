@@ -25,8 +25,8 @@
 
                     <tbody>
                         @foreach ($projects as $project)
-                            <tr>
-                                <td><span title="{{ $project->title }}">{{ Str::limit($project->title, 35) }}</span></td>
+                            <tr class="align-baseline">
+                                <td><span class="fw-semibold" title="{{ $project->title }}">{{ Str::limit($project->title, 35) }}</span></td>
                                 <td>{{ $project->due_date->format('d M Y') }}</td>
                                 <td>{{ lastUpdated($project->deleted_at) }}</td>
                                 <td>
