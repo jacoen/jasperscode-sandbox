@@ -404,9 +404,8 @@ class ProjectCrudTest extends TestCase
 
     public function test_only_one_project_can_be_pinned_at_a_time()
     {
-        $this->withoutExceptionHandling();
         $firstProject = Project::factory()->create(['manager_id' => $this->manager->id]);
-        $secondProject = Project::factory()->create(['manager_id' => $this->manager->id, 'is_pinned' => 1]);
+        $secondProject = Project::factory()->create(['manager_id' => $this->manager->id]);
 
         $data = [
             'title' => $firstProject->title,
@@ -417,10 +416,26 @@ class ProjectCrudTest extends TestCase
             'is_pinned' => 1,
         ];
 
+        $secondData = [
+            'title' => $secondProject->title,
+            'description' => $secondProject->description,
+            'status' => 'open',
+            'due_date' => $secondProject->due_date,
+            'is_pinned' => 1
+        ];
+
+        $this->actingAs($this->admin)->put(route('projects.update', $secondProject), $secondData)
+            ->assertRedirect(route('projects.show', $secondProject));
+
         $this->actingAs($this->admin)->put(route('projects.update', $firstProject), $data)
             ->assertSessionHasErrors([
                 'error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.'
             ]);
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $secondProject->id,
+            'is_pinned' => 1,
+        ]);
 
         $this->assertDatabaseHas('projects', [
             'id' => $firstProject->id,
