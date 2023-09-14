@@ -82,8 +82,14 @@ class ProjectController extends Controller
         return new ProjectResource($project);
     }
 
-    public function destroy(Project $project): HttpResponse
+    public function destroy(Project $project): HttpResponse|JsonResponse
     {
+        if ($project->is_pinned) {
+            return response()->json([
+                'message' => 'Project could not be deleted because it was pinned. Remove the pin from the project before deleting it.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $project->delete();
 
         return response('', Response::HTTP_NO_CONTENT);
