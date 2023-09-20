@@ -60,6 +60,6 @@ class TaskPolicy
      */
     public function forceDelete(User $user, Task $task)
     {
-        //
+        return $user->can('delete task') && $user->hasRole(['Admin', 'Super Admin']);
     }
 }

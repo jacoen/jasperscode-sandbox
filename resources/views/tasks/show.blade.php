@@ -58,8 +58,20 @@
                             <div class="col-md-2"><span class="fw-bold">Status</div>
                             <div class="col-md-9">{{ $task->status }}</div>
                         </div>
-                    </div>
 
+                        {{-- @if ($task->image) --}}
+                            <div class="mb-2">
+                                <div><span class="fw-bold">Image(s)</span></div>
+                                <div class="row-gx-1">
+                                    <div class="col-md-3">
+                                        <a href="{{ $task->getFirstMediaUrl() }}">
+                                            <img class="img-thumbnail rounded" src="{{ $task->getFirstMedia()->getUrl() }}" alt="{{ $task->getFirstMedia()->getUrl() }}">
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {{-- @endif --}}
+                    </div>
                 </div>
             </div>
         </div>

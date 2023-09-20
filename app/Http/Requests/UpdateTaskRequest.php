@@ -28,6 +28,7 @@ class UpdateTaskRequest extends FormRequest
             'title' => ['required', 'string', 'min:3', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['required', 'string', Rule::in(config('definitions.statuses'))],
+            'image' => ['nullable'],
         ];
     }
 

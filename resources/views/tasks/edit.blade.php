@@ -9,7 +9,7 @@
         </div>
 
         <div class="card-body">
-            <form action="{{ route('tasks.update', $task) }}" method="POST" class="px-4">
+            <form action="{{ route('tasks.update', $task) }}" method="POST" class="px-4" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -51,6 +51,13 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                </div>
+
+                <div class="row gx-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="image" class="form-label">Image</label>
+                        <input type="file" id="image" name="image" class="form-control @error('image') is-invalid @enderror">
                     </div>
                 </div>
 

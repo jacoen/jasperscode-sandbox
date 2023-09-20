@@ -62,6 +62,16 @@ class TaskController extends Controller
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
         $task = $project->tasks()->create($data);
 
+        if ($attachments = $request->file('attachments')) {
+            foreach ($attachments as $attachment)
+            {
+                $task->addMedia($attachment)
+                ->usingName($task->title)
+                ->toMediaCollection('attachments');
+            }
+            
+        }
+
         if (isset($request->user_id) && auth()->id() != $request->user_id) {
             User::find($request->user_id)->notify(new TaskAssignedNotification($task));
         }
@@ -95,6 +105,13 @@ class TaskController extends Controller
         }
 
         $task->update($request->validated());
+
+        if ($request->hasFile('image')) {
+            $task->clearMediaCollection();
+            $task->addMediaFromRequest('image')
+                ->usingName($task->title)
+                ->toMediaCollection();
+        }
 
         if ($task->wasChanged('title')) {
             $task = $task->fresh();
@@ -158,5 +175,21 @@ class TaskController extends Controller
             ->paginate();
 
         return view('tasks.index', compact('tasks', 'route'));
+    }
+
+    public function forceDelete(Task $task)
+    {
+        $this->authorize('forceDelete', $task);
+
+        $mediaItems = $task->getMedia();
+        if (! $mediaItems->isempty()) {
+            $task->clearMediaCollection('thumb');
+            $task->clearMediaCollection('attachments');
+        }
+
+        $task->forceDelete();
+
+        return redirect()->route('tasks.trashed')
+            ->with('success', 'The task has been permanently deleted.');
     }
 }

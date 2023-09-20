@@ -26,6 +26,7 @@ class StoreTaskRequest extends FormRequest
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'min:3', 'max:255'],
             'description' => ['nullable', 'string'],
+            'attachments.*' => ['nullable', 'image'],
         ];
     }
 
