@@ -67,9 +67,8 @@ class TaskController extends Controller
             {
                 $task->addMedia($attachment)
                 ->usingName($task->title)
-                ->toMediaCollection('attachments');
+                ->toMediaCollection();
             }
-            
         }
 
         if (isset($request->user_id) && auth()->id() != $request->user_id) {
@@ -157,6 +156,16 @@ class TaskController extends Controller
             ->with('success', 'The task '.$task->title.'has been restored.');
     }
 
+    public function forceDelete(Task $task)
+    {
+        $this->authorize('forceDelete', $task);
+
+        $task->forceDelete();
+
+        return redirect()->route('tasks.trashed')
+            ->with('success', 'The task has been permanently deleted.');
+    }
+
     public function userTasks(): View
     {
         $this->authorize('read task', Task::class);
@@ -175,21 +184,5 @@ class TaskController extends Controller
             ->paginate();
 
         return view('tasks.index', compact('tasks', 'route'));
-    }
-
-    public function forceDelete(Task $task)
-    {
-        $this->authorize('forceDelete', $task);
-
-        $mediaItems = $task->getMedia();
-        if (! $mediaItems->isempty()) {
-            $task->clearMediaCollection('thumb');
-            $task->clearMediaCollection('attachments');
-        }
-
-        $task->forceDelete();
-
-        return redirect()->route('tasks.trashed')
-            ->with('success', 'The task has been permanently deleted.');
     }
 }

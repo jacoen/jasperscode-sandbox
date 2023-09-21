@@ -33,7 +33,7 @@ class Task extends Model implements Hasmedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('tasks')
+        $this->addMediaCollection('attachments')
             ->acceptsMimeTypes(['image/jpg', 'image/jpeg', 'image/png'])
             ->onlyKeepLatest(3);
     }
