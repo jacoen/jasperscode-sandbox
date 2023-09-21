@@ -36,4 +36,11 @@ class StoreTaskRequest extends FormRequest
             'description' => strip_tags($this->description),
         ]);
     }
+
+    public function messages(): array
+    {
+        return [
+            'attachments.*' => 'The attachments may only contain images.',
+        ];
+    }
 }
