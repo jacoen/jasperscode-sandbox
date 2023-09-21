@@ -41,9 +41,11 @@ class TaskObserver
      */
     public function deleted(Task $task): void
     {
-        $task->status = 'closed';
-        $task->user_id = null;
-        $task->save();
+        if (request()->routeIs('tasks.destroy')) {
+            $task->status = 'closed';
+            $task->user_id = null;
+            $task->save();
+        }
     }
 
     /**
