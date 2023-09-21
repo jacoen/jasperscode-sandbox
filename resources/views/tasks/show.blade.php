@@ -63,11 +63,11 @@
                             <div class="mb-2">
                                 <div><span class="fw-bold">Image(s)</span></div>
                                 <div class="row-gx-1">
-                                    <div class="col-md-3">
-                                        <a href="{{ $task->getFirstMediaUrl() }}">
-                                            <img class="img-thumbnail rounded" src="{{ $task->getFirstMedia()->getUrl() }}" alt="{{ $task->getFirstMedia()->getUrl() }}">
+                                    @foreach ($task->getMedia() as $image)
+                                        <a href="{{ $image->getUrl() }}" class="me-2">
+                                            <img src="{{ $image->getUrl('thumb') }}" alt="{{ $image->getUrl() }}">
                                         </a>
-                                    </div>
+                                    @endforeach
                                 </div>
                             </div>
                         {{-- @endif --}}
