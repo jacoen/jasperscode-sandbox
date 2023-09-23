@@ -105,11 +105,13 @@ class TaskController extends Controller
 
         $task->update($request->validated());
 
-        if ($request->hasFile('image')) {
-            $task->clearMediaCollection();
-            $task->addMediaFromRequest('image')
+        if ($attachments = $request->file('attachments')) {
+            foreach ($attachments as $attachment)
+            {
+                $task->addMedia($attachment)
                 ->usingName($task->title)
                 ->toMediaCollection();
+            }
         }
 
         if ($task->wasChanged('title')) {
