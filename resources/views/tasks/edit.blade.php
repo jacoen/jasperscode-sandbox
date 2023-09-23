@@ -56,8 +56,8 @@
 
                 <div class="row gx-3 mb-3">
                     <div class="col-md-6">
-                        <label for="image" class="form-label">Image</label>
-                        <input type="file" id="image" name="image" class="form-control @error('image') is-invalid @enderror">
+                        <label for="attachments" class="form-label">Image</label>
+                        <input type="file" id="attachments" name="attachments[]" class="form-control @error('image') is-invalid @enderror" multiple>
                     </div>
                 </div>
 
