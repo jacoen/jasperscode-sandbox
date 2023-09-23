@@ -30,7 +30,7 @@ class StoreTaskRequest extends FormRequest
         ];
     }
 
-    public function prepareForValidation()
+    public function prepareForValidation(): void
     {
         $this->merge([
             'description' => strip_tags($this->description),
