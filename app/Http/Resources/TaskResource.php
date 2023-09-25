@@ -32,6 +32,9 @@ class TaskResource extends JsonResource
             'deleted_at' => $this->when($request->routeIs('tasks.trashed'), function () {
                 return new DateTimeResource($this->deleted_at);
             }),
+            'attachments' => $this->when(! $request->routeIs('tasks.index') && ! $request->routeIs('tasks.trashed'), function () {
+                return MediaResource::collection($this->getMedia('attachments'));
+            }),
         ];
     }
 }
