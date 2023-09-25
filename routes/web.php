@@ -7,6 +7,7 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskImageController;
 use App\Http\Controllers\TrashedProjectController;
 use App\Http\Controllers\TrashedTaskController;
 use App\Http\Controllers\UserController;
@@ -72,4 +73,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/projects', TrashedProjectController::class)->name('projects.trashed');
         Route::get('/tasks', TrashedTaskController::class)->name('tasks.trashed');
     });
+
+    Route::delete('tasks/{task}/images/{image}', TaskImageController::class)->name('task-image.delete');
 });
