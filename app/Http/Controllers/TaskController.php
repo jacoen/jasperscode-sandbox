@@ -67,7 +67,7 @@ class TaskController extends Controller
             {
                 $task->addMedia($attachment)
                 ->usingName($task->title)
-                ->toMediaCollection();
+                ->toMediaCollection('attachments');
             }
         }
 
@@ -106,11 +106,12 @@ class TaskController extends Controller
         $task->update($request->validated());
 
         if ($attachments = $request->file('attachments')) {
+            $task->clearMediaCollection();
             foreach ($attachments as $attachment)
             {
                 $task->addMedia($attachment)
                 ->usingName($task->title)
-                ->toMediaCollection();
+                ->toMediaCollection('attachments');
             }
         }
 
