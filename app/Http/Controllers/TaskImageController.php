@@ -13,10 +13,10 @@ class TaskImageController extends Controller
      */
     public function __invoke(Task $task, Media $image)
     {
-        // if ($task->id == $image->id) {
-        //     return redirect()->route('tasks.show', $task)
-        //         ->withErrors(['errors' => 'Cannot remove this image.']); 
-        // }
+        if ($task->id == $image->id) {
+            return redirect()->route('tasks.show', $task)
+                ->withErrors(['errors' => 'Cannot remove this image.']); 
+        }
 
         $image->delete();
 
