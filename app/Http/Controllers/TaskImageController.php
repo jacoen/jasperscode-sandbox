@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
-use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class TaskImageController extends Controller
@@ -13,7 +12,7 @@ class TaskImageController extends Controller
      */
     public function __invoke(Task $task, Media $image)
     {
-        if ($task->id == $image->id) {
+        if ($task->id !== $image->model_id) {
             return redirect()->route('tasks.show', $task)
                 ->withErrors(['errors' => 'Cannot remove this image.']); 
         }
