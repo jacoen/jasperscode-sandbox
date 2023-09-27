@@ -26,13 +26,21 @@ class StoreTaskRequest extends FormRequest
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'min:3', 'max:255'],
             'description' => ['nullable', 'string'],
+            'attachments.*' => ['nullable', 'image'],
         ];
     }
 
-    public function prepareForValidation()
+    public function prepareForValidation(): void
     {
         $this->merge([
             'description' => strip_tags($this->description),
         ]);
+    }
+
+    public function messages(): array
+    {
+        return [
+            'attachments.*' => 'The attachments may only contain images.',
+        ];
     }
 }

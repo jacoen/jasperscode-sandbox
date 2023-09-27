@@ -16,6 +16,8 @@ abstract class TestCase extends BaseTestCase
 
     protected $employee;
 
+    protected $user;
+
     public function setUp(): void
     {
         parent::setUp();

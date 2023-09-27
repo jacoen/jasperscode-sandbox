@@ -16,19 +16,24 @@ class ProjectObserver
         }
     }
 
-    /**
-     * Handle the Project "deleted" event.
-     */
-    public function deleted(Project $project): void
+    public function deleting(Project $project)
     {
+        $project->tasks()->each(function ($task) {
+            $task->delete();
+
         $project->timestamps = false;
         $project->status = 'closed';
         $project->manager_id = null;
         $project->save();
 
-        $project->tasks()->each(function ($task) {
-            $task->delete();
-        });
+    }
+
+    /**
+     * Handle the Project "deleted" event.
+     */
+    public function deleted(Project $project): void
+    {
+        // 
     }
 
     /**
@@ -51,8 +56,10 @@ class ProjectObserver
     /**
      * Handle the Project "force deleted" event.
      */
-    public function forceDeleted(Project $project): void
+    public function forceDeleting(Project $project): void
     {
-        //
+        $project->tasks()->withTrashed()->each(function ($task) {
+            $task->forceDelete();
+        });
     }
 }

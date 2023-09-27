@@ -55,6 +55,14 @@ class TaskController extends Controller
         $data = Arr::add($request->validated(), 'author_id', auth()->id());
         $task = $project->tasks()->create($data);
 
+        if ($attachments = $request->file('attachments')) {
+            foreach ($attachments as $attachment) {
+                $task->addMedia($attachment)
+                ->usingName($task->title)
+                ->toMediaCollection('attachments');
+            }
+        }
+
         if (isset($request->user_id) && auth()->id() != $request->user_id) {
             User::find($request->user_id)->notify(new TaskAssignedNotification($task));
         }
@@ -84,6 +92,16 @@ class TaskController extends Controller
         }
 
         $task->update($request->validated());
+
+        if ($attachments = $request->file('attachments')) {
+            $task->clearMediaCollection();
+            foreach ($attachments as $attachment)
+            {
+                $task->addMedia($attachment)
+                ->usingName($task->title)
+                ->toMediaCollection('attachments');
+            }
+        }
 
         if ($task->wasChanged('user_id') && isset($request->user_id) && auth()->id() != $request->user_id) {
             User::find($request->user_id)->notify(new TaskAssignedNotification($task));
