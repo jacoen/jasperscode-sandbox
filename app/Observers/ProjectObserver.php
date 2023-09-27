@@ -18,16 +18,14 @@ class ProjectObserver
 
     public function deleting(Project $project)
     {
-        if (request()->routeIs('projects.destroy')) {
-            $project->tasks()->each(function ($task) {
-                $task->delete();
-            });
+        $project->tasks()->each(function ($task) {
+            $task->delete();
 
-            $project->timestamps = false;
-            $project->status = 'closed';
-            $project->manager_id = null;
-            $project->save();
-        }
+        $project->timestamps = false;
+        $project->status = 'closed';
+        $project->manager_id = null;
+        $project->save();
+
     }
 
     /**
