@@ -4,6 +4,12 @@
     <x-flash-success :message="session('success')" />
     <x-errors :errors="$errors" />
 
+    @if ($project->due_date_alert || $project->due_date_warning)
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <span class="fw-bold">Info</span> The due date of this project is {{ $project->due_date_difference }}
+        </div> 
+    @endif
+
     @if ($project->is_pinned && auth()->user()->hasRole(['Super Admin', 'Admin']))
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
             <li class="ms-2 fw-semibold">This project has been pinned.</li>

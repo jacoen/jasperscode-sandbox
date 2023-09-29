@@ -33,4 +33,23 @@ class Project extends Model
     {
         return $this->status === 'open' || $this->status === 'pending';
     }
+
+    public function getDueDateAlertAttribute(): bool
+    {
+        return $this->due_date->lte(now()->addWeek()) && $this->getIsOpenOrPendingAttribute();
+    }
+
+    public function getDueDateWarningAttribute(): bool
+    {
+        return $this->due_date->lte(now()->addMonth()) && $this->getIsOpenOrPendingAttribute() && ! $this->getDueDateAlertAttribute();
+    }
+
+    public function getDueDateDifferenceAttribute(): string
+    {
+        if ($this->due_date->lte(now()->addDay())) {
+            return 'tomorrow.';
+        }
+
+        return $this->due_date->diffInDays(now()).' days.';
+    }
 }
