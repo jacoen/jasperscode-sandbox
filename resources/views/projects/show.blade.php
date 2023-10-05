@@ -85,20 +85,6 @@
                     @endif
                 </div>
 
-                {{-- <div class="d-flex justify-content-between align-items-center mb-2">
-                    @if($project->tasks->count())
-                        <x-filter-form route="projects.show" :param="$project" placeholder="Search task by title" />
-                    @endif
-
-                    @if (auth()->user()->can('create task') && $project->is_open_or_pending)
-                        <div class="justify-content-end me-2">
-                            <a href="{{ route('tasks.create', $project) }}" class="btn btn-block btn-success fw-semibold text-white">
-                                New task
-                            </a>
-                        </div>
-                    @endif
-                </div> --}}
-
                 @if (! $project->tasks->count())
                     <p>No tasks in this project yet.</p>
                 @else
@@ -146,4 +132,44 @@
             </div>
         </div>
     </div>
+
+    @if ($activities->count())
+        <div class="card">
+            <div class="card-header">
+                Activities
+            </div>
+            <div class="card-body">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Event</th>
+                            <th scope="col">causer</th>
+                            <th scope="col">Old</th>
+                            <th scope="col">New</th>
+                            <th scope="col">Date time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($activities as $activity)
+                            <tr>
+                                <td scope="col">{{ $activity->event }}</td>
+                                <td scope="col">{{ $activity->causer->name }}</td>
+                                <td scope="col">
+                                    @foreach ($activity->changes['old'] as $key => $value )
+                                        <span class="fw-bold">{{ $key }}</span> {{ $value }} <br />
+                                    @endforeach
+                                </td>
+                                <td scope="col">
+                                    @foreach($activity->changes['attributes'] as $key => $value)
+                                        <strong>{{ $key }}:</strong> {{ $value }}<br>
+                                    @endforeach
+                                </td>
+                                <td scope="col">{{ $activity->created_at->format('Y-m-d') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 @endsection
