@@ -20,12 +20,12 @@ class ProjectObserver
     {
         $project->tasks()->each(function ($task) {
             $task->delete();
+        });
 
         $project->timestamps = false;
         $project->status = 'closed';
         $project->manager_id = null;
         $project->save();
-
     }
 
     /**
