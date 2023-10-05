@@ -73,6 +73,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project): View
     {
+        $activities = $project->activities()->with('causer')->get();
         $pending_or_open = $project->is_open_or_pending;
 
         $tasks = $project->tasks()
@@ -87,7 +88,7 @@ class ProjectController extends Controller
             ->orderBy('id', 'desc')
             ->paginate();
 
-        return view('projects.show', compact(['project', 'tasks', 'pending_or_open']));
+        return view('projects.show', compact(['project', 'tasks', 'pending_or_open', 'activities']));
     }
 
     /**
