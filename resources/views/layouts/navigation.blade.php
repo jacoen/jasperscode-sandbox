@@ -78,6 +78,16 @@
         </li>
     @endcan
 
+    @can('read activity')
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('activities.index') }}">
+                <svg class="nav-icon">
+                </svg>
+                {{ __('Activities') }}
+            </a>
+        </li>
+    @endcan
+
     {{-- <li class="nav-group" aria-expanded="false">
         <a class="nav-link nav-group-toggle" href="#">
             <svg class="nav-icon">

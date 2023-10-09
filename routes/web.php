@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
 use App\Http\Controllers\HomeController;
@@ -75,4 +76,6 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::delete('tasks/{task}/images/{image}', TaskImageController::class)->name('task-image.delete');
+
+    Route::get('/activities', ActivityController::class)->name('activities.index');
 });
