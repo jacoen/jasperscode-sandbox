@@ -132,44 +132,4 @@
             </div>
         </div>
     </div>
-
-    @if ($activities->count())
-        <div class="card">
-            <div class="card-header">
-                Activities
-            </div>
-            <div class="card-body">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th scope="col">Event</th>
-                            <th scope="col">causer</th>
-                            <th scope="col">Old</th>
-                            <th scope="col">New</th>
-                            <th scope="col">Date time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($activities as $activity)
-                            <tr>
-                                <td scope="col">{{ $activity->event }}</td>
-                                <td scope="col">{{ $activity->causer->name }}</td>
-                                <td scope="col">
-                                    @foreach ($activity->changes['old'] as $key => $value )
-                                        <span class="fw-bold">{{ $key }}</span> {{ $value }} <br />
-                                    @endforeach
-                                </td>
-                                <td scope="col">
-                                    @foreach($activity->changes['attributes'] as $key => $value)
-                                        <strong>{{ $key }}:</strong> {{ $value }}<br>
-                                    @endforeach
-                                </td>
-                                <td scope="col">{{ $activity->created_at->format('Y-m-d') }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    @endif
 @endsection
