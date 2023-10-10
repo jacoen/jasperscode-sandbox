@@ -39,7 +39,7 @@ class TaskObserver
     /**
      * Handle the Task "deleted" event.
      */
-    public function deleted(Task $task): void
+    public function deleting(Task $task): void
     {
         $task->status = 'closed';
         $task->user_id = null;

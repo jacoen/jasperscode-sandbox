@@ -9,7 +9,7 @@
         </div>
 
         <div class="card-body">
-            <form action="{{ route('tasks.store', $project) }}" method="POST" class="px-4">
+            <form action="{{ route('tasks.store', $project) }}" method="POST" class="px-4" enctype="multipart/form-data">
                 @csrf
                 <div class="mb-3">
                     <label for="title" class="form-label">Title</label>
@@ -33,6 +33,11 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="attachments" class="form-label">Image</label>
+                        <input type="file" id="attachments" name="attachments[]" class="form-control @error('image') is-invalid @enderror" multiple>
                     </div>
                 </div>
 

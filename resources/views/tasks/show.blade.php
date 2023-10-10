@@ -2,6 +2,7 @@
 
 @section('content')
     <x-flash-success :message="session('success')" />
+    <x-errors :errors="$errors" />
 
     <div>
         <a class="btn btn-link" href="{{ route('projects.show', $task->project) }}">
@@ -58,8 +59,36 @@
                             <div class="col-md-2"><span class="fw-bold">Status</div>
                             <div class="col-md-9">{{ $task->status }}</div>
                         </div>
-                    </div>
 
+                        @if ($task->getMedia())
+                        <div class="mb-2">
+                            <div>
+                                <span class="fw-bold">Image(s)</span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-around">
+                                    @foreach($task->getMedia('attachments') as $image)
+                                        <div class="mx-2">
+                                            <a href="{{ $image->getUrl() }}">
+                                                <img src="{{ $image->getUrl('thumb') }}" alt="{{ $image->file_name }}" class="card-img-top">
+                                            </a>
+                                            <div class="text-center mt-2">
+                                                <form action="{{ route('task-image.delete', [$task, $image]) }}" method="POST">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger text-white fw-semibold">
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div> 
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

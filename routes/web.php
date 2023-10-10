@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
 use App\Http\Controllers\HomeController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskImageController;
 use App\Http\Controllers\TrashedProjectController;
 use App\Http\Controllers\TrashedTaskController;
 use App\Http\Controllers\UserController;
@@ -64,6 +66,7 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
+        Route::patch('/tasks/{task}/force_delete', 'forceDelete')->withTrashed()->name('tasks.delete');
         Route::get('user/tasks', 'userTasks')->name('tasks.user');
     });
 
@@ -71,4 +74,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/projects', TrashedProjectController::class)->name('projects.trashed');
         Route::get('/tasks', TrashedTaskController::class)->name('tasks.trashed');
     });
+
+    Route::delete('tasks/{task}/images/{image}', TaskImageController::class)->name('task-image.delete');
+
+    Route::get('/activities', ActivityController::class)->name('activities.index');
 });
