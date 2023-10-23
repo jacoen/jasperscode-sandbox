@@ -2,21 +2,27 @@
 
 namespace App\Notifications;
 
+use App\Models\Project;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ProjectAlertNotification extends Notification
+class ProjectAlertNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    protected Project $project;
+    protected User $user;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct($project, $user)
     {
-        //
+        $this->project = $project;
+        $this->user = $user;
     }
 
     /**
@@ -34,7 +40,10 @@ class ProjectAlertNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('emails.projects.alert');
+        return (new MailMessage)->markdown('emails.projects.alert', [
+            'project' => $this->project,
+            'user' => $this->user->name,
+        ]);
     }
 
     /**

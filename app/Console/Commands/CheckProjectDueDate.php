@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Notifications\ProjectAlertNotification;
 use App\Notifications\ProjectWarningNotification;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -41,7 +42,8 @@ class CheckProjectDueDate extends Command
 
         $this->info('The following project are about to expire :');
         foreach($this->activeProjects() as $project) {
-            if ($project->due_date_warning && in_array(now()->dayOfWeek, $days)) {
+            
+            if ($project->due_date_warning) {
                 $projectWarningCounter++;
 
                 if ($project->manager) {
@@ -51,13 +53,21 @@ class CheckProjectDueDate extends Command
                     $admins = User::role(['Admin'])->get();
                     $admins->each(function ($admin) use ($project) {
                         $admin->notify(new ProjectWarningNotification($project, $admin));
-                    });
+                    });  
                 }
             }
 
-            if($project->due_date_alert) {
-                Log::warning('Alert: The project'.$project->title.' is due '. $project->due_date_difference);
+            if ($project->due_date_alert) {
                 $projectAlertCounter++;
+                if ($project->manager) {
+                    $manager = User::find($project->manager_id);
+                    $manager->notify(new ProjectAlertNotification($project, $manager));
+                } else {
+                    $admins = User::role(['Admin'])->get();
+                    $admins->each(function ($admin) use ($project) {
+                        $admin->notify(new ProjectAlertNotification($project, $admin));
+                    });
+                }
             }
 
             $this->info('project due date: '. $project->due_date->format('Y-m-d').' - status: '. $project->status .' - title: '.$project->title);
@@ -70,7 +80,6 @@ class CheckProjectDueDate extends Command
     private function activeProjects()
     {
         return Project::with('manager')
-            // ->where('due_date', '>=', now())
             ->whereIn('status', ['open', 'pending'])
             ->orderBy('due_date', 'asc')
             ->orderby('id', 'desc')
