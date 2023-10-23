@@ -52,7 +52,7 @@ class Project extends Model
             return 'tomorrow.';
         }
 
-        return $this->due_date->diffInDays(now()).' days.';
+        return 'in '.$this->due_date->diffInDays(now()->toDateString()).' days.';
     }
     public function getActivitylogOptions(): LogOptions
     {
