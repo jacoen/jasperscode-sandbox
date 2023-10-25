@@ -8,7 +8,6 @@ use App\Notifications\ProjectAlertNotification;
 use App\Notifications\ProjectWarningNotification;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class CheckProjectDueDate extends Command
 {
@@ -43,21 +42,20 @@ class CheckProjectDueDate extends Command
         $this->info('The following project are about to expire :');
         foreach($this->activeProjects() as $project) {
             
-            if ($project->due_date_warning) {
+            if ($project->due_date_warning && now()->isMonday()) {
                 $projectWarningCounter++;
 
                 if ($project->manager) {
                     $user = User::find($project->manager_id); 
                     $user->notify(new ProjectWarningNotification($project, $user));
                 } else {
-                    $admins = User::role(['Admin'])->get();
-                    $admins->each(function ($admin) use ($project) {
-                        $admin->notify(new ProjectWarningNotification($project, $admin));
-                    });  
+                    $admin = User::role(['Admin'])->first();
+                    $admin->notify(new ProjectWarningNotification($project, $admin));
+                
                 }
             }
 
-            if ($project->due_date_alert) {
+            if ($project->due_date_alert && now()->isWeekday()) {
                 $projectAlertCounter++;
                 if ($project->manager) {
                     $manager = User::find($project->manager_id);

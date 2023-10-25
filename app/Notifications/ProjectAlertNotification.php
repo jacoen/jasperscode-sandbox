@@ -57,4 +57,9 @@ class ProjectAlertNotification extends Notification implements ShouldQueue
             //
         ];
     }
+
+    public function getProject()
+    {
+        return $this->project;
+    }
 }
