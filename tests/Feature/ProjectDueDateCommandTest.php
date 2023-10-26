@@ -146,5 +146,4 @@ class ProjectDueDateCommandTest extends TestCase
         Notification::assertNotSentTo($this->admin, ProjectWarningNotification::class);
         Notification::assertNotSentTo($this->manager, ProjectWarningNotification::class);
     }
-
 }

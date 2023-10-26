@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -398,9 +397,9 @@ class ProjectCrudTest extends TestCase
         ];
 
         $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
-        ->assertSessionHasErrors([
-            'error' => 'User is not authorized to pin a project',
-        ]);
+            ->assertSessionHasErrors([
+                'error' => 'User is not authorized to pin a project',
+            ]);
     }
 
     public function test_only_one_project_can_be_pinned_at_a_time()
@@ -422,7 +421,7 @@ class ProjectCrudTest extends TestCase
             'description' => $secondProject->description,
             'status' => 'open',
             'due_date' => $secondProject->due_date,
-            'is_pinned' => 1
+            'is_pinned' => 1,
         ];
 
         $this->actingAs($this->admin)->put(route('projects.update', $secondProject), $secondData)
@@ -430,7 +429,7 @@ class ProjectCrudTest extends TestCase
 
         $this->actingAs($this->admin)->put(route('projects.update', $firstProject), $data)
             ->assertSessionHasErrors([
-                'error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.'
+                'error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.',
             ]);
 
         $this->assertDatabaseHas('projects', [
@@ -453,7 +452,7 @@ class ProjectCrudTest extends TestCase
         $this->actingAs($this->employee)->get(route('projects.show', $project))
             ->assertOk()
             ->assertSeeText('Info This project is due in 6 days.');
-            
+
         $this->actingAs($this->employee)->get(route('projects.show', $tomorrowProject))
             ->assertOk()
             ->assertSeeText('Info This project is due tomorrow.');
