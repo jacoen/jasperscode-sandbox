@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -441,5 +442,38 @@ class ProjectCrudTest extends TestCase
             'id' => $firstProject->id,
             'is_pinned' => 0,
         ]);
+    }
+
+    public function test_an_alert_is_shown_when_an_active_project_is_due_in_a_week_or_less()
+    {
+        $project = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'open', 'due_date' => now()->addDays(6)]);
+        $tomorrowProject = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'open', 'due_date' => now()->addDay()]);
+        $inactiveProject = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'closed', 'due_date' => now()->addDay()]);
+
+        $this->actingAs($this->employee)->get(route('projects.show', $project))
+            ->assertOk()
+            ->assertSeeText('Info This project is due in 6 days.');
+            
+        $this->actingAs($this->employee)->get(route('projects.show', $tomorrowProject))
+            ->assertOk()
+            ->assertSeeText('Info This project is due tomorrow.');
+
+        $this->actingAs($this->employee)->get(route('projects.show', $inactiveProject))
+            ->assertOk()
+            ->assertDontSeeText('Info This project is due tomorrow.');
+    }
+
+    public function test_a_warning_is_shown_when_an_active_project_is_due_in_less_than_a_month()
+    {
+        $project = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'open', 'due_date' => now()->addDays(25)]);
+        $inactiveProject = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'closed', 'due_date' => now()->addDays(25)]);
+
+        $this->actingAs($this->employee)->get(route('projects.show', $project))
+            ->assertOk()
+            ->assertSeeText('Info This project is due in 25 days.');
+
+        $this->actingAs($this->employee)->get(route('projects.show', $inactiveProject))
+            ->assertOk()
+            ->assertDontSeeText('Info This project is due in 25 days.');
     }
 }
