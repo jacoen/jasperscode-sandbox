@@ -151,4 +151,14 @@ class ProjectController extends Controller
         return redirect()->route('projects.trashed')
             ->with('success', 'The project '.$project->title.' has been restored.');
     }
+
+    public function forceDelete(Project $project): RedirectResponse
+    {
+        $this->authorize('forceDelete', $project);
+
+        $project->forceDelete();
+
+        return redirect()->route('projects.trashed')
+            ->with('success', 'The project has been permanently deleted.');
+    }
 }

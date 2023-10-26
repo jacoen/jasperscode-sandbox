@@ -54,4 +54,9 @@ class ProjectPolicy
     {
         return $user->can('restore project');
     }
+
+    public function forceDelete(User $user, Project $project)
+    {
+        return $user->can('detele project') && $user->hasRole(['Admin', 'Super Admin']);
+    }
 }
