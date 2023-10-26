@@ -6,7 +6,6 @@ use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAlertNotification;
 use App\Notifications\ProjectWarningNotification;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class CheckProjectDueDate extends Command
@@ -30,33 +29,25 @@ class CheckProjectDueDate extends Command
      */
     public function handle()
     {
-        $projectWarningCounter = 0;
-        $projectAlertCounter = 0;
+        $alertCounter = 0;
+        $warningCounter = 0;
 
-        $days = [
-            Carbon::MONDAY,
-            Carbon::WEDNESDAY,
-            Carbon::FRIDAY,
-        ];
+        $this->info('Checking the due dates of all the active projects.');
+        foreach ($this->activeProjects() as $project) {
 
-        $this->info('The following project are about to expire :');
-        foreach($this->activeProjects() as $project) {
-            
             if ($project->due_date_warning && now()->isMonday()) {
-                $projectWarningCounter++;
-
+                $warningCounter++;
                 if ($project->manager) {
-                    $user = User::find($project->manager_id); 
+                    $user = User::find($project->manager_id);
                     $user->notify(new ProjectWarningNotification($project, $user));
                 } else {
                     $admin = User::role(['Admin'])->first();
                     $admin->notify(new ProjectWarningNotification($project, $admin));
-                
                 }
             }
 
             if ($project->due_date_alert && now()->isWeekday()) {
-                $projectAlertCounter++;
+                $alertCounter++;
                 if ($project->manager) {
                     $manager = User::find($project->manager_id);
                     $manager->notify(new ProjectAlertNotification($project, $manager));
@@ -67,12 +58,11 @@ class CheckProjectDueDate extends Command
                     });
                 }
             }
-
-            $this->info('project due date: '. $project->due_date->format('Y-m-d').' - status: '. $project->status .' - title: '.$project->title);
         }
-        $this->info($projectWarningCounter.' projects are less than a month away from the due date.');
-        $this->info($projectAlertCounter.' projects are less than a week away from the due date.');
-        return;
+        $this->info('Checked all projects:');
+        $this->info('The due date of '.$alertCounter.' active projects are expiring within a week.');
+        $this->info('The due date of '.$warningCounter.' active project are expiring within a month.');
+
     }
 
     private function activeProjects()

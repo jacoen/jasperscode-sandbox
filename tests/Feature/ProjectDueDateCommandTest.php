@@ -40,7 +40,7 @@ class ProjectDueDateCommandTest extends TestCase
         $newManager = User::factory()->create(['name' => 'John Manager', 'email' => 'john.manager@example.com']);
         $project = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'open', 'due_date' => now()->addDays(5)->toDateString()]);
         $closedProject = Project::factory()->create(['manager_id' => $newManager->id, 'status' => 'closed', 'due_date' => now()->addDays(5)->toDateString()]);
-        
+
         $this->artisan('project:due-date-check')->assertSuccessful();
 
         Notification::assertSentTo($this->manager, ProjectAlertNotification::class);
@@ -99,7 +99,7 @@ class ProjectDueDateCommandTest extends TestCase
                 return $notification->getProject()->id === $project->id;
             }
         );
-        
+
         Notification::assertNotSentTo(
             $this->manager,
             function (ProjectWarningNotification $notification, $channels) use ($closedProject) {
@@ -113,7 +113,7 @@ class ProjectDueDateCommandTest extends TestCase
     public function test_an_admin_receives_a_notification_once_a_week_that_the_end_date_of_an_active_project_without_a_project_manager_is_less_than_a_month_away()
     {
         Carbon::setTestNow(Carbon::parse('next monday'));
-        
+
         $project = Project::factory()->create(['manager_id' => null, 'due_date' => now()->addDays(25)->toDateString()]);
         $closedProject = Project::factory()->create(['manager_id' => null, 'status' => 'closed', 'due_date' => now()->addDay(25)->toDateString()]);
 
@@ -146,9 +146,5 @@ class ProjectDueDateCommandTest extends TestCase
         Notification::assertNotSentTo($this->admin, ProjectWarningNotification::class);
         Notification::assertNotSentTo($this->manager, ProjectWarningNotification::class);
     }
-    // test geen notificatie in weekend bij alert
 
-    // test geen notificatie op andere dag dan maandag bij warning
-
-    // test commando project met aflopende due date in een maand, zonder manager
 }

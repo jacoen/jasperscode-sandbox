@@ -54,6 +54,7 @@ class Project extends Model
 
         return 'in '.$this->due_date->diffInDays(now()->toDateString()).' days.';
     }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

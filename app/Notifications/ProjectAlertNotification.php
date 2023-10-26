@@ -13,13 +13,14 @@ class ProjectAlertNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected Project $project;
-    protected User $user;
+    protected $project;
+
+    protected $user;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($project, $user)
+    public function __construct(Project $project, User $user)
     {
         $this->project = $project;
         $this->user = $user;
