@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class ProjectController extends Controller

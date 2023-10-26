@@ -33,7 +33,7 @@ class ProjectObserver
      */
     public function deleted(Project $project): void
     {
-        // 
+        //
     }
 
     /**

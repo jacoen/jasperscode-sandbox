@@ -33,15 +33,23 @@ Auth::routes(['register' => false]);
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 
-Route::controller(AccountActivationController::class)->prefix('/change-password')->middleware('guest')->group(function () {
-    Route::get('/{password_token}', 'create')->name('activate-account.create');
-    Route::post('/', 'store')->name('activate-account.store');
-});
+Route::controller(AccountActivationController::class)
+    ->prefix('/change-password')
+    ->name('activate-account.')
+    ->middleware('guest')
+    ->group(function () {
+        Route::get('/{password_token}', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+    });
 
-Route::controller(RequestNewTokenController::class)->prefix('/request-token')->middleware('guest')->group(function () {
-    Route::get('/{password_token}', 'create')->name('request-token.create');
-    Route::post('/', 'store')->name('request-token.store');
-});
+Route::controller(RequestNewTokenController::class)
+    ->prefix('/request-token')
+    ->name('request-token.')
+    ->middleware('guest')
+    ->group(function () {
+        Route::get('/{password_token}', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+    });
 
 Route::middleware('auth')->group(function () {
     Route::controller(NewsletterController::class)->prefix('/newsletter')->group(function () {
@@ -55,7 +63,10 @@ Route::middleware('auth')->group(function () {
     Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::resource('/projects', ProjectController::class);
-    Route::patch('projects/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('projects.restore');
+    Route::controller(ProjectController::class)->prefix('/projects')->name('projects.')->group(function () {
+        Route::patch('/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('restore');
+        Route::patch('{project}/force-delete')->withTrashed()->name('delete');
+    });
 
     Route::resource('/tasks', TaskController::class)->except(['create', 'store']);
 
