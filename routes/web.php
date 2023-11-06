@@ -65,7 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('/projects', ProjectController::class);
     Route::controller(ProjectController::class)->prefix('/projects')->name('projects.')->group(function () {
         Route::patch('/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('restore');
-        Route::patch('{project}/force-delete')->withTrashed()->name('delete');
+        Route::patch('{project}/force-delete', 'forceDelete')->withTrashed()->name('delete');
     });
 
     Route::resource('/tasks', TaskController::class)->except(['create', 'store']);
