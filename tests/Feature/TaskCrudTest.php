@@ -6,6 +6,8 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -545,5 +547,88 @@ class TaskCrudTest extends TestCase
                 $secondTask->title,
                 $thirdTask->title,
             ]);
+    }
+
+    public function test_a_user_cannot_upload_anything_other_than_an_image_when_a_task_is_created()
+    {
+        Storage::fake('media');
+
+        $document = UploadedFile::fake()->create('test.txt', 15);
+        $pdf = UploadedFile::fake()->create('test.pdf', 101);
+
+        $data =  [
+            'title' => 'A sample with media as attachment',
+            'description' => 'These samples should fail the upload',
+            'user_id' => $this->employee->id,
+        ];
+
+        $this->actingAs($this->employee)->post(route('tasks.store', $this->project),
+            array_merge($data, ['attachments' => [$document]])
+        )->assertSessionHasErrors([
+            'attachments.0' => 'The attachments may only contain images.'
+        ]);
+
+        $this->actingAs($this->employee)->post(route('tasks.store', $this->project),
+            array_merge($data, ['attachments' => [$pdf]])
+        )->assertSessionHasErrors([
+            'attachments.0' => 'The attachments may only contain images.'
+        ]);
+
+        Storage::disk('media')->assertMissing($document);
+        Storage::disk('media')->assertMissing($pdf);
+    }
+
+    public function test_a_user_can_upload_a_maximum_of_3_images_when_a_task_is_created()
+    {
+        Storage::fake('media');
+
+        $image1 = UploadedFile::fake()->image('test1.jpg');
+        $image2 = UploadedFile::fake()->image('test2.jpg');
+        $image3 = UploadedFile::fake()->image('test3.jpg');
+        $image4 = UploadedFile::fake()->image('test4.jpg');
+
+        $data = [
+            'title' => 'over the image limit',
+            'user_id' => $this->employee->id,
+            'attachments' => [
+                $image1, $image2, $image3, $image4,
+            ],
+        ];
+
+        $this->actingAs($this->employee)->post(route('tasks.store', $this->project), $data)
+            ->assertSessionHasErrors([
+                'attachments' => 'The attachments field must not have more than 3 items.'
+            ]);
+
+        $this->assertDatabaseMissing('tasks', ['title' => $data['title']]);
+
+        $this->assertFileDoesNotExist($image1->getClientOriginalName());
+        $this->assertFileDoesNotExist($image2->getClientOriginalName());
+        $this->assertFileDoesNotExist($image3->getClientOriginalName());
+        $this->assertFileDoesNotExist($image4->getClientOriginalName());
+    }
+
+    public function test_a_user_can_upload_an_image_as_attachment_when_a_task_is_created()
+    {
+        Storage::fake('media');
+
+        $file = UploadedFile::fake()->image('test.jpg');
+
+        $data = [
+            'title' => 'Sample task with image',
+            'user_id' => $this->employee->id,
+            'attachments' => [$file],
+        ];
+
+        $this->actingAs($this->employee)->post(route('tasks.store', $this->project), $data)
+            ->assertRedirect(route('projects.show', $this->project))
+            ->assertSessionHas('success', 'A new task has been created.');
+
+        $task = Task::first();
+
+        $this->assertEquals($task->getFirstMedia('attachments')->file_name, $file->getClientOriginalName());
+        $this->assertFileExists($task->getFirstMedia('attachments')->getPath());
+
+        Storage::disk('media')->assertExists('/'.$task->id.'/'.$file->getClientOriginalName());
     }
 }
