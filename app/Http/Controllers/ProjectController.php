@@ -60,7 +60,7 @@ class ProjectController extends Controller
     {
         $project = Project::create($request->validated());
 
-        if (isset($request->manager_id) && auth()->id() != $project->manager_id) {
+        if (isset($request->manager_id)) {
             User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
         }
 
@@ -106,18 +106,20 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
+        $pinnedProject = Project::where('is_pinned', true)->first();
+
         if (! auth()->user()->can('pin project') && $request->is_pinned) {
             return back()->withErrors(['error' => 'User is not authorized to pin a project']);
         }
 
-        if (Project::where('is_pinned', true)->count() >= 1 && $request->is_pinned) {
+        if ($request->is_pinned && $pinnedProject && $pinnedProject->id != $project->id) {
             return back()
                 ->withErrors(['error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.']);
         }
 
         $project->update($request->validated());
 
-        if (isset($request->manager_id) && $project->wasChanged('manager_id') && auth()->id() != $project->manager_id) {
+        if (isset($request->manager_id) && $project->wasChanged('manager_id')) {
             User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
         }
 
