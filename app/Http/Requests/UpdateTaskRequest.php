@@ -28,7 +28,8 @@ class UpdateTaskRequest extends FormRequest
             'title' => ['required', 'string', 'min:3', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['required', 'string', Rule::in(config('definitions.statuses'))],
-            'attachments.*' => ['nullable', 'image'],
+            'attachments' => ['nullable', 'array', 'max:3'],
+            'attachments.*' => ['image'],
         ];
     }
 
@@ -42,7 +43,7 @@ class UpdateTaskRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'attachments.*' => 'The attachments may only contain images.',
+            'attachments.*.image' => 'The attachments field may only contain images.',
         ];
     }
 }
