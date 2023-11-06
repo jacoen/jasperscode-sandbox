@@ -45,8 +45,7 @@ class Task extends Model implements Hasmedia
         $this->addMediaConversion('thumb')
             ->width(150)
             ->height(150)
-            ->sharpen(10)
-            ->fit();
+            ->sharpen(10);
     }
 
     public function getActivitylogOptions(): LogOptions

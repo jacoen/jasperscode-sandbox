@@ -13,7 +13,7 @@
                 @csrf
                 <div class="mb-3">
                     <label for="title" class="form-label">Title</label>
-                    <input type="text" id="title" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}" placeholder="The title of the task" required>
+                    <input type="text" id="title" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}" placeholder="The title of the task">
                 </div>
 
                 <div class="mb-3">
@@ -39,6 +39,11 @@
                         <label for="attachments" class="form-label">Image</label>
                         <input type="file" id="attachments" name="attachments[]" class="form-control @error('image') is-invalid @enderror" multiple>
                     </div>
+
+                    {{-- <div class="col-md-6">
+                        <label for="attachment" class="form-label">Image</label>
+                        <input type="file" id="attachment" name="attachment" class="form-control">
+                    </div> --}}
                 </div>
 
                 <div>
