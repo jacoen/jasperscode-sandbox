@@ -43,7 +43,7 @@ class UpdateTaskRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'attachments.*.image' => 'The attachments field may only contain images.',
+            'attachments.*.image' => 'The attachments may only contain images.',
         ];
     }
 }

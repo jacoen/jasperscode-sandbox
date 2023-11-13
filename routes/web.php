@@ -78,7 +78,7 @@ Route::middleware('auth')->group(function () {
 
         Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
         Route::patch('/tasks/{task}/force_delete', 'forceDelete')->withTrashed()->name('tasks.delete');
-        Route::get('user/tasks', 'userTasks')->name('tasks.user');
+        Route::get('/admin/tasks', 'adminTasks')->name('tasks.admin');
     });
 
     Route::prefix('trashed')->group(function () {
