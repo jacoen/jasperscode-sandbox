@@ -27,6 +27,7 @@ class TaskController extends Controller
     {
         $route = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
+            ->where('user_id', auth()->id())
             ->when(request()->search, function ($query) {
                 $query->where('title', 'LIKE', '%'.request()->search.'%');
             })
@@ -70,7 +71,7 @@ class TaskController extends Controller
             }
         }
 
-        if (isset($request->user_id) && auth()->id() != $request->user_id) {
+        if (isset($request->user_id)) {
             User::find($request->user_id)->notify(new TaskAssignedNotification($task));
         }
 
@@ -98,7 +99,7 @@ class TaskController extends Controller
         if (! $task->project->is_open_or_pending) {
             return redirect()->route('tasks.edit', $task)
                 ->withErrors([
-                    'error' => 'Could no update this task because teh project is not open or pending.',
+                    'error' => 'Could not update this task because the project is inactive.',
                 ]);
         }
 
@@ -113,12 +114,12 @@ class TaskController extends Controller
             }
         }
 
-        if ($task->wasChanged('title')) {
-            $task = $task->fresh();
+        if (isset($request->user_id) && $task->wasChanged('user_id')) {
+            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
         }
 
-        if ($task->wasChanged('user_id') && isset($request->user_id) && auth()->id() != $request->user_id) {
-            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
+        if ($task->wasChanged('title')) {
+            $task = $task->fresh();
         }
 
         return redirect()->route('tasks.show', $task)
@@ -167,7 +168,7 @@ class TaskController extends Controller
             ->with('success', 'The task has been permanently deleted.');
     }
 
-    public function userTasks(): View
+    public function adminTasks(): View
     {
         $this->authorize('read task', Task::class);
 
@@ -179,7 +180,6 @@ class TaskController extends Controller
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
-            ->where('user_id', auth()->id())
             ->latest('updated_at')
             ->orderByDesc('id')
             ->paginate();
