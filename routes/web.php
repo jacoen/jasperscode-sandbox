@@ -65,7 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('/projects', ProjectController::class);
     Route::controller(ProjectController::class)->prefix('/projects')->name('projects.')->group(function () {
         Route::patch('/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('restore');
-        Route::patch('{project}/force-delete', 'forceDelete')->withTrashed()->name('delete');
+        Route::patch('{project}/force-delete', 'forceDelete')->withTrashed()->name('force-delete');
     });
 
     Route::resource('/tasks', TaskController::class)->except(['create', 'store']);
@@ -77,13 +77,13 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
-        Route::patch('/tasks/{task}/force_delete', 'forceDelete')->withTrashed()->name('tasks.delete');
-        Route::get('/admin/tasks', 'adminTasks')->name('tasks.admin');
+        Route::patch('/tasks/{task}/force_delete', 'forceDelete')->withTrashed()->name('tasks.force-delete');
+        Route::get('/admin/tasks', 'adminTasks')->name('admin.tasks');
     });
 
     Route::prefix('trashed')->group(function () {
-        Route::get('/projects', TrashedProjectController::class)->name('projects.trashed');
-        Route::get('/tasks', TrashedTaskController::class)->name('tasks.trashed');
+        Route::get('/projects', [ProjectController::class, 'trashed'])->name('projects.trashed');
+        Route::get('/tasks', [TaskController::class, 'trashed'])->name('tasks.trashed');
     });
 
     Route::delete('tasks/{task}/images/{image}', TaskImageController::class)->name('task-image.delete');

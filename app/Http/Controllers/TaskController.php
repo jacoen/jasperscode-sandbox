@@ -137,6 +137,19 @@ class TaskController extends Controller
         return redirect()->route('projects.show', $project)
             ->with('success', 'The task '.$taskTitle.' has been deleted.');
     }
+    
+    public function trashed(): View
+    {
+        $this->authorize('restore task', Task::class);
+
+        $tasks = Task::onlyTrashed()
+            ->with('project')
+            ->latest('deleted_at')
+            ->orderBy('id', 'desc')
+            ->paginate();
+
+        return view('tasks.trashed', compact('tasks'));
+    }
 
     public function restore(Task $task): RedirectResponse
     {
@@ -170,7 +183,7 @@ class TaskController extends Controller
 
     public function adminTasks(): View
     {
-        $this->authorize('read task', Task::class);
+        abort_if(!auth()->user()->hasRole('Admin'), 403);
 
         $route = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
