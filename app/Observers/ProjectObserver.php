@@ -6,26 +6,14 @@ use App\Models\Project;
 
 class ProjectObserver
 {
-    /**
-     * Handle the Project "creating" event.
-     */
-    public function creating(Project $project): void
-    {
-        if (! $project->status) {
-            $project->status = config('definitions.statuses.Open');
-        }
-    }
-
     public function deleting(Project $project)
     {
-        $project->tasks()->each(function ($task) {
-            $task->delete();
-        });
-
-        $project->timestamps = false;
-        $project->status = 'closed';
-        $project->manager_id = null;
-        $project->save();
+        if (! $project->isForceDeleting()) 
+        {
+            $project->tasks()->each(function ($task) {
+                $task->delete();
+            });
+        }
     }
 
     /**
@@ -33,7 +21,13 @@ class ProjectObserver
      */
     public function deleted(Project $project): void
     {
-        //
+        if (! $project->isForceDeleting()) 
+        {
+            $project->timestamps = false;
+            $project->status = 'closed';
+            $project->manager_id = null;
+            $project->save();
+        }
     }
 
     /**
@@ -50,16 +44,6 @@ class ProjectObserver
             if ($task->deleted_at->gte($deleted)) {
                 $task->restore();
             }
-        });
-    }
-
-    /**
-     * Handle the Project "force deleted" event.
-     */
-    public function forceDeleting(Project $project): void
-    {
-        $project->tasks()->withTrashed()->each(function ($task) {
-            $task->forceDelete();
         });
     }
 }
