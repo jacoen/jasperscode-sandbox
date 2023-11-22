@@ -144,6 +144,19 @@ class ProjectController extends Controller
             ->with('success', 'The project has been deleted.');
     }
 
+    public function trashed(): View
+    {
+        $this->authorize('restore project', Project::class);
+
+        $projects = Project::onlyTrashed()
+            ->with('manager')
+            ->latest('deleted_at')
+            ->orderBy('id', 'desc')
+            ->paginate();
+
+        return view('projects.trashed', compact('projects'));
+    }
+
     public function restore(Project $project): RedirectResponse
     {
         $this->authorize('restore', $project);
@@ -160,7 +173,7 @@ class ProjectController extends Controller
 
         $project->forceDelete();
 
-        return redirect()->route('projects.trashed')
+        return redirect()->route('projectsf.trashed')
             ->with('success', 'The project has been permanently deleted.');
     }
 }

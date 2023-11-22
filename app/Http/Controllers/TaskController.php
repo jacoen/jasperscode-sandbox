@@ -171,7 +171,7 @@ class TaskController extends Controller
             ->with('success', 'The task '.$task->title.'has been restored.');
     }
 
-    public function forceDelete(Task $task)
+    public function forceDelete(Task $task): RedirectResponse
     {
         $this->authorize('forceDelete', $task);
 

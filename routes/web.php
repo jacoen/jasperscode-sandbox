@@ -65,7 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('/projects', ProjectController::class);
     Route::controller(ProjectController::class)->prefix('/projects')->name('projects.')->group(function () {
         Route::patch('/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('restore');
-        Route::patch('{project}/force-delete', 'forceDelete')->withTrashed()->name('force-delete');
+        Route::patch('{project}/force_delete', 'forceDelete')->withTrashed()->name('force-delete');
     });
 
     Route::resource('/tasks', TaskController::class)->except(['create', 'store']);
@@ -73,7 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::controller(TaskController::class)->group(function () {
         Route::prefix('/projects/{project}/tasks')->group(function () {
             Route::get('/create', 'create')->name('tasks.create');
-            Route::post('/', 'store')->name('tasks.store');
+            Route::post('/', 'store')->withTrashed()->name('tasks.store');
         });
 
         Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
