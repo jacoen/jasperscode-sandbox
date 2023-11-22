@@ -127,7 +127,7 @@ class ProjectControllerTest extends TestCase
         $this->assertDatabaseEmpty('projects');
     }
 
-    public function test_the_due_date_must_be_after_the_current_date()
+    public function test_the_due_date_must_be_after_the_current_date_when_creating_a_project()
     {
         $projectLastMonth = Project::factory()->make(['manager_id' => $this->manager->id, 'due_date' => now()->subMonth()])->toArray();
         $projectCurrentDate = Project::factory()->make(['manager_id' => $this->manager->id, 'due_date' => now()])->toArray();
@@ -446,26 +446,32 @@ class ProjectControllerTest extends TestCase
         $this->assertSoftDeleted($project);
     }
 
-    public function test_when_a_project_has_been_deleted_the_status_has_been_changed_to_closed()
+    public function test_a_guest_cannot_visit_the_trashed_project_page()
     {
-        $project = Project::factory()->create();
-
-        $this->actingAs($this->manager)->delete(route('projects.destroy', $project))
-            ->assertRedirect(route('projects.index'))
-            ->assertSessionHas('success', 'The project has been deleted.');
-
-        $this->assertEquals($project->fresh()->status, 'closed');
+        $this->get(route('projects.trashed'))->assertRedirect(route('login'));
     }
 
-    public function test_when_a_project_has_been_deleted_the_manager_is_unassigned()
+    public function test_a_user_without_the_restore_project_permission_cannot_visit_the_trashed_project_page()
     {
-        $project = Project::factory()->create(['manager_id' => $this->manager]);
+        $this->actingAs($this->employee)->get(route('projects.trashed'))
+            ->assertForbidden();
+    }
 
-        $this->actingAs($this->manager)->delete(route('projects.destroy', $project))
-            ->assertRedirect(route('projects.index'))
-            ->assertSessionHas('success', 'The project has been deleted.');
+    public function test_a_user_with_the_restore_project_permission_can_visit_the_trashed_project_page()
+    {
+        $this->actingAs($this->admin)->get(route('projects.trashed'))
+            ->assertOk()
+            ->assertSeeText('No trashed projects yet.');
 
-        $this->assertEmpty($project->fresh()->manager_id);
+        $project1 = Project::factory()->trashed()->create();
+        $project2 = Project::factory()->trashed()->create();
+
+        $this->actingAs($this->admin)->get(route('projects.trashed'))
+            ->assertOk()
+            ->assertSeeText([
+                $project1->title,
+                $project2->title,
+            ]);
     }
 
     public function test_a_user_without_the_restore_project_permission_cannot_restore_a_project()
@@ -489,13 +495,16 @@ class ProjectControllerTest extends TestCase
         $this->assertNotSoftDeleted($project);
     }
 
-    public function test_when_a_project_has_been_restored_the_status_has_been_changed_to_restored()
+    public function test_a_user_with_the_force_delete_permission_can_permanently_delete_a_project()
     {
-        $project = project::factory()->trashed()->create();
+        $project = Project::factory()->trashed()->create();
 
-        $this->actingAs($this->admin)->patch(route('projects.restore', $project))
-            ->assertRedirect(route('projects.trashed'));
+        $this->assertSoftDeleted($project);
 
-        $this->assertEquals($project->fresh()->status, 'restored');
+        $this->actingAs($this->admin)->patch(route('projects.force-delete', $project))
+            ->assertRedirect(route('projects.trashed'))
+            ->assertSessionHas('success', 'The project has been permanently deleted.');
+
+        $this->assertNull($project->fresh());
     }
 }
