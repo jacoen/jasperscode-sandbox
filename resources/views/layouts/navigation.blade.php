@@ -52,7 +52,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('tasks.admin')}}">
+                        <a class="nav-link" href="{{ route('admin.tasks')}}">
                             Tasks overview
                         </a>
                     </li>
