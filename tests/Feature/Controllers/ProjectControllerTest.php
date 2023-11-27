@@ -66,24 +66,24 @@ class ProjectControllerTest extends TestCase
 
     public function test_a_user_can_search_project_by_their_title()
     {
-        $firstProject = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the first project']);
-        $secondProject = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the second project']);
-        $thirdProject = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the third project']);
+        $project1 = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the first project']);
+        $project2 = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the second project']);
+        $project3 = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the third project']);
 
         $this->actingAs($this->employee)->get(route('projects.index'))
             ->assertOk()
             ->assertSeeText([
-                Str::limit($firstProject->title, 35),
-                Str::limit($secondProject->title, 35),
-                Str::limit($thirdProject->title, 35),
+                Str::limit($project1->title, 35),
+                Str::limit($project2->title, 35),
+                Str::limit($project3->title, 35),
             ]);
 
         $this->actingAs($this->employee)->get(route('projects.index', ['search' => 'second']))
             ->assertOk()
-            ->assertSeeText([Str::limit($secondProject->title, 35)])
+            ->assertSeeText([Str::limit($project2->title, 35)])
             ->assertDontSeeText([
-                Str::limit($firstProject->title, 35),
-                Str::limit($thirdProject->title, 35),
+                Str::limit($project1->title, 35),
+                Str::limit($project3->title, 35),
             ]);
     }
 
@@ -254,6 +254,61 @@ class ProjectControllerTest extends TestCase
                 $task->author->name,
                 $task->user->name,
                 $task->status,
+            ]);
+    }
+
+    public function test_a_user_can_filter_the_tasks_related_to_a_project_by_the_status_of_the_task()
+    {
+        $project = Project::factory()->create();
+
+        $openTask = Task::factory()->for($project)->create(['status' => 'open']);
+        $pendingTask = Task::factory()->for($project)->create(['status' => 'pending']);
+        $closedTask = Task::factory()->for($project)->create(['status' => 'closed']);
+        $completedTask = Task::factory()->for($project)->create(['status' => 'completed']);
+
+        $this->actingAs($this->employee)->get(route('projects.show', $project))
+            ->assertOk()
+            ->assertSeeText([
+                $openTask->title,
+                $pendingTask->title,
+                $closedTask->title,
+                $completedTask->title
+            ]);
+
+        $this->actingAs($this->employee)->get(route('projects.show', ['project' => $project, 'status' => 'pending']))
+            ->assertOk()
+            ->assertSeeText([
+                $pendingTask->title, $pendingTask->status
+            ])->assertDontSeeText([
+                $openTask->title,
+                $closedTask->title,
+                $completedTask->title,
+            ]);
+    }
+
+    public function test_a_user_can_search_all_task_related_to_a_project_by_their_title()
+    {
+        $project = Project::factory()->create();
+
+        $task1 = Task::factory()->for($project)->create(['title' => 'First task']);
+        $task2 = Task::factory()->for($project)->create(['title' => 'This is the second task']);
+        $task3 = Task::factory()->for($project)->create(['title' => 'Task number three']);
+
+        $this->actingAs($this->employee)->get(route('projects.show', $project))
+            ->assertOk()
+            ->assertSeeText([
+                $task1->title,
+                $task2->title,
+                $task3->title,
+            ]);
+
+            $this->actingAs($this->employee)->get(route('projects.show', ['project' => $project, 'search' => 'second']))
+            ->assertOk()
+            ->assertSeeText([
+                $task2->title,
+            ])->assertDontSeeText([
+                $task1->title,
+                $task3->title,
             ]);
     }
 

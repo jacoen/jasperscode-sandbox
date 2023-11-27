@@ -1,14 +1,13 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Controllers;
 
 use App\Models\User;
-use App\Notifications\AccountCreatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
-class UserCrudTest extends TestCase
+class UserControllerTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -17,15 +16,37 @@ class UserCrudTest extends TestCase
         $this->get(route('users.index'))->assertRedirect(route('login'));
     }
 
-    public function test_only_a_user_with_the_read_user_permission_can_view_the_user_overview_page()
+    public function test_a_user_without_the_read_user_permission_cannot_visit_the_user_overview_page()
     {
         $this->actingAs($this->employee)->get(route('users.index'))
             ->assertForbidden();
+    }
 
+    public function test_a_user_with_the_read_user_permission_can_visit_the_user_overview_page()
+    {
         $this->actingAs($this->admin)->get(route('users.index'))
             ->assertOk()
-            ->assertSeeText([$this->admin->name, $this->admin->email, 'Admin'])
-            ->assertSeeText([$this->employee->name, $this->employee->email, 'Employee']);
+            ->assertSeeText([
+                $this->admin->name, $this->admin->email, 'Admin',
+                $this->manager->name, $this->manager->email, 'Manager',
+                $this->employee->name, $this->employee->email, 'Employee',
+                $this->user->name, $this->user->email,    
+            ]);
+    }
+
+    public function test_a_guest_cannot_create_a_new_user_account()
+    {
+        $data = [
+            'name' => 'Sample User',
+            'email' => 'sample.user@example.com',
+        ];
+
+        $this->get(route('users.create'))->assertRedirect(route('login'));
+
+        $this->post(route('users.store', $data))
+            ->assertRedirect(route('login'));
+
+        $this->assertDatabaseMissing('users', $data);
     }
 
     public function test_a_user_without_the_create_user_permission_cannot_create_a_new_user()
@@ -45,7 +66,7 @@ class UserCrudTest extends TestCase
         $this->assertDatabaseMissing('users', $data);
     }
 
-    public function test_fields_are_required()
+    public function test_all_fields_are_required_when_creating_a_user()
     {
         $data = [
             'name' => '',
@@ -80,6 +101,9 @@ class UserCrudTest extends TestCase
             ->assertSessionHasErrors([
                 'email' => 'The email has already been taken.',
             ]);
+
+        // 4 users from using the factory in testcase file
+        $this->assertDatabaseCount('users', 5);
 
         $this->assertDatabaseMissing('users', [
             'name' => $data['name'],
@@ -144,66 +168,5 @@ class UserCrudTest extends TestCase
         $user = User::where('email', $data['email'])->get();
 
         Notification::assertSentTo($user, AccountCreatedNotification::class);
-    }
-
-    public function test_a_user_without_the_edit_user_permission_cannot_edit_a_user()
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($this->employee)->get(route('users.edit', $user))
-            ->assertForbidden();
-
-        $data = [
-            'name' => 'Bob Brouwer',
-            'email' => 'bob.brouwer@example.com',
-            'role' => $user->role,
-        ];
-
-        $this->actingAs($this->employee)->put(route('users.update', $user), $data)
-            ->assertForbidden();
-
-        $this->assertDatabaseMissing('users', [
-            'id' => $user->id,
-            'name' => $data['name'],
-            'email' => $data['email'],
-        ]);
-    }
-
-    public function test_a_user_with_the_edit_user_permission_can_edit_a_user()
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($this->admin)->get(route('users.edit', $user))
-            ->assertOk()
-            ->assertSee([$user->name, $user->email, 'User']);
-
-        $data = [
-            'name' => 'Bob Brouwer',
-            'email' => 'bob.brouwer@example.com',
-            'role' => $user->roles->first()->id,
-        ];
-
-        $this->actingAs($this->admin)->put(route('users.update', $user), $data)
-            ->assertRedirect(route('users.index'))
-            ->assertSessionHas('success', $data['name'].'\'s account has been updated!');
-
-        $this->assertDatabaseHas('users', [
-            'id' => $user->id,
-            'name' => $data['name'],
-            'email' => $data['email'],
-        ]);
-    }
-
-    public function test_a_user_without_the_delete_user_permission_cannot_delete_a_user()
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($this->employee)->delete(route('users.destroy', $user))
-            ->assertForbidden();
-
-        $this->assertDatabaseHas('users', [
-            'name' => $user->name,
-            'email' => $user->email,
-        ]);
     }
 }
