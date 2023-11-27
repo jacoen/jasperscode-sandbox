@@ -656,6 +656,7 @@ class TaskControllerTest extends TestCase
     {
         $tasks = Task::factory(2)->create(['user_id' => $this->employee->id]);
         $trashedTask = Task::factory()->trashed()->create();
+        $taskExtra = Task::factory()->for($this->project)->create(['status' => 'completed']);
 
         $firstTask = Task::first();
         $secondTask = Task::latest()->first();
@@ -670,7 +671,66 @@ class TaskControllerTest extends TestCase
                 Str::limit($secondTask->title, 25),
                 Str::limit($secondTask->title, 25),
                 $secondTask->status,
+                Str::limit($taskExtra->title, 25),
+                $taskExtra->status
             ])
             ->assertDontSeeText($trashedTask->title);
+    }
+
+    public function test_an_admin_can_filter_all_active_task_by_their_status_on_the_admin_task_overview()
+    {
+        $projectExtra = Project::factory()->create(['status' => 'pending']);
+
+        $task1 = Task::factory()->for($this->project)->create(['status' => 'open']);
+        $task2 = Task::factory()->for($this->project)->create(['status' => 'pending']);
+        $task3 = Task::factory()->for($projectExtra)->create(['status' => 'pending']);
+        $task4 = Task::factory()->for($projectExtra)->create(['status' => 'completed']);
+
+        $this->actingAs($this->admin)->get(route('admin.tasks'))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($task1->title, 25),
+                Str::limit($task2->title, 25),
+                Str::limit($task3->title, 25),
+                Str::limit($task4->title, 25),
+            ]);
+
+        $this->actingAs($this->admin)->get(route('admin.tasks', ['status' => 'pending']))
+            ->assertSeeText([
+                Str::limit($task2->title, 25),
+                Str::limit($task3->title, 25),
+            ])->assertDontSeeText([
+                Str::limit($task1->title, 25),
+                Str::limit($task4->title, 25),
+            ]);
+    }
+
+    public function test_an_admin_can_search_all_active_tasks_by_their_title_on_the_admin_task_overview()
+    {
+        $projectExtra = Project::factory()->create(['status' => 'pending']);
+
+        $task1 = Task::factory()->for($this->project)->create(['title' => 'The first task for this project']);
+        $task2 = Task::factory()->for($this->project)->create(['title' => 'the second task for this project']);
+        $task3 = Task::factory()->for($projectExtra)->create(['title' => 'this is the first task of the extra project']);
+        $task4 = Task::factory()->for($projectExtra)->create(['title' => 'this is task number 2 for the extra project']);
+
+        $this->actingAs($this->admin)->get(route('admin.tasks'))
+            ->assertOk()
+            ->assertSeeText([
+                Str::limit($task1->title, 25),
+                Str::limit($task2->title, 25),
+                Str::limit($task3->title, 25),
+                Str::limit($task4->title, 25),
+            ]);
+
+            $this->actingAs($this->admin)->get(route('admin.tasks', ['search' => 'first']))
+            ->assertSeeText([
+                Str::limit($task1->title, 25),
+                Str::limit($task3->title, 25),
+            ])
+            ->assertDontSeeText([
+                Str::limit($task2->title, 25),
+                Str::limit($task4->title, 25),
+            ]);
     }
 }
