@@ -524,8 +524,8 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($this->admin)->get(route('projects.trashed'))
             ->assertOk()
             ->assertSeeText([
-                $project1->title,
-                $project2->title,
+                Str::limit($project1->title, 35),
+                Str::limit($project2->title, 35)
             ]);
     }
 
