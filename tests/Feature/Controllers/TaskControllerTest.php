@@ -471,10 +471,12 @@ class TaskControllerTest extends TestCase
         $employee = User::factory()->create()->assignRole('Admin');
         $task = Task::factory()->create(['user_id' => $user->id]);
 
-        $this->actingAs($user)->put(route('tasks.update', $task), $this->data)
+        $taskData = array_merge($this->data, ['status' => 'open', 'user_id' => $employee->id]);
+
+        $this->actingAs($user)->put(route('tasks.update', $task), $taskData)
             ->assertRedirect(route('tasks.show', $task));
 
-        $this->assertDatabaseHas('tasks', array_merge($this->data, ['id' => $task->id]));
+        $this->assertDatabaseHas('tasks', array_merge($taskData, ['id' => $task->id]));
 
         Notification::assertSentTo($employee,TaskAssignedNotification::class);
     }
