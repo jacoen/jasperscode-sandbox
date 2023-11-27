@@ -13,9 +13,11 @@ class TaskImageController extends Controller
      */
     public function __invoke(Task $task, Media $image): RedirectResponse
     {
+        abort_if(! auth()->user()->can('update task'), 403);
+
         if ($task->id !== $image->model_id) {
             return redirect()->route('tasks.show', $task)
-                ->withErrors(['errors' => 'Cannot remove this image.']);
+                ->withErrors(['error' => 'Cannot remove this image.']);
         }
 
         $image->delete();
