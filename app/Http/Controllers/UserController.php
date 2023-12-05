@@ -43,7 +43,9 @@ class UserController extends Controller
         $user->save();
 
         $user->generatePasswordToken();
-        $user->syncRoles($request->role);
+
+        $user->syncRoles($request->role ?? 'User');
+
         $user->notify(new AccountCreatedNotification());
 
         return redirect()->route('users.index')
@@ -63,6 +65,12 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user)
     {
+        // Temporary
+        if ($request->email !== $user->email) {
+            return redirect()->route('users.edit', $user)
+                ->withErrors(['email' => 'The email does not match the original email address']);
+        }
+
         $user->update($request->validated());
 
         $user->syncRoles($request->role);

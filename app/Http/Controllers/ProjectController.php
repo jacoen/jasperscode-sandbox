@@ -173,7 +173,7 @@ class ProjectController extends Controller
 
         $project->forceDelete();
 
-        return redirect()->route('projectsf.trashed')
+        return redirect()->route('projects.trashed')
             ->with('success', 'The project has been permanently deleted.');
     }
 }
