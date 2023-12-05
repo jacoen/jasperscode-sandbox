@@ -3,7 +3,6 @@
 namespace Tests\Feature\Controllers;
 
 use App\Models\User;
-use App\Notifications\AccountActivatedNotification;
 use App\Notifications\AccountCreatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -89,6 +88,18 @@ class UserControllerTest extends TestCase
         ]);
     }
 
+    public function test_the_email_address_must_be_valid_when_creating_a_user_account()
+    {
+        $userData = array_merge($this->data, ['email' => 'hallo']);
+
+        $this->actingAs($this->admin)->post(route('users.store'), $userData)
+            ->assertSessionHasErrors([
+                'email' => 'The email field must be a valid email address.',
+            ]);
+
+        $this->assertDatabaseMissing('users', $userData);
+    }
+
     public function test_the_email_of_a_user_must_be_unique()
     {
         User::factory()->create(['name' => 'John Doe Senior', 'email' => 'john@example.com']);
@@ -162,18 +173,26 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_that_gets_created_with_a_role_does_get_the_default_role_assigned()
     {
-        $data = [
-            'name' => 'Test User',
-            'email' => 'test.user@example.com',
+        $userData = array_merge($this->data, [
             'role' => 4 //Employee
-        ];
+        ]);
 
-        $this->actingAs($this->admin)->post(route('users.store'), $data)
+        $this->actingAs($this->admin)->post(route('users.store'), $userData)
             ->assertRedirect(route('users.index'));
 
-        $user = User::where('email', $data['email'])->first();
+        $user = User::where('email', $userData['email'])->first();
 
         $this->assertTrue($user->hasRole('Employee'));
+    }
+
+    public function test_when_a_new_user_has_been_created_a_password_token_will_be_generated_for_this_user()
+    {
+        $this->actingAs($this->admin)->post(route('users.store'), $this->data)
+            ->assertRedirect(route('users.index'));
+
+        $user = User::where('email', $this->data['email'])->first();
+
+        $this->assertNotEmpty($user->password_token);
     }
 
     public function test_when_a_new_user_has_been_created_this_user_receives_a_notification()
@@ -202,6 +221,123 @@ class UserControllerTest extends TestCase
             ->assertRedirect(route('login'));
 
         $this->assertDatabaseMissing('users', array_merge($this->data, ['id' => $user->id]));
+    }
 
+    public function test_a_user_without_the_update_user_permission_cannout_edit_an_existing_user()
+    {
+        $user = User::factory()->create();
+
+        $userData = array_merge($this->data, ['role' => 4]);
+
+        $this->actingAs($this->employee)->get(route('users.edit', $user))
+            ->assertForbidden();
+
+        $this->actingAs($this->employee)->put(route('users.update', $user), $userData)
+            ->assertForbidden();
+    }
+
+    public function test_all_the_fields_are_required_when_editing_an_existing_user()
+    {
+        $user = User::factory()->create();
+        
+        $data = [
+            'name' => '',
+            'email' => '',
+            'role' => '',
+        ];
+
+        $this->actingAs($this->admin)->put(route('users.update', $user), $data)
+            ->assertSessionHasErrors([
+                'name' => 'The name field is required.',
+                'email' => 'The email field is required.',
+                'role' => 'The role field is required.',
+            ]);
+
+        $this->assertNotEquals($user->fresh()->name, $data['name']);
+        $this->assertNotEquals($user->fresh()->email, $data['email']);
+    }
+
+    public function test_the_email_address_must_be_valid_whe_editing_a_user_account()
+    {
+        $user = User::factory()->create();
+
+        $userData = array_merge($this->data, [
+            'email' => 'hallo',
+            'role' => 4,
+        ]);
+
+        $this->actingAs($this->admin)->put(route('users.update', $user), $userData)
+            ->assertSessionHasErrors(['email' => 'The email field must be a valid email address.']);
+
+        $this->assertDatabaseMissing('users', ['id' => $user->id, 'email' => $userData['email']]);
+    }
+
+    public function test_a_user_with_the_update_user_permission_cannot_change_the_email_address_of_an_existing_user()
+    {
+        $this->withoutExceptionHandling();
+        $user = User::factory()->create(['email' => 'Scott.price@example.com']);
+
+        $userData = array_merge($this->data, [
+            'name' => $user->name,
+            'email' => 'David.Smith@example.com',
+            'role' => 4,
+        ]);
+
+        $this->actingAs($this->admin)->put(route('users.update', $user), $userData)
+            ->assertSessionHasErrors([
+                'email' => 'The email does not match the original email address'
+            ]);
+
+        $this->assertNotEquals($user->fresh()->email, $userData['email']);
+
+        $this->assertDatabaseMissing('users', [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $userData['email'],
+        ]);
+    }
+
+    public function test_a_user_with_the_update_user_permission_can_edit_an_existing_user()
+    {
+        $user = User::factory()->create();
+
+        $userData = [
+            'name' => 'Roger Davids',
+            'email' => $user->email,
+            'role' => 4 // Employee
+        ];
+
+        $this->actingAs($this->admin)->get(route('users.edit', $user))
+            ->assertOk();
+
+        $this->actingAs($this->admin)->put(route('users.update', $user), $userData)
+            ->assertRedirect(route('users.index'));
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => $userData['name'],
+            'email' => $userData['email'],
+        ]);
+
+        $this->assertTrue($user->fresh()->hasRole('Employee'));
+        $this->assertFalse($user->fresh()->hasRole('User'));
+    }
+
+    public function test_a_guest_cannot_delete_a_user_account()
+    {
+        $user = User::factory()->create();
+
+        $this->delete(route('users.destroy', $user))
+            ->assertRedirect(route('login'));
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'email' => $user->email]);
+    }
+
+    public function test_a_user_without_the_delete_user_permission_cannot_delete_a_user_account()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($this->manager)->delete(route('users.destroy', $user))
+            ->assertForbidden();
     }
 }
