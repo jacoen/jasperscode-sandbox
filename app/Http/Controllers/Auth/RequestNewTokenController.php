@@ -35,7 +35,7 @@ class RequestNewTokenController extends Controller
     {
         $user = User::where([
             ['password_token', $request->token],
-            ['email', $request->email]
+            ['email', $request->email],
         ])->first();
 
         if (! $user) {

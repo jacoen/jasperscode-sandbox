@@ -63,7 +63,7 @@ class UserFactory extends Factory
 
     public function notActivated()
     {
-        return $this->state(function (){
+        return $this->state(function () {
             return [
                 'password_token' => Str::random(32),
                 'token_expires_at' => now()->addHour(),

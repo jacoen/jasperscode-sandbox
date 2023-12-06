@@ -67,12 +67,12 @@ class TaskControllerTest extends TestCase
                 Str::limit($task->title, 25),
                 Str::limit($this->project->title, 25),
                 $task->status,
-                $this->employee->name
+                $this->employee->name,
             ])
             ->assertDontSeeText([$secondTask->title]);
     }
 
-    public function test_an_employee_can_filter_their_own_task_on_the_status_of_the_task ()
+    public function test_an_employee_can_filter_their_own_task_on_the_status_of_the_task()
     {
         $openTask = Task::factory()->for($this->project)->create(['status' => 'open', 'user_id' => $this->employee->id]);
         $pendingTask = Task::factory()->for($this->project)->create(['status' => 'pending', 'user_id' => $this->employee->id]);
@@ -195,7 +195,7 @@ class TaskControllerTest extends TestCase
 
         $this->actingAs($this->employee)->post(route('tasks.store', $restoredProject), $this->data)
             ->assertSessionHasErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
-        
+
         $this->assertDatabaseMissing('tasks', [
             'title' => $this->data['title'],
             'project_id' => $restoredProject->id,
@@ -208,8 +208,8 @@ class TaskControllerTest extends TestCase
             ->assertNotFound();
 
         $this->assertDatabaseMissing('tasks', [
-            'title' => $this->data['title'], 
-            'project_id' => 99,    
+            'title' => $this->data['title'],
+            'project_id' => 99,
         ]);
     }
 
@@ -221,13 +221,13 @@ class TaskControllerTest extends TestCase
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project),
             array_merge($this->data, ['attachments' => [$document]])
         )->assertSessionHasErrors([
-            'attachments.0' => 'The attachments may only contain images.'
+            'attachments.0' => 'The attachments may only contain images.',
         ]);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project),
             array_merge($this->data, ['attachments' => [$pdf]])
         )->assertSessionHasErrors([
-            'attachments.0' => 'The attachments may only contain images.'
+            'attachments.0' => 'The attachments may only contain images.',
         ]);
 
         Storage::disk('media')->assertMissing($document);
@@ -241,7 +241,7 @@ class TaskControllerTest extends TestCase
         $image3 = UploadedFile::fake()->image('test3.jpg');
         $image4 = UploadedFile::fake()->image('test4.jpg');
 
-        $taskData = array_merge($this->data, 
+        $taskData = array_merge($this->data,
             ['attachments' => [
                 $image1,
                 $image2,
@@ -249,10 +249,10 @@ class TaskControllerTest extends TestCase
                 $image4,
             ],
         ]);
-        
+
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), $taskData)
             ->assertSessionHasErrors([
-                'attachments' => 'The attachments field must not have more than 3 items.'
+                'attachments' => 'The attachments field must not have more than 3 items.',
             ]);
 
         $this->assertDatabaseMissing('tasks', ['title' => $taskData['title']]);
@@ -291,7 +291,7 @@ class TaskControllerTest extends TestCase
         $file = UploadedFile::fake()->image('test.jpg');
 
         $taskData = array_merge($this->data, [
-            'attachments' =>[$file],
+            'attachments' => [$file],
         ]);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), $taskData)
@@ -363,7 +363,7 @@ class TaskControllerTest extends TestCase
     {
         $task = Task::factory()->for($this->project)->create();
 
-        $taskData = array_merge($this->data, ['status' =>  'pending']);
+        $taskData = array_merge($this->data, ['status' => 'pending']);
 
         $this->get(route('tasks.edit', $task))->assertRedirect('login');
 
@@ -437,7 +437,7 @@ class TaskControllerTest extends TestCase
 
         $taskData = array_merge($this->data, [
             'title' => '',
-            'status' => '' 
+            'status' => '',
         ]);
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
@@ -478,7 +478,7 @@ class TaskControllerTest extends TestCase
 
         $this->assertDatabaseHas('tasks', array_merge($taskData, ['id' => $task->id]));
 
-        Notification::assertSentTo($employee,TaskAssignedNotification::class);
+        Notification::assertSentTo($employee, TaskAssignedNotification::class);
     }
 
     public function test_guests_cannot_delete_a_task()
@@ -569,7 +569,7 @@ class TaskControllerTest extends TestCase
     {
         $project = Project::factory()->trashed()->create();
         $task = Task::factory()->for($project)->trashed()->create();
-        
+
         $this->assertTrue($project->trashed());
         $this->assertTrue($task->trashed());
 
@@ -674,7 +674,7 @@ class TaskControllerTest extends TestCase
                 Str::limit($secondTask->title, 25),
                 $secondTask->status,
                 Str::limit($taskExtra->title, 25),
-                $taskExtra->status
+                $taskExtra->status,
             ])
             ->assertDontSeeText($trashedTask->title);
     }
@@ -725,7 +725,7 @@ class TaskControllerTest extends TestCase
                 Str::limit($task4->title, 25),
             ]);
 
-            $this->actingAs($this->admin)->get(route('admin.tasks', ['search' => 'first']))
+        $this->actingAs($this->admin)->get(route('admin.tasks', ['search' => 'first']))
             ->assertSeeText([
                 Str::limit($task1->title, 25),
                 Str::limit($task3->title, 25),

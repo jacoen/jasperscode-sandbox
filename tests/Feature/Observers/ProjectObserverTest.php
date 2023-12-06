@@ -12,6 +12,7 @@ class ProjectObserverTest extends TestCase
     use RefreshDatabase;
 
     protected $project;
+
     protected $trashedProject;
 
     public function setUp(): void

@@ -12,7 +12,9 @@ class TaskObserverTest extends TestCase
     use RefreshDatabase;
 
     protected $project;
+
     protected $task;
+
     protected $data;
 
     public function setUp(): void

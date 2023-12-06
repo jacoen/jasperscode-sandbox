@@ -191,14 +191,14 @@ class ProjectControllerTest extends TestCase
     }
 
     public function test_a_user_with_the_read_project_permission_can_visit_the_project_detail_page()
-    {   
+    {
         $project = Project::factory()->create(['manager_id' => null]);
 
         $this->actingAs($this->employee)->get(route('projects.show', $project))
             ->assertOk()
             ->assertSeeText([
-                $project->title, 
-                $project->description, 
+                $project->title,
+                $project->description,
                 $project->due_date->format('d M Y'),
                 $project->status,
             ]);
@@ -272,13 +272,14 @@ class ProjectControllerTest extends TestCase
                 $openTask->title,
                 $pendingTask->title,
                 $closedTask->title,
-                $completedTask->title
+                $completedTask->title,
             ]);
 
         $this->actingAs($this->employee)->get(route('projects.show', ['project' => $project, 'status' => 'pending']))
             ->assertOk()
             ->assertSeeText([
-                $pendingTask->title, $pendingTask->status
+                $pendingTask->title,
+                $pendingTask->status,
             ])->assertDontSeeText([
                 $openTask->title,
                 $closedTask->title,
@@ -302,11 +303,10 @@ class ProjectControllerTest extends TestCase
                 $task3->title,
             ]);
 
-            $this->actingAs($this->employee)->get(route('projects.show', ['project' => $project, 'search' => 'second']))
+        $this->actingAs($this->employee)->get(route('projects.show', ['project' => $project, 'search' => 'second']))
             ->assertOk()
-            ->assertSeeText([
-                $task2->title,
-            ])->assertDontSeeText([
+            ->assertSeeText($task2->title)
+            ->assertDontSeeText([
                 $task1->title,
                 $task3->title,
             ]);
@@ -346,16 +346,16 @@ class ProjectControllerTest extends TestCase
 
         $data = [
             'title' => '',
-            'due_date' => '', 
+            'due_date' => '',
             'status' => '',
         ];
 
         $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
-        ->assertSessionHasErrors([
-            'title' => 'The title field is required.',
-            'due_date' => 'The due date field is required.',
-            'status' => 'The status field is required.',
-        ]);
+            ->assertSessionHasErrors([
+                'title' => 'The title field is required.',
+                'due_date' => 'The due date field is required.',
+                'status' => 'The status field is required.',
+            ]);
     }
 
     public function test_the_status_field_must_contain_a_valid_status_when_updating_a_project()
@@ -379,7 +379,7 @@ class ProjectControllerTest extends TestCase
     }
 
     public function test_a_user_with_the_update_project_permission_can_update_a_project()
-    {   
+    {
         $project = Project::factory()->create();
 
         $data = [
@@ -525,7 +525,7 @@ class ProjectControllerTest extends TestCase
             ->assertOk()
             ->assertSeeText([
                 Str::limit($project1->title, 35),
-                Str::limit($project2->title, 35)
+                Str::limit($project2->title, 35),
             ]);
     }
 

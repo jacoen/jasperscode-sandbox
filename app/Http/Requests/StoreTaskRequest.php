@@ -19,7 +19,7 @@ class StoreTaskRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
      */
-    public function rules(): array  
+    public function rules(): array
     {
         return [
             'project' => ['missing'],

@@ -32,7 +32,7 @@ class AccountActivationControllerTest extends TestCase
     public function test_a_guest_needs_a_valid_password_token_to_reach_the_account_activation_page()
     {
         $token = [
-            'password_token' => 'erewbwbuq'
+            'password_token' => 'erewbwbuq',
         ];
 
         $this->get(route('activate-account.create', $token))
@@ -53,7 +53,7 @@ class AccountActivationControllerTest extends TestCase
             ->assertSessionHasErrors([
                 'password_token' => 'The password token field is required.',
                 'email' => 'The email field is required.',
-                'password' => 'The password field is required.'
+                'password' => 'The password field is required.',
             ]);
 
         $this->assertNotNull($this->user->fresh()->email);
@@ -171,7 +171,7 @@ class AccountActivationControllerTest extends TestCase
             ->assertSessionHasErrors([
                 'error' => 'The token has expired, click on the request new token button to request a new token.',
             ]);
-        
+
         $this->assertNull($this->user->password_changed_at);
         $this->assertNotNull($this->user->password_token);
     }
@@ -188,8 +188,6 @@ class AccountActivationControllerTest extends TestCase
         $this->post(route('activate-account.store'), $data)
             ->assertRedirect(route('login'))
             ->assertSessionHas('success', 'Your password has been changed.');
-
-
 
         $this->assertNotNull($this->user->fresh()->password_changed_at);
         $this->assertNull($this->user->fresh()->password_token);

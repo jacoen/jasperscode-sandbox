@@ -43,7 +43,7 @@ class UserControllerTest extends TestCase
                 $this->admin->name, $this->admin->email, 'Admin',
                 $this->manager->name, $this->manager->email, 'Manager',
                 $this->employee->name, $this->employee->email, 'Employee',
-                $this->user->name, $this->user->email,    
+                $this->user->name, $this->user->email,
             ]);
     }
 
@@ -174,7 +174,7 @@ class UserControllerTest extends TestCase
     public function test_a_user_that_gets_created_with_a_role_does_get_the_default_role_assigned()
     {
         $userData = array_merge($this->data, [
-            'role' => 4 //Employee
+            'role' => 4, //Employee
         ]);
 
         $this->actingAs($this->admin)->post(route('users.store'), $userData)
@@ -239,7 +239,7 @@ class UserControllerTest extends TestCase
     public function test_all_the_fields_are_required_when_editing_an_existing_user()
     {
         $user = User::factory()->create();
-        
+
         $data = [
             'name' => '',
             'email' => '',
@@ -285,7 +285,7 @@ class UserControllerTest extends TestCase
 
         $this->actingAs($this->admin)->put(route('users.update', $user), $userData)
             ->assertSessionHasErrors([
-                'email' => 'The email does not match the original email address'
+                'email' => 'The email does not match the original email address',
             ]);
 
         $this->assertNotEquals($user->fresh()->email, $userData['email']);
@@ -304,7 +304,7 @@ class UserControllerTest extends TestCase
         $userData = [
             'name' => 'Roger Davids',
             'email' => $user->email,
-            'role' => 4 // Employee
+            'role' => 4, // Employee
         ];
 
         $this->actingAs($this->admin)->get(route('users.edit', $user))

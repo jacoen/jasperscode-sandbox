@@ -4,7 +4,6 @@ namespace Tests\Feature\Controllers;
 
 use App\Models\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -59,14 +58,14 @@ class TaskImageControllerTest extends TestCase
     {
         $task = Task::factory()->create(['user_id' => $this->employee->id]);
         $extraFile = UploadedFile::fake()->image('anotherFile.jpg');
-        
+
         $task->addMedia($extraFile)->toMediaCollection('media');
 
         $image = $task->getFirstMedia('media');
 
         $response = $this->actingAs($this->employee)->delete(route('task-image.delete', [
             'task' => $this->task,
-            'image' => $image
+            'image' => $image,
         ]));
 
         $response->assertSessionHasErrors(['error' => 'Cannot remove this image.']);
@@ -78,7 +77,7 @@ class TaskImageControllerTest extends TestCase
     {
         $image = $this->task->getFirstMedia('media');
 
-        $this->actingAs($this->employee)->delete(route('task-image.delete', 
+        $this->actingAs($this->employee)->delete(route('task-image.delete',
             [
                 'task' => $this->task,
                 'image' => $image,

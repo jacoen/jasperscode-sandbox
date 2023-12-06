@@ -8,8 +8,7 @@ class ProjectObserver
 {
     public function deleting(Project $project)
     {
-        if (! $project->isForceDeleting()) 
-        {
+        if (! $project->isForceDeleting()) {
             $project->tasks()->each(function ($task) {
                 $task->delete();
             });
@@ -21,8 +20,7 @@ class ProjectObserver
      */
     public function deleted(Project $project): void
     {
-        if (! $project->isForceDeleting()) 
-        {
+        if (! $project->isForceDeleting()) {
             $project->timestamps = false;
             $project->status = 'closed';
             $project->manager_id = null;

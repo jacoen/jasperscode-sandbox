@@ -4,10 +4,8 @@ namespace App\Providers;
 
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
 use App\Observers\ProjectObserver;
 use App\Observers\TaskObserver;
-use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;

@@ -13,7 +13,7 @@ class RequestNewTokenControllerTest extends TestCase
     use RefreshDatabase;
 
     protected $user;
-    
+
     public function setUp(): void
     {
         parent::setUp();
@@ -31,9 +31,7 @@ class RequestNewTokenControllerTest extends TestCase
 
     public function test_a_guest_needs_a_valid_token_to_reach_the_request_new_token_page()
     {
-        $token = [
-            'password_token' => 'erewbwbuq'
-        ];
+        $token = 'erewbwbuq';
 
         $this->get(route('request-token.create', $token))
             ->assertRedirect(route('login'))
@@ -47,7 +45,7 @@ class RequestNewTokenControllerTest extends TestCase
         $this->get(route('request-token.create', $extraUser->password_token))
             ->assertRedirect(route('activate-account.create', $extraUser->password_token))
             ->assertSessionHasErrors([
-                'error' => 'The current token has not expired yet.'
+                'error' => 'The current token has not expired yet.',
             ]);
     }
 
@@ -71,7 +69,7 @@ class RequestNewTokenControllerTest extends TestCase
         $this->post(route('request-token.store'), $data)
             ->assertSessionHasErrors([
                 'token' => 'The token field is required.',
-                'email' => 'The email field is required.'
+                'email' => 'The email field is required.',
             ]);
     }
 
@@ -126,7 +124,7 @@ class RequestNewTokenControllerTest extends TestCase
 
         $data = [
             'token' => $this->user->password_token,
-            'email' => $extraUser->email
+            'email' => $extraUser->email,
         ];
 
         $this->post(route('request-token.store'), $data)
@@ -148,7 +146,7 @@ class RequestNewTokenControllerTest extends TestCase
 
         $this->post(route('request-token.store'), $data)
             ->assertSessionHasErrors([
-                'error' => 'This token has not yet expired.'
+                'error' => 'This token has not yet expired.',
             ]);
 
         $this->assertFalse($this->user->wasChanged('token_expires_at'));

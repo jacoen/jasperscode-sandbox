@@ -9,8 +9,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskImageController;
-use App\Http\Controllers\TrashedProjectController;
-use App\Http\Controllers\TrashedTaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
