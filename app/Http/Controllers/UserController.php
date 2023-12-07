@@ -43,7 +43,6 @@ class UserController extends Controller
         $user->save();
 
         $user->generatePasswordToken();
-
         $user->syncRoles($request->role ?? 'User');
 
         $user->notify(new AccountCreatedNotification());
