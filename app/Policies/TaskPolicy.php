@@ -12,7 +12,7 @@ class TaskPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('read task') && $user->hasRole(['Super Admin|Admin']);
+        return $user->can('read task');
     }
 
     /**
@@ -61,5 +61,10 @@ class TaskPolicy
     public function forceDelete(User $user, Task $task)
     {
         return $user->can('delete task') && $user->hasRole(['Admin', 'Super Admin']);
+    }
+
+    public function adminTasks(User $user, Task $task)
+    {
+        return $user->can('read task') && $user->hasRole(['Super Admin|Admin']);
     }
 }

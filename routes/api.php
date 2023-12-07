@@ -21,7 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::apiResource('/projects', ProjectController::class);
     Route::put('/projects/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('projects.restore');
 

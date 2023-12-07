@@ -26,7 +26,8 @@ class StoreTaskRequest extends FormRequest
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'min:3', 'max:255'],
             'description' => ['nullable', 'string'],
-            'attachments.*' => ['nullable', 'image'],
+            'attachments' => ['nullable', 'array', 'max:3'],
+            'attachments.*' => ['image'],
         ];
     }
 
@@ -40,7 +41,7 @@ class StoreTaskRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'attachments.*' => 'The attachments may only contain images.',
+            'attachments.*.image' => 'The attachments may only contain images.',
         ];
     }
 }

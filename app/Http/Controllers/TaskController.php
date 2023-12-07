@@ -27,6 +27,7 @@ class TaskController extends Controller
     {
         $route = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
+            ->where('user_id', auth()->id())
             ->when(request()->search, function ($query) {
                 $query->where('title', 'LIKE', '%'.request()->search.'%');
             })
@@ -63,15 +64,14 @@ class TaskController extends Controller
         $task = $project->tasks()->create($data);
 
         if ($attachments = $request->file('attachments')) {
-            foreach ($attachments as $attachment)
-            {
+            foreach ($attachments as $attachment) {
                 $task->addMedia($attachment)
-                ->usingName($task->title)
-                ->toMediaCollection('attachments');
+                    ->usingName($task->title)
+                    ->toMediaCollection('attachments');
             }
         }
 
-        if (isset($request->user_id) && auth()->id() != $request->user_id) {
+        if (isset($request->user_id)) {
             User::find($request->user_id)->notify(new TaskAssignedNotification($task));
         }
 
@@ -99,7 +99,7 @@ class TaskController extends Controller
         if (! $task->project->is_open_or_pending) {
             return redirect()->route('tasks.edit', $task)
                 ->withErrors([
-                    'error' => 'Could no update this task because teh project is not open or pending.',
+                    'error' => 'Could not update this task because the project is inactive.',
                 ]);
         }
 
@@ -107,20 +107,19 @@ class TaskController extends Controller
 
         if ($attachments = $request->file('attachments')) {
             $task->clearMediaCollection();
-            foreach ($attachments as $attachment)
-            {
+            foreach ($attachments as $attachment) {
                 $task->addMedia($attachment)
-                ->usingName($task->title)
-                ->toMediaCollection('attachments');
+                    ->usingName($task->title)
+                    ->toMediaCollection('attachments');
             }
+        }
+
+        if (isset($request->user_id) && $task->wasChanged('user_id')) {
+            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
         }
 
         if ($task->wasChanged('title')) {
             $task = $task->fresh();
-        }
-
-        if ($task->wasChanged('user_id') && isset($request->user_id) && auth()->id() != $request->user_id) {
-            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
         }
 
         return redirect()->route('tasks.show', $task)
@@ -137,6 +136,19 @@ class TaskController extends Controller
 
         return redirect()->route('projects.show', $project)
             ->with('success', 'The task '.$taskTitle.' has been deleted.');
+    }
+
+    public function trashed(): View
+    {
+        $this->authorize('restore task', Task::class);
+
+        $tasks = Task::onlyTrashed()
+            ->with('project')
+            ->latest('deleted_at')
+            ->orderBy('id', 'desc')
+            ->paginate();
+
+        return view('tasks.trashed', compact('tasks'));
     }
 
     public function restore(Task $task): RedirectResponse
@@ -159,7 +171,7 @@ class TaskController extends Controller
             ->with('success', 'The task '.$task->title.'has been restored.');
     }
 
-    public function forceDelete(Task $task)
+    public function forceDelete(Task $task): RedirectResponse
     {
         $this->authorize('forceDelete', $task);
 
@@ -169,9 +181,9 @@ class TaskController extends Controller
             ->with('success', 'The task has been permanently deleted.');
     }
 
-    public function userTasks(): View
+    public function adminTasks(): View
     {
-        $this->authorize('read task', Task::class);
+        abort_if(! auth()->user()->hasRole('Admin'), 403);
 
         $route = Route::currentRouteName();
         $tasks = Task::with('project', 'author', 'user')
@@ -181,7 +193,6 @@ class TaskController extends Controller
             ->when(request()->status, function ($query) {
                 $query->where('status', request()->status);
             })
-            ->where('user_id', auth()->id())
             ->latest('updated_at')
             ->orderByDesc('id')
             ->paginate();

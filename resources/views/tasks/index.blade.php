@@ -5,15 +5,15 @@
 
     <div class="card mb-4">
         <div class="card-header fw-bold">
-            @if (auth()->user()->hasAnyRole('Super Admin|Admin') && \Route::currentRouteNamed('tasks.index'))
-                Tasks
+            @if ($route == 'admin.tasks')
+                All tasks
             @else
-                {{ auth()->user()->name.'\'s tasks'}}
+                {{ auth()->user()->name }}'s tasks
             @endif
         </div>
 
         <div class="card-body">
-            @if(! $tasks->count() && ! request()->query->count())
+            @if (! $tasks->count() && ! request()->query->count())
                 <p class="mb-2">No tasks yet.</p>
             @else
                 <div class="float-end col-lg-10 me-4">

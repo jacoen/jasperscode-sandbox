@@ -29,7 +29,7 @@
                                 <td><span class="fw-semibold" title="{{ $project->title }}">{{ Str::limit($project->title, 35) }}</span></td>
                                 <td>{{ $project->due_date->format('d M Y') }}</td>
                                 <td>{{ lastUpdated($project->deleted_at) }}</td>
-                                <td>
+                                <td class="d-flex align-items-center">
                                     @can('restore project')
                                         <form action="{{ route('projects.restore', $project) }}" method="POST">
                                             @csrf
@@ -37,6 +37,16 @@
                                             <button type="submit" class="btn btn-info text-white fw-semibold">Restore</button>
                                         </form>
                                     @endcan
+
+                                    @if (auth()->user()->can('delete project') && auth()->user()->hasRole('Admin'))    
+                                        <form action="{{ route('projects.force-delete', $project) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this project? This project cannot be reversed!')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="btn btn-danger text-white fw-semibold ms-2">
+                                                Force Delete
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
