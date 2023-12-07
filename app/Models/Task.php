@@ -6,13 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Image\Manipulations;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Task extends Model implements Hasmedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, SoftDeletes, InteractsWithMedia, LogsActivity;
 
     protected $fillable = ['title', 'description', 'author_id', 'user_id', 'project_id', 'status'];
 
@@ -43,6 +46,14 @@ class Task extends Model implements Hasmedia
         $this->addMediaConversion('thumb')
             ->width(150)
             ->height(150)
-            ->sharpen(10);
+            ->sharpen(10)
+            ->fit(Manipulations::FIT_CROP, 150, 100);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['title', 'description', 'status', 'author.name', 'user.name', 'project.title'])
+            ->logOnlyDirty();
     }
 }

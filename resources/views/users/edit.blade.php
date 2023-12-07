@@ -19,7 +19,7 @@
 
                 <div class="mb-3">
                     <label for="email" class="form-label">E-mail</label>
-                    <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="user@email.com" value="{{ old('email', $user->email) }}" required>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="user@email.com" value="{{ old('email', $user->email) }}" readonly>
                 </div>
 
                 <div class="mb-3">

@@ -20,7 +20,7 @@ class RequestNewTokenController extends Controller
 
         if (! $user) {
             return redirect()->route('login')
-                ->withErrors(['error' => 'Invalid token.']);
+                ->withErrors(['error' => 'The selected token is invalid.']);
         }
 
         if (! $user->has_token_expired) {
@@ -33,9 +33,12 @@ class RequestNewTokenController extends Controller
 
     public function store(StoreNewTokenRequest $request)
     {
-        $user = User::where('password_token', $request->token)->first();
+        $user = User::where([
+            ['password_token', $request->token],
+            ['email', $request->email],
+        ])->first();
 
-        if ($user->email !== $request->email) {
+        if (! $user) {
             return redirect()->route('request-token.create', $request->token)
                 ->withErrors(['email' => 'The selected email is invalid.']);
         }

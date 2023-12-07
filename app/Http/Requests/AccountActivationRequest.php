@@ -23,6 +23,7 @@ class AccountActivationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'password_token' => ['required', 'exists:users,password_token', 'size:32'],
             'email' => ['required', 'string', 'email', 'exists:users,email'],
             'password' => ['required', 'string', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()->uncompromised()],
         ];

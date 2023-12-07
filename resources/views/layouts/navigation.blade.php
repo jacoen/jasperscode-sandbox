@@ -48,21 +48,21 @@
                 <ul class="nav-group-items">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('tasks.index') }}">
-                            All tasks
+                            My tasks
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('tasks.user')}}">
-                            My tasks
+                        <a class="nav-link" href="{{ route('admin.tasks')}}">
+                            Tasks overview
                         </a>
                     </li>
                 </ul>
         @else
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('tasks.user') }}">
+                <a class="nav-link" href="{{ route('tasks.index') }}">
                     <svg class="nav-icon">
                     </svg>
-                    {{ __('Tasks') }}
+                    {{ __('My tasks') }}
                 </a>
             </li>
         @endhasanyrole
@@ -74,6 +74,16 @@
                 <svg class="nav-icon">
                 </svg>
                 {{ __('Trashed tasks') }}
+            </a>
+        </li>
+    @endcan
+
+    @can('read activity')
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('activities.index') }}">
+                <svg class="nav-icon">
+                </svg>
+                {{ __('Activities') }}
             </a>
         </li>
     @endcan

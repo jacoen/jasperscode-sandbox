@@ -4,6 +4,12 @@
     <x-flash-success :message="session('success')" />
     <x-errors :errors="$errors" />
 
+    @if ($project->due_date_alert || $project->due_date_warning)
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <span class="fw-bold">Info</span> This project is due {{ $project->due_date_difference }}
+        </div> 
+    @endif
+
     @if ($project->is_pinned && auth()->user()->hasRole(['Super Admin', 'Admin']))
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
             <li class="ms-2 fw-semibold">This project has been pinned.</li>
@@ -84,20 +90,6 @@
                         </div>
                     @endif
                 </div>
-
-                {{-- <div class="d-flex justify-content-between align-items-center mb-2">
-                    @if($project->tasks->count())
-                        <x-filter-form route="projects.show" :param="$project" placeholder="Search task by title" />
-                    @endif
-
-                    @if (auth()->user()->can('create task') && $project->is_open_or_pending)
-                        <div class="justify-content-end me-2">
-                            <a href="{{ route('tasks.create', $project) }}" class="btn btn-block btn-success fw-semibold text-white">
-                                New task
-                            </a>
-                        </div>
-                    @endif
-                </div> --}}
 
                 @if (! $project->tasks->count())
                     <p>No tasks in this project yet.</p>
