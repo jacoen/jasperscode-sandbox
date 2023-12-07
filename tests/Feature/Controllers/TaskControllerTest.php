@@ -149,20 +149,6 @@ class TaskControllerTest extends TestCase
         $this->assertDatabaseMissing('tasks', $taskData);
     }
 
-    public function test_a_task_cannot_be_created_for_a_trashed_project()
-    {
-        $this->withoutExceptionHandling();
-        $trashedProject = Project::factory()->trashed()->create();
-
-        $this->actingAs($this->employee)->post(route('tasks.store', $trashedProject), $this->data)
-            ->assertSessionHasErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
-
-        $this->assertDatabaseMissing('tasks', [
-            'title' => $this->data['title'],
-            'project_id' => $trashedProject->id,
-        ]);
-    }
-
     public function test_a_task_cannot_be_created_for_a_closed_project()
     {
         $closedProject = Project::factory()->create(['status' => 'closed']);

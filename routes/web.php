@@ -71,7 +71,7 @@ Route::middleware('auth')->group(function () {
     Route::controller(TaskController::class)->group(function () {
         Route::prefix('/projects/{project}/tasks')->group(function () {
             Route::get('/create', 'create')->name('tasks.create');
-            Route::post('/', 'store')->withTrashed()->name('tasks.store');
+            Route::post('/', 'store')->name('tasks.store');
         });
 
         Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
