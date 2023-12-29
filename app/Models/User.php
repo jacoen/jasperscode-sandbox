@@ -89,8 +89,9 @@ class User extends Authenticatable
     {
         $this->timestamps = false;
         $this->two_factor_code = generateDigitCode();
-        $this->two_factor_expires_at = now()->addMinutes(15);
+        $this->two_factor_expires_at = now()->addMinutes(5);
         $this->save();
+        $this->timestamps = true;
     }
 
     public function resetTwoFactorCode(): void
@@ -99,5 +100,6 @@ class User extends Authenticatable
         $this->two_factor_code = null;
         $this->two_factor_expires_at = null;
         $this->save();
+        $this->timestamps = true;
     }
 }
