@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskImageController;
+use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,8 +30,6 @@ Route::get('/', function () {
 
 Auth::routes(['register' => false]);
 
-Route::get('/home', [HomeController::class, 'index'])->name('home');
-
 Route::controller(AccountActivationController::class)
     ->prefix('/change-password')
     ->name('activate-account.')
@@ -49,7 +48,15 @@ Route::controller(RequestNewTokenController::class)
         Route::post('/', 'store')->name('store');
     });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'twofactor'])->group(function () {
+    Route::controller(TwoFactorController::class)->group(function () {
+        Route::get('/verify', 'create')->name('verify.create');
+        Route::get('/verify/resend', 'resend')->name('verify.resend');
+        Route::post('/verify', 'store')->name('verify.store');
+    });
+
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+
     Route::controller(NewsletterController::class)->prefix('/newsletter')->group(function () {
         Route::get('/', 'create')->name('newsletter.create');
         Route::post('/', 'store')->name('newsletter.store');
@@ -57,8 +64,12 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('/users', UserController::class)->except('show');
 
-    Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::controller(ProfileController::class)->name('profile.')->prefix('/profile')->group(function () {
+        Route::get('/', 'show')->name('show');
+        Route::put('/', 'put')->name('update');
+    });
+
+    Route::put('two-factor-settings', [ProfileController::class, 'twoFactorSettings'])->name('two-factor.update');
 
     Route::resource('/projects', ProjectController::class);
     Route::controller(ProjectController::class)->prefix('/projects')->name('projects.')->group(function () {
@@ -88,3 +99,5 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/activities', ActivityController::class)->name('activities.index');
 });
+
+
