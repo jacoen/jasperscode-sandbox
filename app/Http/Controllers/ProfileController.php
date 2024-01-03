@@ -29,10 +29,26 @@ class ProfileController extends Controller
 
     public function twoFactorSettings(Request $request)
     {
-        auth()->user()->update([
-            'two_factor_enabled' => $request->has('two_factor_enabled')
+        $user = auth()->user();
+
+        if ($user->hasAnyRole(['Admin', 'Super Admin']) && $request->input('two_factor_enabled') === null) {
+            return redirect()->route('profile.show')->withErrors([
+                'two_factor_enabled' => 'You cannot disable the two factor authentication'
+            ]);
+        }
+
+        $user->update([
+            'two_factor_enabled' => ! $user->two_factor_enabled,
         ]);
 
-        return redirect()->route('profile.show');
+        if ($user->two_factor_enabled) {
+            auth()->logout();
+            
+            return redirect()->route('login')
+                ->with('success', 'Two factor authentication has been enabled. Please sign in again.');
+        }
+
+        return redirect()->route('profile.show')
+            ->with('success', 'The two factor authentication has been disabled.');
     }
 }
