@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Notifications\TwoFactorCodeNotification;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 
 class TwoFactorController extends Controller
@@ -27,15 +26,6 @@ class TwoFactorController extends Controller
                 'two_factor_code' => 'The two factor code you have entered does not match.',
             ]);
         }
-
-        // if ($request->two_factor_expires_at < now()) {
-        //     auth()->user()->resetTwoFactorCode();
-        //     auth()->logout();
-            
-        //     return redirect()->route('login')->withErrors([
-        //         'error' => 'The two factor code has expired. Please login again.',
-        //     ]);
-        // }
 
         auth()->user()->resetTwoFactorCode();
 

@@ -65,7 +65,7 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
     Route::resource('/users', UserController::class)->except('show');
 
     Route::controller(ProfileController::class)->name('profile.')->prefix('/profile')->group(function () {
-        Route::get('/', 'show')->name('show');
+        Route::get('/', 'show')->name('show')->middleware('password.confirm');
         Route::put('/', 'put')->name('update');
     });
 
