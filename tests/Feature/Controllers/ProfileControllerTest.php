@@ -10,12 +10,6 @@ class ProfileControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Refactor
-     * Maak nieuwe test waarbij invoer middleware wordt gedaan
-     * Maak tests met employee afhankelijk van deze test
-     * Admin test met middleware apart
-     */
     public function test_a_user_needs_to_confirm_their_password_before_they_can_reach_the_profile_page()
     {
         $this->actingAs($this->employee)->get(route('profile.show'))
@@ -25,13 +19,6 @@ class ProfileControllerTest extends TestCase
 
         $this->get(route('password.confirm'))
             ->assertOk();
-    }
-
-    protected function setUpPasswordConfirmation($user)
-    {
-        $this->actingAs($user)->post(route('password.confirm'), [
-            'password' => 'password',
-        ]);
     }
 
     public function test_a_user_can_see_if_two_factor_authentication_is_on_their_profile_page()
@@ -82,5 +69,12 @@ class ProfileControllerTest extends TestCase
             ->assertSessionHas('success', 'The two factor authentication has been disabled.');
 
         $this->assertFalse($user->fresh()->two_factor_enabled);
+    }
+
+    protected function setUpPasswordConfirmation($user)
+    {
+        $this->actingAs($user)->post(route('password.confirm'), [
+            'password' => 'password',
+        ]);
     }
 }

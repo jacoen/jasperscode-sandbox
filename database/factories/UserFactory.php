@@ -75,11 +75,13 @@ class UserFactory extends Factory
         });
     }
 
-    public function twoFactorEnabled()
+    public function withTwoFactorEnabled()
     {
         return $this->state(function () {
             return [
                 'two_factor_enabled' => true,
+                'two_factor_code' => generateDigitCode(),
+                'two_factor_expires_at' => now()->addMinutes(),
             ];
         });
     }

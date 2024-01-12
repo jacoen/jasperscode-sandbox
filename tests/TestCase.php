@@ -24,7 +24,7 @@ abstract class TestCase extends BaseTestCase
 
         $this->seed(PermissionRoleSeeder::class);
 
-        $this->admin = User::factory()->create(['two_factor_enabled' => true])->syncRoles(['Admin']);
+        $this->admin = User::factory()->withTwoFactorEnabled()->create()->syncRoles(['Admin']);
         $this->manager = User::factory()->create()->syncRoles(['Manager']);
         $this->employee = User::factory()->create()->syncRoles(['Employee']);
         $this->user = User::factory()->create()->syncRoles(['User']);
