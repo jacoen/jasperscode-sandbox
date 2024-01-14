@@ -33,7 +33,7 @@ class ProfileController extends Controller
 
         if ($user->hasAnyRole(['Admin', 'Super Admin']) && $request->input('two_factor_enabled') === null) {
             return redirect()->route('profile.show')->withErrors([
-                'two_factor_enabled' => 'You cannot disable the two factor authentication'
+                'error' => 'You cannot disable the two factor authentication.'
             ]);
         }
 

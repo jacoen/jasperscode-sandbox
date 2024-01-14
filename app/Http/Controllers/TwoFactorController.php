@@ -17,6 +17,11 @@ class TwoFactorController extends Controller
 
     public function store(Request $request)
     {
+        /**
+         * Misschien hier in de toekomst nog valid timestamp veld toevoegen met een bepaalde tijdsduur
+         * Dit zou inhouden dat de meer gegegevens gewist moeten worden als 2fa wordt uitgeschakeld
+        */ 
+
         $request->validate([
             'two_factor_code' => 'required', 'integer', 'digits:6',
         ]);

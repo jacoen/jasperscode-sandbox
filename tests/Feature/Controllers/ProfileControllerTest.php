@@ -35,6 +35,12 @@ class ProfileControllerTest extends TestCase
 
     public function test_an_admin_cannot_disable_two_factor_authentication_on_their_profile_page()
     {
+        $this->actingAs($this->admin);
+
+        $this->post(route('verify.store'), [
+            'two_factor_code' => $this->admin->two_factor_code,
+        ]);
+
         $this->setUpPasswordConfirmation($this->admin);
 
         $this->put(route('two-factor.update'))
