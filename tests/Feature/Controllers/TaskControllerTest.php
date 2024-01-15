@@ -616,7 +616,9 @@ class TaskControllerTest extends TestCase
     {
         $task = Task::factory()->for($this->project)->trashed()->create();
 
-        $this->actingAs($this->admin)->patch(route('tasks.force-delete', $task))
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
+        $this->patch(route('tasks.force-delete', $task))
             ->assertRedirect(route('tasks.trashed'))
             ->assertSessionHas('success', 'The task has been permanently deleted.');
 
@@ -649,7 +651,9 @@ class TaskControllerTest extends TestCase
         $firstTask = Task::first();
         $secondTask = Task::latest()->first();
 
-        $this->actingAs($this->admin)->get(route('admin.tasks'))
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
+        $this->get(route('admin.tasks'))
             ->assertOk()
             ->assertSeeText([
                 Str::limit($firstTask->title, 25),
@@ -674,7 +678,9 @@ class TaskControllerTest extends TestCase
         $task3 = Task::factory()->for($projectExtra)->create(['status' => 'pending']);
         $task4 = Task::factory()->for($projectExtra)->create(['status' => 'completed']);
 
-        $this->actingAs($this->admin)->get(route('admin.tasks'))
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
+        $this->get(route('admin.tasks'))
             ->assertOk()
             ->assertSeeText([
                 Str::limit($task1->title, 25),
@@ -702,7 +708,9 @@ class TaskControllerTest extends TestCase
         $task3 = Task::factory()->for($projectExtra)->create(['title' => 'this is the first task of the extra project']);
         $task4 = Task::factory()->for($projectExtra)->create(['title' => 'this is task number 2 for the extra project']);
 
-        $this->actingAs($this->admin)->get(route('admin.tasks'))
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
+        $this->get(route('admin.tasks'))
             ->assertOk()
             ->assertSeeText([
                 Str::limit($task1->title, 25),
@@ -720,5 +728,14 @@ class TaskControllerTest extends TestCase
                 Str::limit($task2->title, 25),
                 Str::limit($task4->title, 25),
             ]);
+    }
+
+    protected function actingAsVerifiedTwoFactor($user)
+    {
+        $this->actingAs($user);
+
+        $this->post(route('verify.store'), [
+            'two_factor_code' => $user->two_factor_code,
+        ]);
     }
 }
