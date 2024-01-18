@@ -10,34 +10,60 @@ class UserObserverTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected $userData;
     protected $user;
 
     public function setUp(): void
     {
         parent::setUp();
 
+        $this->ActingAsVerifiedTwoFactor();
+
+        $this->userData = [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ];
+
         $this->user = User::factory()->create()->assignRole('User');
     }
 
     public function test_it_does_not_enabled_two_factor_when_an_employee_account_has_been_created()
     {
-        $employee = User::factory()->create()->assignRole('Employee');
+        $data = array_merge($this->userData, [
+            'role' => 4
+        ]);
 
-        $this->assertFalse($employee->two_factor_enabled);
+        $this->post(route('users.store'), $data);
+
+        $user = User::where('email', $data['email'])->first();
+
+        $this->assertFalse($user->two_factor_enabled);
     }
 
     public function test_it_does_not_enable_two_factor_when_a_manager_account_has_been_created()
     {
-        $manager = User::factory()->create()->assignRole('Manager');
+        $data = array_merge($this->userData, [
+            'role' => 3
+        ]);
 
-        $this->assertFalse($manager->two_factor_enabled);
+        $this->post(route('users.store'), $data);
+
+        $user = User::where('email', $data['email'])->first();
+
+        $this->assertFalse($user->two_factor_enabled);
     }
 
-    public function test_it_does_enabled_two_factor_when_an_admin_account_has_been_created()
+    public function test_it_does_enable_two_factor_when_an_admin_account_has_been_created()
     {
-        $admin = User::factory()->create()->assignRole('Admin');
+        $data = array_merge($this->userData, [
+            'role' => 2
+        ]);
 
-        $this->assertTrue($admin->two_factor_enabled);
+        $this->post(route('users.store'), $data);
+
+        $user = User::where('email', $data['email'])->first();
+
+        $this->assertFalse($user->two_factor_enabled);
     }
 
     public function test_it_does_not_enable_two_factor_when_the_role_gets_changed_to_employee()
@@ -48,7 +74,7 @@ class UserObserverTest extends TestCase
             'role' => '4', // Employee
         ];
 
-        $this->actingAs($this->admin)->put(route('users.update', $this->user), $data)
+        $this->put(route('users.update', $this->user), $data)
             ->assertRedirect();
 
         $this->assertTrue($this->user->fresh()->hasRole('Employee'));
@@ -63,10 +89,10 @@ class UserObserverTest extends TestCase
             'role' => '3', // Manager
         ];
 
-        $this->actingAs($this->admin)->put(route('users.update', $this->user), $data)
+        $this->put(route('users.update', $this->user), $data)
             ->assertRedirect();
 
-        $this->assertTrue($this->user->fresh()->hasRole('Employee'));
+        $this->assertTrue($this->user->fresh()->hasRole('Manager'));
         $this->assertFalse($this->user->fresh()->two_factor_enabled);
     }
 
@@ -78,7 +104,7 @@ class UserObserverTest extends TestCase
             'role' => '2', // Admin
         ];
 
-        $this->actingAs($this->admin)->put(route('users.update', $this->user), $data)
+        $this->put(route('users.update', $this->user), $data)
             ->assertRedirect();
 
         $this->assertTrue($this->user->fresh()->hasRole('Admin'));
@@ -95,10 +121,19 @@ class UserObserverTest extends TestCase
             'role' => '4', // Employee
         ];
 
-        $this->actingAs($this->admin)->put(route('users.update', $admin), $data)
+        $this->put(route('users.update', $admin), $data)
             ->assertRedirect();
 
         $this->assertTrue($admin->fresh()->hasRole('Employee'));
         $this->assertFalse($admin->fresh()->two_factor_enabled);
+    }
+
+    protected function ActingAsVerifiedTwoFactor()
+    {
+        $this->actingAs($this->admin);
+
+        $this->post(route('verify.store'), [
+            'two_factor_code' => $this->admin->two_factor_code,
+        ]);
     }
 }

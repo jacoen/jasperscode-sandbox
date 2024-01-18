@@ -3,28 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TwoFactorRequest;
 use App\Notifications\TwoFactorCodeNotification;
-use Illuminate\Http\Request;
 
 class TwoFactorController extends Controller
 {
     public function create()
     {
+        if (! auth()->user()->two_factor_enabled) {
+            return redirect(route('home'))
+                ->withErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication.']);
+        }
+
         $email = $this->maskEmail(auth()->user()->email);
 
         return view('auth.two-factor', compact('email'));
     }
 
-    public function store(Request $request)
+    public function store(TwoFactorRequest $request)
     {
         /**
          * Misschien hier in de toekomst nog valid timestamp veld toevoegen met een bepaalde tijdsduur
          * Dit zou inhouden dat de meer gegegevens gewist moeten worden als 2fa wordt uitgeschakeld
-        */ 
-
-        $request->validate([
-            'two_factor_code' => 'required', 'integer', 'digits:6',
-        ]);
+        */
 
         if ($request->two_factor_code !== auth()->user()->two_factor_code) {
             return redirect()->route('verify.create')->withErrors([
@@ -39,6 +40,11 @@ class TwoFactorController extends Controller
 
     public function resend()
     {
+        if (! auth()->user()->two_factor_enabled) {
+            return redirect()->route('home')
+                ->withErrors(['error' => 'Could not sent a new two factor code because two factor is disabled.']);
+        }
+
         auth()->user()->generateTwoFactorCode();
 
         auth()->user()->notify(new TwoFactorCodeNotification());
