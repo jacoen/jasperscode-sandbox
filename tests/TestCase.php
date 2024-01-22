@@ -24,7 +24,7 @@ abstract class TestCase extends BaseTestCase
 
         $this->seed(PermissionRoleSeeder::class);
 
-        $this->admin = User::factory()->withTwoFactorEnabled()->create()->assignRole('Admin');
+        $this->admin = User::factory()->create(['two_factor_enabled' => true])->assignRole('Admin');
         $this->manager = User::factory()->create()->assignRole('Manager');
         $this->employee = User::factory()->create()->assignRole('Employee');
         $this->user = User::factory()->create()->assignRole('User');
