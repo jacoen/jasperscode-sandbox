@@ -29,19 +29,43 @@ class TwoFactorControllerTest extends TestCase
     {
         $this->actingAs($this->user)->get(route('verify.create'))
             ->assertRedirect(route('home'))
-            ->assertSessionHasErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication.']);
+            ->assertSessionHasErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.']);
     }
 
     public function test_a_user_with_two_factor_enabled_can_reach_the_two_factor_verification_page()
     {
-        $this->be($this->admin)->get(route('verify.create'))
-            ->assertOk();
+        $this->verifiedWithTwoFactor();
 
+        $this->get(route('verify.create'))
+            ->assertOk();
+    }
+
+    public function test_a_guest_cannot_submit_a_two_factor_code()
+    {
+        $this->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ])->assertRedirect(route('login'));
+    }
+
+    public function test_a_user_without_two_factor_enabled_cannot_submit_a_two_factor_code()
+    {
+        $this->assertNull($this->employee->two_factor_code);
+        $this->assertFalse($this->employee->two_factor_enabled);
+
+        $this->actingAs($this->employee)->post(route('verify.store'), [
+            'two_factor_code' => '123456'
+        ])
+            ->assertRedirect(route('home'))
+            ->assertSessionHasErrors([
+                'error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.'
+            ]);
     }
 
     public function test_the_two_factor_code_is_required()
     {
-        $this->actingAs($this->admin)->post(route('verify.store'), [
+        $this->verifiedWithTwoFactor();
+
+        $this->post(route('verify.store'), [
             'two_factor_code' => ''
         ])->assertSessionHasErrors([
             'two_factor_code' => 'The two factor code field is required.',
@@ -55,7 +79,9 @@ class TwoFactorControllerTest extends TestCase
 
     public function test_the_two_factor_code_can_only_consist_of_numbers()
     {
-        $this->actingAs($this->admin)->post(route('verify.store'), [
+        $this->verifiedWithTwoFactor();
+
+        $this->post(route('verify.store'), [
             'two_factor_code' => 'ab*d_f'
         ])->assertSessionHasErrors([
             'two_factor_code' => 'The two factor code field must be a number.',
@@ -70,7 +96,9 @@ class TwoFactorControllerTest extends TestCase
 
     public function test_the_two_factor_code_must_be_exactly_six_numbers()
     {
-        $this->actingAs($this->admin)->post(route('verify.store'), [
+        $this->verifiedWithTwoFactor();
+
+        $this->post(route('verify.store'), [
             'two_factor_code' => '12345'
         ])->assertSessionHasErrors([
             'two_factor_code' => 'The two factor code field must be 6 digits.',
@@ -123,6 +151,7 @@ class TwoFactorControllerTest extends TestCase
         ]);
     }
 
+
     public function test_a_guest_cannot_resend_a_two_factor_code()
     {
         $this->get(route('verify.resend'))
@@ -143,14 +172,23 @@ class TwoFactorControllerTest extends TestCase
 
     public function test_a_user_with_two_factor_enabled_can_resend_a_new_two_factor_code()
     {
+        $this->verifiedWithTwoFactor();
+
         $twoFactorCode = $this->admin->two_factor_code;
 
-        $this->actingAs($this->admin)->get(route('verify.resend'))
+        $this->get(route('verify.resend'))
             ->assertRedirect(route('verify.create'))
             ->assertSessionHas('success', 'A new code has been sent to your email.');
 
         Notification::assertSentTo($this->admin, TwoFactorCodeNotification::class);
 
         $this->assertNotEquals($this->admin->fresh()->two_factor_code, $twoFactorCode);
+    }
+
+    protected function verifiedWithTwoFactor()
+    {
+        $this->be($this->admin);
+
+        $this->admin->generateTwoFactorCode();
     }
 }

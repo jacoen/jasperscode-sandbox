@@ -29,8 +29,6 @@ class TwoFactorMiddleware
                 return redirect()->route('login')
                     ->withErrors(['error' => 'The two factor code has expired. Please login in again.']);
             }
-
-            
         }
 
         return $next($request);
