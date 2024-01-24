@@ -8,13 +8,16 @@ use App\Notifications\TwoFactorCodeNotification;
 
 class TwoFactorController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if ($this->checkTwoFactor()) return $this->checkTwoFactor();
+            return $next($request);
+        });
+    }
+
     public function create()
     {
-        if (! auth()->user()->two_factor_enabled) {
-            return redirect(route('home'))
-                ->withErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication.']);
-        }
-
         $email = $this->maskEmail(auth()->user()->email);
 
         return view('auth.two-factor', compact('email'));
@@ -40,9 +43,9 @@ class TwoFactorController extends Controller
 
     public function resend()
     {
-        if (! auth()->user()->two_factor_enabled) {
-            return redirect()->route('home')
-                ->withErrors(['error' => 'Could not sent a new two factor code because two factor is disabled.']);
+        if (! auth()->user()->two_factor_enabled || ! auth()->user()->two_factor_code) {
+            return redirect(route('home'))
+                ->withErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.']);
         }
 
         auth()->user()->generateTwoFactorCode();
@@ -61,5 +64,15 @@ class TwoFactorController extends Controller
         $emailName .= str_repeat("*", 8);
 
         return $emailName."@".$emailparts[1];
+    }
+
+    private function checkTwoFactor()
+    {
+        if (! auth()->user()->two_factor_enabled || ! auth()->user()->two_factor_code) {
+            return redirect(route('home'))
+                ->withErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.']);
+        }
+
+        return null;
     }
 }

@@ -42,7 +42,7 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
-    protected function authenticated(Request $request, $user)
+    public function authenticated(Request $request, $user)
     {
         if ($user->two_factor_enabled) {
             $user->generateTwoFactorCode();
@@ -51,14 +51,12 @@ class LoginController extends Controller
         }
     }
 
-    protected function logout(Request $request) 
+    public function logout(Request $request) 
     {
         if ($request->user()->two_factor_code) {
             $request->user()->resetTwoFactorCode();
         }
 
         $this->performLogout($request);
-
-        return redirect()->route('login');
     }
 }

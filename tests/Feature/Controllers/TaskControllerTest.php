@@ -689,7 +689,7 @@ class TaskControllerTest extends TestCase
                 Str::limit($task4->title, 25),
             ]);
 
-        $this->actingAs($this->admin)->get(route('admin.tasks', ['status' => 'pending']))
+        $this->get(route('admin.tasks', ['status' => 'pending']))
             ->assertSeeText([
                 Str::limit($task2->title, 25),
                 Str::limit($task3->title, 25),
@@ -719,7 +719,7 @@ class TaskControllerTest extends TestCase
                 Str::limit($task4->title, 25),
             ]);
 
-        $this->actingAs($this->admin)->get(route('admin.tasks', ['search' => 'first']))
+        $this->get(route('admin.tasks', ['search' => 'first']))
             ->assertSeeText([
                 Str::limit($task1->title, 25),
                 Str::limit($task3->title, 25),
