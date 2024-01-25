@@ -70,18 +70,12 @@
                     </p>
     
                     <form action="{{ route('two-factor.update') }}" method="POST" class="mb-3" 
-                        onclick="return confirm('{{ auth()->user()->two_factor_enabled ? __('messages.confirm_disable') : __('messages.confirm_logout') }}')">
+                        onsubmit="return confirm('{{ auth()->user()->two_factor_enabled ? __('messages.confirm_disable') : __('messages.confirm_logout') }}')">
                         @csrf
                         @method('PUT')
     
-                        {{-- <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="two_factor_enabled" name="two_factor_enabled" {{ auth()->user()->two_factor_enabled ? 'checked' : ''}}
-                                onchange="document.getElementById('two_factor_form').submit();">
-                            <label class="form-check-label" for="two_factor_enabled">Enable two factor</label>
-                        </div> --}}
-    
                         <div class="mb-3 text-center mb-1">
-                            <button class="btn btn-sm btn-info text-white fw-semibold" type="submit">
+                            <button class="btn btn-sm btn-info text-white fw-semibold" type="submit" @if(auth()->user()->hasRole(['Admin', 'Super Admin'])) disabled @endif>
                                 {{ auth()->user()->two_factor_enabled ? 'Disable' : 'Enable'}} two factor
                             </button>
                         </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Notifications\TwoFactorCodeNotification;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LoginController extends Controller
@@ -42,7 +43,7 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
-    public function authenticated(Request $request, $user)
+    protected function authenticated(Request $request, $user)
     {
         if ($user->two_factor_enabled) {
             $user->generateTwoFactorCode();
@@ -51,12 +52,16 @@ class LoginController extends Controller
         }
     }
 
-    public function logout(Request $request) 
+    protected function logout(Request $request) 
     {
         if ($request->user()->two_factor_code) {
             $request->user()->resetTwoFactorCode();
         }
 
         $this->performLogout($request);
+
+        return $request->wantsJson()
+            ? new JsonResponse([], 204)
+            : redirect('/');
     }
 }
