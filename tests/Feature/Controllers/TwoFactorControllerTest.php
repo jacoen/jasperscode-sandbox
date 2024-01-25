@@ -40,6 +40,15 @@ class TwoFactorControllerTest extends TestCase
             ->assertOk();
     }
 
+    public function test_a_user_with_two_factor_enabled_can_see_their_masked_email_address_on_the_two_factor_verification_form()
+    {
+        $this->verifiedWithTwoFactor();
+        $maskedEmail = maskEmail($this->admin->email);
+
+        $this->get(route('verify.create'))
+            ->assertSeeText($maskedEmail);
+    }
+
     public function test_a_guest_cannot_submit_a_two_factor_code()
     {
         $this->post(route('verify.store'), [
