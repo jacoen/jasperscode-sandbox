@@ -18,7 +18,7 @@ class TwoFactorController extends Controller
 
     public function create()
     {
-        $email = $this->maskEmail(auth()->user()->email);
+        $email = maskEmail(auth()->user()->email);
 
         return view('auth.two-factor', compact('email'));
     }
@@ -55,15 +55,6 @@ class TwoFactorController extends Controller
         return redirect()
             ->route('verify.create')
             ->with('success', 'A new code has been sent to your email.');
-    }
-
-    private function maskEmail($email)
-    {
-        $emailparts = explode("@", $email);
-        $emailName = substr($emailparts[0], 0, 1);
-        $emailName .= str_repeat("*", 8);
-
-        return $emailName."@".$emailparts[1];
     }
 
     private function checkTwoFactor()

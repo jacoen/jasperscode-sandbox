@@ -27,3 +27,14 @@ if (! function_exists('generateDigitCode')) {
         return $code;
     }
 }
+
+if (! function_exists('maskEmail')) {
+    function maskEmail($email)
+    {
+        $emailparts = explode("@", $email);
+        $emailName = substr($emailparts[0], 0, 1);
+        $emailName .= str_repeat("*", 8);
+
+        return $emailName."@".$emailparts[1];
+    }
+}
