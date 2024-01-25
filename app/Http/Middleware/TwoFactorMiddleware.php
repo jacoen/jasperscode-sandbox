@@ -15,19 +15,26 @@ class TwoFactorMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = auth()->user();
+        if (auth()->check()) {
+            $user = auth()->user();
 
-        if (auth()->check() && $user->two_factor_enabled && $user->two_factor_code) {
-            if (! $request->routeIs('verify*')) {
-                return redirect()->route('verify.create');
+            if ($request->routeIs('verify*') && (! $user->two_factor_enabled || ! $user->two_factor_code)) {
+                return redirect()->route('home')
+                    ->withErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.']);
             }
 
-            if ($user->two_factor_expires_at->lt(now())) {
-                $user->resetTwoFactorCode();
-                auth()->logout();
+            if ($user->two_factor_enabled && $user->two_factor_code) {
+                if (now()->gt($user->two_factor_expires_at)) {
+                    $user->resetTwoFactorCode();
+                    auth()->logout();
+    
+                    return redirect()->route('login')
+                        ->withErrors(['error' => 'The two factor code has expired. Please login in again.']);
+                }
 
-                return redirect()->route('login')
-                    ->withErrors(['error' => 'The two factor code has expired. Please login in again.']);
+                if (! $request->routeIs('verify*')) {
+                    return redirect()->route('verify.create');
+                }
             }
         }
 

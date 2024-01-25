@@ -8,14 +8,6 @@ use App\Notifications\TwoFactorCodeNotification;
 
 class TwoFactorController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if ($this->checkTwoFactor()) return $this->checkTwoFactor();
-            return $next($request);
-        });
-    }
-
     public function create()
     {
         $email = maskEmail(auth()->user()->email);
@@ -55,15 +47,5 @@ class TwoFactorController extends Controller
         return redirect()
             ->route('verify.create')
             ->with('success', 'A new code has been sent to your email.');
-    }
-
-    private function checkTwoFactor()
-    {
-        if (! auth()->user()->two_factor_enabled || ! auth()->user()->two_factor_code) {
-            return redirect(route('home'))
-                ->withErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.']);
-        }
-
-        return null;
     }
 }
