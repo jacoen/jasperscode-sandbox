@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\RoleUpdatedEvent;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
@@ -44,6 +46,7 @@ class UserController extends Controller
 
         $user->generatePasswordToken();
         $user->syncRoles($request->role ?? 'User');
+        event(new RoleUpdatedEvent($user));
 
         $user->notify(new AccountCreatedNotification());
 
@@ -64,7 +67,8 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user)
     {
-        // Temporary
+        $oldRole = $user->roles->first()->id;
+
         if ($request->email !== $user->email) {
             return redirect()->route('users.edit', $user)
                 ->withErrors(['email' => 'The email does not match the original email address']);
@@ -72,7 +76,11 @@ class UserController extends Controller
 
         $user->update($request->validated());
 
-        $user->syncRoles($request->role);
+        
+        if ($request->role !== $oldRole) {
+            $user->syncRoles($request->role);
+            event(new RoleUpdatedEvent($user));
+        }
 
         return redirect()->route('users.index')
             ->with('success', $user->name.'\'s account has been updated!');
