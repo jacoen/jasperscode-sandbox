@@ -309,7 +309,7 @@ class UserControllerTest extends TestCase
     {
         $this->twoFactorConfirmation($this->admin);
 
-        $user = User::factory()->create(['email' => 'Scott.price@example.com']);
+        $user = User::factory()->create(['email' => 'Scott.price@example.com'])->assignRole('Employee');
 
         $userData = array_merge($this->data, [
             'name' => $user->name,
@@ -335,7 +335,7 @@ class UserControllerTest extends TestCase
     {
         $this->twoFactorConfirmation($this->admin);
 
-        $user = User::factory()->create();
+        $user = User::factory()->create()->assignRole('Employee');
 
         $userData = [
             'name' => 'Roger Davids',
