@@ -35,11 +35,6 @@ class TwoFactorController extends Controller
 
     public function resend()
     {
-        if (! auth()->user()->two_factor_enabled || ! auth()->user()->two_factor_code) {
-            return redirect(route('home'))
-                ->withErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.']);
-        }
-
         auth()->user()->generateTwoFactorCode();
 
         auth()->user()->notify(new TwoFactorCodeNotification());
