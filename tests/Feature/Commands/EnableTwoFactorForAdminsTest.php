@@ -16,7 +16,7 @@ class EnableTwoFactorForAdminsTest extends TestCase
     {
         parent::setUp();
 
-        $this->completeAdmin = User::factory()->withTwoFactorEnabled ()->create([
+        $this->completeAdmin = User::factory()->withTwoFactorEnabled()->create([
             'created_at' => now()->subMinute(),
             'updated_at' => now()->subMinute(),
         ])->assignRole('Admin');

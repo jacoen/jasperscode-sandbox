@@ -19,9 +19,7 @@ class LoginControllerTest extends TestCase
     }
     
     public function test_when_a_user_without_two_factor_signs_in_no_two_factor_code_will_be_generated()
-    {
-        $this->assertFalse($this->employee->two_factor_enabled); 
-        
+    { 
         $this->post('/login', [
             'email' => $this->employee->email,
             'password' => 'password'
@@ -32,8 +30,6 @@ class LoginControllerTest extends TestCase
 
     public function test_when_a_user_with_two_factor_signs_in_a_two_factor_code_will_be_generated()
     {
-        $this->assertTrue($this->admin->two_factor_enabled);
-
         $this->post('/login', [
             'email' => $this->admin->email,
             'password' => 'password'
@@ -46,15 +42,7 @@ class LoginControllerTest extends TestCase
         $this->assertEqualsWithDelta($admin->two_factor_expires_at, now()->addMinutes(5), 1);
     }
 
-    public function test_no_notification_will_be_sent_to_the_user_if_they_do_not_have_two_factor_enabled()
-    {
-        $this->post('/login', [
-            'email' => $this->employee->email,
-            'password' => 'password'
-        ])->assertRedirect();
-    }
-
-    public function test_when_a_user_with_two_factor_signs_in_a_notification_will_ben_sent_to_this_user()
+    public function test_the_user_will_not_receive_a_notification_if_they_sign_in_without_two_factor_enabled()
     {
         $this->post('/login', [
             'email' => $this->employee->email,
@@ -64,7 +52,7 @@ class LoginControllerTest extends TestCase
         Notification::assertNothingSentTo($this->employee);
     }
 
-    public function test_the_two_factor_code_will_be_reset_if_a_user_with_two_factor_enabled_signs_out()
+    public function test_the_user_will_receive_a_notification_if_they_sign_in_with_two_factor_enabled()
     {
         $this->post('/login', [
             'email' => $this->admin->email,

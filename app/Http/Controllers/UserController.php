@@ -8,7 +8,6 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
