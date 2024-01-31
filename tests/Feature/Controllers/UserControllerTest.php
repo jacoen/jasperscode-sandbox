@@ -35,15 +35,6 @@ class UserControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_a_user_with_two_factor_enabled_get_redirected_to_the_verify_two_factor_page_before_they_can_use_crud_operations()
-    {
-        $admin = User::factory()->create(['two_factor_enabled' => true])->assignRole('Admin');
-        $admin->generateTwoFactorCode();
-
-        $this->actingAs($admin)->get(route('users.index'))
-            ->assertRedirect(route('verify.create'));
-    }
-
     public function test_a_user_with_the_read_user_permission_can_visit_the_user_overview_page()
     {
         $this->twoFactorConfirmation($this->admin);

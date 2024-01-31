@@ -32,7 +32,7 @@ class TwoFactorMiddlewareTest extends TestCase
             ->assertRedirect(route('verify.create'));
     }
 
-    public function test_it_allows_access_to_verify_route_for_logged_in_user_with_two_factor_auth()
+    public function test_it_allows_user_with_two_factor_enabled_and_a_two_factor_code_access_to_verify_route()
     {
         $user = User::factory()->create(['two_factor_enabled' => true]);
 
@@ -57,5 +57,45 @@ class TwoFactorMiddlewareTest extends TestCase
             ->assertRedirect('login');
         
         $this->assertGuest();
+    }
+
+    public function test_it_does_not_allow_a_user_without_two_factor_enabled_access_to_the_verify_routes()
+    {
+        $this->actingAs($this->employee);
+
+        $create = $this->get(route('verify.create'));
+        $this->assertTwoFactorError($create);
+
+        $post = $this->post(route('verify.store'), [
+            'two_factor_code' => '',
+        ]);
+        $this->assertTwoFactorError($post);
+
+        $resend = $this->get(route('verify.resend'));
+        $this->assertTwoFactorError($resend);
+    }
+
+    public function test_it_does_not_allow_a_user_without_two_factor_code_access_to_the_verify_routes()
+    {
+        $this->actingAs($this->admin);
+
+        $create = $this->get(route('verify.create'));
+        $this->assertTwoFactorError($create);
+
+        $post = $this->post(route('verify.store'), [
+            'two_factor_code' => '',
+        ]);
+        $this->assertTwoFactorError($post);
+
+        $resend = $this->get(route('verify.resend'));
+        $this->assertTwoFactorError($resend);
+    }
+
+    private function assertTwoFactorError($response)
+    {
+        $response->assertRedirect(route('home'))
+            ->withErrors([
+                'error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.'
+            ]);   
     }
 }
