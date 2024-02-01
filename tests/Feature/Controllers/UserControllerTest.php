@@ -37,9 +37,7 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_read_user_permission_can_visit_the_user_overview_page()
     {
-        $this->twoFactorConfirmation($this->admin);
-
-        $this->get(route('users.index'))
+        $this->actingAs($this->admin)->get(route('users.index'))
             ->assertOk()
             ->assertSeeText([
                 $this->admin->name, $this->admin->email, 'Admin',
@@ -73,7 +71,7 @@ class UserControllerTest extends TestCase
 
     public function test_the_name_and_email_fileds_are_required_when_creating_a_user()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $data = [
             'name' => '',
@@ -94,7 +92,7 @@ class UserControllerTest extends TestCase
 
     public function test_the_email_address_must_be_valid_when_creating_a_user_account()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
         
         $userData = array_merge($this->data, ['email' => 'hallo']);
 
@@ -108,7 +106,7 @@ class UserControllerTest extends TestCase
 
     public function test_the_email_of_a_user_must_be_unique()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         User::factory()->create(['name' => 'John Doe Senior', 'email' => 'john@example.com']);
 
@@ -133,7 +131,7 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_must_be_assigned_a_valid_role()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $userData = array_merge($this->data, ['role' => 99]);
 
@@ -150,7 +148,7 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_create_user_permission_can_create_a_new_user()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $userData = array_merge($this->data, ['role' => 4]);
 
@@ -170,7 +168,7 @@ class UserControllerTest extends TestCase
 
     public function test_when_a_user_gets_created_without_a_role_this_user_gets_assigned_a_default_role()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $data = [
             'name' => 'Test User',
@@ -187,7 +185,7 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_that_gets_created_with_a_role_does_get_the_default_role_assigned()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $userData = array_merge($this->data, [
             'role' => 4, //Employee
@@ -203,7 +201,7 @@ class UserControllerTest extends TestCase
 
     public function test_when_a_new_user_has_been_created_a_password_token_will_be_generated_for_this_user()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $this->post(route('users.store'), $this->data)
             ->assertRedirect(route('users.index'));
@@ -215,7 +213,7 @@ class UserControllerTest extends TestCase
 
     public function test_when_a_new_user_has_been_created_this_user_receives_a_notification()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $userData = array_merge($this->data, ['role' => 4]);
 
@@ -258,7 +256,7 @@ class UserControllerTest extends TestCase
 
     public function test_all_the_fields_are_required_when_editing_an_existing_user()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $user = User::factory()->create();
 
@@ -279,9 +277,9 @@ class UserControllerTest extends TestCase
         $this->assertNotEquals($user->fresh()->email, $data['email']);
     }
 
-    public function test_the_email_address_must_be_valid_whe_editing_a_user_account()
+    public function test_the_email_address_must_be_valid_when_editing_a_user_account()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $user = User::factory()->create();
 
@@ -298,7 +296,7 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_update_user_permission_cannot_change_the_email_address_of_an_existing_user()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $user = User::factory()->create(['email' => 'Scott.price@example.com'])->assignRole('Employee');
 
@@ -324,7 +322,7 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_update_user_permission_can_edit_an_existing_user()
     {
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $user = User::factory()->create()->assignRole('Employee');
 
@@ -372,7 +370,7 @@ class UserControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->twoFactorConfirmation($this->admin);
+        $this->actingAs($this->admin);
 
         $this->post(route('verify.store'), [
             'two_factor_code' => $this->admin->two_factor_code
@@ -384,18 +382,6 @@ class UserControllerTest extends TestCase
         $this->assertDatabaseMissing('users', [
             'id' => $user->id,
             'email' => $user->email,
-        ]);
-    }
-
-    protected function twoFactorConfirmation($user)
-    {
-        $this->actingAs($user);
-        $user = $user->fresh();
-
-        $user->generateTwoFactorCode();
-
-        $this->post(route('verify.store'), [
-            'two_factor_code' => $user->two_factor_code
         ]);
     }
 }
