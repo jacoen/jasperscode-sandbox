@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\RoleUpdatedEvent;
+use App\Listeners\RoleUpdatedListener;
 use App\Models\Project;
 use App\Models\Task;
 use App\Observers\ProjectObserver;
@@ -20,6 +22,9 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
+        ],
+        RoleUpdatedEvent::class => [
+            RoleUpdatedListener::class,
         ],
     ];
 

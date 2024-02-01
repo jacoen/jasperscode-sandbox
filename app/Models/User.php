@@ -26,6 +26,9 @@ class User extends Authenticatable
         'password_token',
         'token_expires_at',
         'password_changed_at',
+        'two_factor_enabled',
+        'two_factor_code',
+        'two_factor_expires_at',
     ];
 
     /**
@@ -50,6 +53,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'token_expires_at' => 'datetime',
         'password_changed_at' => 'datetime',
+        'two_factor_expires_at' => 'datetime',
+        'two_factor_enabled' => 'boolean',
     ];
 
     public function projects()
@@ -78,5 +83,23 @@ class User extends Authenticatable
     public function getHasChangedPasswordAttribute()
     {
         return $this->password_changed_at !== null;
+    }
+
+    public function generateTwoFactorCode(): void
+    {
+        $this->timestamps = false;
+        $this->two_factor_code = generateDigitCode();
+        $this->two_factor_expires_at = now()->addMinutes(5);
+        $this->save();
+        $this->timestamps = true;
+    }
+
+    public function resetTwoFactorCode(): void
+    {
+        $this->timestamps = false;
+        $this->two_factor_code = null;
+        $this->two_factor_expires_at = null;
+        $this->save();
+        $this->timestamps = true;
     }
 }

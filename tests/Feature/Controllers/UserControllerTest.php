@@ -71,12 +71,14 @@ class UserControllerTest extends TestCase
 
     public function test_the_name_and_email_fileds_are_required_when_creating_a_user()
     {
+        $this->actingAs($this->admin);
+
         $data = [
             'name' => '',
             'email' => '',
         ];
 
-        $this->actingAs($this->admin)->post(route('users.store'), $data)
+        $this->post(route('users.store'), $data)
             ->assertSessionHasErrors([
                 'name' => 'The name field is required.',
                 'email' => 'The email field is required.',
@@ -90,9 +92,11 @@ class UserControllerTest extends TestCase
 
     public function test_the_email_address_must_be_valid_when_creating_a_user_account()
     {
+        $this->actingAs($this->admin);
+        
         $userData = array_merge($this->data, ['email' => 'hallo']);
 
-        $this->actingAs($this->admin)->post(route('users.store'), $userData)
+        $this->post(route('users.store'), $userData)
             ->assertSessionHasErrors([
                 'email' => 'The email field must be a valid email address.',
             ]);
@@ -102,6 +106,8 @@ class UserControllerTest extends TestCase
 
     public function test_the_email_of_a_user_must_be_unique()
     {
+        $this->actingAs($this->admin);
+
         User::factory()->create(['name' => 'John Doe Senior', 'email' => 'john@example.com']);
 
         $userData = array_merge($this->data, [
@@ -109,7 +115,7 @@ class UserControllerTest extends TestCase
             'role' => 4,
         ]);
 
-        $this->actingAs($this->admin)->post(route('users.store'), $userData)
+        $this->post(route('users.store'), $userData)
             ->assertSessionHasErrors([
                 'email' => 'The email has already been taken.',
             ]);
@@ -125,9 +131,11 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_must_be_assigned_a_valid_role()
     {
+        $this->actingAs($this->admin);
+
         $userData = array_merge($this->data, ['role' => 99]);
 
-        $this->actingAs($this->admin)->post(route('users.store'), $userData)
+        $this->post(route('users.store'), $userData)
             ->assertSessionHasErrors([
                 'role' => 'The selected role is invalid.',
             ]);
@@ -140,12 +148,14 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_create_user_permission_can_create_a_new_user()
     {
+        $this->actingAs($this->admin);
+
         $userData = array_merge($this->data, ['role' => 4]);
 
-        $this->actingAs($this->admin)->get(route('users.create'))
+        $this->get(route('users.create'))
             ->assertOk();
 
-        $this->actingAs($this->admin)->post(route('users.store'), $userData)
+        $this->post(route('users.store'), $userData)
             ->assertRedirect(route('users.index'))
             ->assertSessionHas('success', 'A new user was created.');
 
@@ -158,12 +168,14 @@ class UserControllerTest extends TestCase
 
     public function test_when_a_user_gets_created_without_a_role_this_user_gets_assigned_a_default_role()
     {
+        $this->actingAs($this->admin);
+
         $data = [
             'name' => 'Test User',
             'email' => 'test.user@example.com',
         ];
 
-        $this->actingAs($this->admin)->post(route('users.store'), $data)
+        $this->post(route('users.store'), $data)
             ->assertRedirect(route('users.index'));
 
         $user = User::where('email', 'test.user@example.com')->first();
@@ -173,11 +185,13 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_that_gets_created_with_a_role_does_get_the_default_role_assigned()
     {
+        $this->actingAs($this->admin);
+
         $userData = array_merge($this->data, [
             'role' => 4, //Employee
         ]);
 
-        $this->actingAs($this->admin)->post(route('users.store'), $userData)
+        $this->post(route('users.store'), $userData)
             ->assertRedirect(route('users.index'));
 
         $user = User::where('email', $userData['email'])->first();
@@ -187,7 +201,9 @@ class UserControllerTest extends TestCase
 
     public function test_when_a_new_user_has_been_created_a_password_token_will_be_generated_for_this_user()
     {
-        $this->actingAs($this->admin)->post(route('users.store'), $this->data)
+        $this->actingAs($this->admin);
+
+        $this->post(route('users.store'), $this->data)
             ->assertRedirect(route('users.index'));
 
         $user = User::where('email', $this->data['email'])->first();
@@ -197,11 +213,13 @@ class UserControllerTest extends TestCase
 
     public function test_when_a_new_user_has_been_created_this_user_receives_a_notification()
     {
+        $this->actingAs($this->admin);
+
         $userData = array_merge($this->data, ['role' => 4]);
 
         Notification::fake();
 
-        $this->actingAs($this->admin)->post(route('users.store'), $userData)
+        $this->post(route('users.store'), $userData)
             ->assertRedirect(route('users.index'));
 
         $user = User::where('email', $userData['email'])->first();
@@ -238,6 +256,8 @@ class UserControllerTest extends TestCase
 
     public function test_all_the_fields_are_required_when_editing_an_existing_user()
     {
+        $this->actingAs($this->admin);
+
         $user = User::factory()->create();
 
         $data = [
@@ -246,7 +266,7 @@ class UserControllerTest extends TestCase
             'role' => '',
         ];
 
-        $this->actingAs($this->admin)->put(route('users.update', $user), $data)
+        $this->put(route('users.update', $user), $data)
             ->assertSessionHasErrors([
                 'name' => 'The name field is required.',
                 'email' => 'The email field is required.',
@@ -257,8 +277,10 @@ class UserControllerTest extends TestCase
         $this->assertNotEquals($user->fresh()->email, $data['email']);
     }
 
-    public function test_the_email_address_must_be_valid_whe_editing_a_user_account()
+    public function test_the_email_address_must_be_valid_when_editing_a_user_account()
     {
+        $this->actingAs($this->admin);
+
         $user = User::factory()->create();
 
         $userData = array_merge($this->data, [
@@ -266,7 +288,7 @@ class UserControllerTest extends TestCase
             'role' => 4,
         ]);
 
-        $this->actingAs($this->admin)->put(route('users.update', $user), $userData)
+        $this->put(route('users.update', $user), $userData)
             ->assertSessionHasErrors(['email' => 'The email field must be a valid email address.']);
 
         $this->assertDatabaseMissing('users', ['id' => $user->id, 'email' => $userData['email']]);
@@ -274,8 +296,9 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_update_user_permission_cannot_change_the_email_address_of_an_existing_user()
     {
-        $this->withoutExceptionHandling();
-        $user = User::factory()->create(['email' => 'Scott.price@example.com']);
+        $this->actingAs($this->admin);
+
+        $user = User::factory()->create(['email' => 'Scott.price@example.com'])->assignRole('Employee');
 
         $userData = array_merge($this->data, [
             'name' => $user->name,
@@ -283,7 +306,7 @@ class UserControllerTest extends TestCase
             'role' => 4,
         ]);
 
-        $this->actingAs($this->admin)->put(route('users.update', $user), $userData)
+        $this->put(route('users.update', $user), $userData)
             ->assertSessionHasErrors([
                 'email' => 'The email does not match the original email address',
             ]);
@@ -299,7 +322,9 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_update_user_permission_can_edit_an_existing_user()
     {
-        $user = User::factory()->create();
+        $this->actingAs($this->admin);
+
+        $user = User::factory()->create()->assignRole('Employee');
 
         $userData = [
             'name' => 'Roger Davids',
@@ -307,10 +332,10 @@ class UserControllerTest extends TestCase
             'role' => 4, // Employee
         ];
 
-        $this->actingAs($this->admin)->get(route('users.edit', $user))
+        $this->get(route('users.edit', $user))
             ->assertOk();
 
-        $this->actingAs($this->admin)->put(route('users.update', $user), $userData)
+        $this->put(route('users.update', $user), $userData)
             ->assertRedirect(route('users.index'));
 
         $this->assertDatabaseHas('users', [
@@ -339,5 +364,24 @@ class UserControllerTest extends TestCase
 
         $this->actingAs($this->manager)->delete(route('users.destroy', $user))
             ->assertForbidden();
+    }
+
+    public function a_user_with_the_delete_user_permission_can_delete_a_user_account()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($this->admin);
+
+        $this->post(route('verify.store'), [
+            'two_factor_code' => $this->admin->two_factor_code
+        ]);
+
+        $this->delete(route('users.destroy', $user))
+            ->assertRedirect(route('users.index'));
+
+        $this->assertDatabaseMissing('users', [
+            'id' => $user->id,
+            'email' => $user->email,
+        ]);
     }
 }
