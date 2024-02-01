@@ -25,21 +25,6 @@ class TwoFactorControllerTest extends TestCase
             ->assertRedirect('login');
     }
 
-    public function test_a_user_with_two_factor_disabled_cannot_reach_the_two_factor_verification_page()
-    {
-        $this->actingAs($this->user)->get(route('verify.create'))
-            ->assertRedirect(route('home'))
-            ->assertSessionHasErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.']);
-    }
-
-    public function test_a_user_with_two_factor_enabled_can_reach_the_two_factor_verification_page()
-    {
-        $this->verifiedWithTwoFactor();
-
-        $this->get(route('verify.create'))
-            ->assertOk();
-    }
-
     public function test_a_user_with_two_factor_enabled_can_see_their_masked_email_address_on_the_two_factor_verification_form()
     {
         $this->verifiedWithTwoFactor();
@@ -56,19 +41,6 @@ class TwoFactorControllerTest extends TestCase
         ])->assertRedirect(route('login'));
     }
 
-    public function test_a_user_without_two_factor_enabled_cannot_submit_a_two_factor_code()
-    {
-        $this->assertNull($this->employee->two_factor_code);
-        $this->assertFalse($this->employee->two_factor_enabled);
-
-        $this->actingAs($this->employee)->post(route('verify.store'), [
-            'two_factor_code' => '123456'
-        ])
-            ->assertRedirect(route('home'))
-            ->assertSessionHasErrors([
-                'error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.'
-            ]);
-    }
 
     public function test_the_two_factor_code_is_required()
     {
@@ -160,7 +132,6 @@ class TwoFactorControllerTest extends TestCase
         ]);
     }
 
-
     public function test_a_guest_cannot_resend_a_two_factor_code()
     {
         $this->get(route('verify.resend'))
@@ -176,7 +147,32 @@ class TwoFactorControllerTest extends TestCase
 
         Notification::assertNothingSentTo($this->employee);
 
-        $this->assertNull($this->employee->two_factor_code);
+        $this->assertNull($this->employee->fresh()->two_factor_code);
+    }
+
+    public function test_a_user_without_two_factor_code_cannot_resend_a_new_two_factor_code()
+    {
+        $this->actingAs($this->admin)->get(route('verify.resend'))
+            ->assertRedirect(route('home'));
+
+        Notification::assertNotSentTo($this->admin, TwoFactorCodeNotification::class);
+
+        $this->assertNull($this->admin->fresh()->two_factor_code);
+    }
+
+    public function test_a_user_with_an_expired_two_factor_code_cannot_resend_a_new_two_factor_code()
+    {
+        $user = User::factory()->create();
+        $user->generateTwoFactorCode();
+
+        $twoFactorCode = $user->two_factor_code;
+
+        $this->actingAs($user)->get(route('verify.resend'))
+            ->assertRedirect(route('home'));
+
+        Notification::assertNotSentTo($user, TwoFactorCodeNotification::class);
+
+        $this->assertEquals($twoFactorCode, $user->fresh()->two_factor_code);
     }
 
     public function test_a_user_with_two_factor_enabled_can_resend_a_new_two_factor_code()

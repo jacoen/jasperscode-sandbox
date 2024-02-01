@@ -21,12 +21,12 @@ class TwoFactorMiddlewareTest extends TestCase
             ->assertOk();
     }
 
-    public function test_it_redirects_to_verify_route_for_logged_in_user_with_two_factor_auth()
+    public function test_it_redirects_the_user_to_the_verify_route_if_the_user_has_two_factor_enabled()
     {
         $user = User::factory()->create(['two_factor_enabled' => true]);
+        $user->generateTwoFactorCode();
 
         $this->be($user);
-        $user->generateTwoFactorCode();
 
         $this->get(route('home'))
             ->assertRedirect(route('verify.create'));
@@ -35,9 +35,9 @@ class TwoFactorMiddlewareTest extends TestCase
     public function test_it_allows_user_with_two_factor_enabled_and_a_two_factor_code_access_to_verify_route()
     {
         $user = User::factory()->create(['two_factor_enabled' => true]);
+        $user->generateTwoFactorCode();
 
         $this->be($user);
-        $user->generateTwoFactorCode();
 
         $this->get(route('verify.create'))
             ->assertOk();
@@ -66,9 +66,7 @@ class TwoFactorMiddlewareTest extends TestCase
         $create = $this->get(route('verify.create'));
         $this->assertTwoFactorError($create);
 
-        $post = $this->post(route('verify.store'), [
-            'two_factor_code' => '',
-        ]);
+        $post = $this->post(route('verify.store'));
         $this->assertTwoFactorError($post);
 
         $resend = $this->get(route('verify.resend'));
