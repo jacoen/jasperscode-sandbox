@@ -32,20 +32,17 @@ class AccountActivationController extends Controller
     {
         $user = User::where([
             ['password_token', $request->password_token],
+            ['email', $request->email],
         ])->first();
+
+        if (! $user) {
+            return back()
+                ->withErrors(['email' => 'The selected email is invalid.']);
+        }
 
         if ($user->has_token_expired) {
             return back()
                 ->withErrors(['error' => 'The token has expired, click on the request new token button to request a new token.']);
-        }
-
-        if ($user->email !== $request->email) {
-            return back()->withErrors(['email' => 'The selected email is invalid.']);
-        }
-
-        if ($user->password_changed_at) {
-            return redirect()->route('login')
-                ->withErrors(['errors' => 'The password has already been changed.']);
         }
 
         $user->update([

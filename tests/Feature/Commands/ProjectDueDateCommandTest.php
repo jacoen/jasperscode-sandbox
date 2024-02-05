@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Commands;
 
 use App\Models\Project;
 use App\Models\User;
@@ -146,5 +146,4 @@ class ProjectDueDateCommandTest extends TestCase
         Notification::assertNotSentTo($this->admin, ProjectWarningNotification::class);
         Notification::assertNotSentTo($this->manager, ProjectWarningNotification::class);
     }
-
 }

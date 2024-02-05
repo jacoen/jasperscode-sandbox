@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class ProjectController extends Controller
@@ -61,7 +60,7 @@ class ProjectController extends Controller
     {
         $project = Project::create($request->validated());
 
-        if (isset($request->manager_id) && auth()->id() != $project->manager_id) {
+        if (isset($request->manager_id)) {
             User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
         }
 
@@ -107,18 +106,20 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
+        $pinnedProject = Project::where('is_pinned', true)->first();
+
         if (! auth()->user()->can('pin project') && $request->is_pinned) {
             return back()->withErrors(['error' => 'User is not authorized to pin a project']);
         }
 
-        if (Project::where('is_pinned', true)->count() >= 1 && $request->is_pinned) {
+        if ($request->is_pinned && $pinnedProject && $pinnedProject->id != $project->id) {
             return back()
                 ->withErrors(['error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.']);
         }
 
         $project->update($request->validated());
 
-        if (isset($request->manager_id) && $project->wasChanged('manager_id') && auth()->id() != $project->manager_id) {
+        if (isset($request->manager_id) && $project->wasChanged('manager_id')) {
             User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
         }
 
@@ -143,6 +144,19 @@ class ProjectController extends Controller
             ->with('success', 'The project has been deleted.');
     }
 
+    public function trashed(): View
+    {
+        $this->authorize('restore project', Project::class);
+
+        $projects = Project::onlyTrashed()
+            ->with('manager')
+            ->latest('deleted_at')
+            ->orderBy('id', 'desc')
+            ->paginate();
+
+        return view('projects.trashed', compact('projects'));
+    }
+
     public function restore(Project $project): RedirectResponse
     {
         $this->authorize('restore', $project);
@@ -151,5 +165,15 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.trashed')
             ->with('success', 'The project '.$project->title.' has been restored.');
+    }
+
+    public function forceDelete(Project $project): RedirectResponse
+    {
+        $this->authorize('forceDelete', $project);
+
+        $project->forceDelete();
+
+        return redirect()->route('projects.trashed')
+            ->with('success', 'The project has been permanently deleted.');
     }
 }

@@ -1,75 +1,88 @@
 @extends('layouts.app')
 
 @section('content')
+
+    <x-errors :errors="$errors" />
+    <x-flash-success :message="session('success')" />
+
     <div class="card mb-4">
         <div class="card-header">
             {{ __('My profile') }}
         </div>
 
-        <form action="{{ route('profile.update') }}" method="POST">
-            @csrf
-            @method('PUT')
-
-            <div class="card-body">
-
-                @if ($message = Session::get('success'))
-                    <div class="alert alert-success" role="alert">{{ $message }}</div>
-                @endif
-
-                <div class="input-group mb-3"><span class="input-group-text">
-                    <svg class="icon">
-                      <use xlink:href="{{ asset('icons/coreui.svg#cil-user') }}"></use>
-                    </svg></span>
-                    <input class="form-control" type="text" name="name" placeholder="{{ __('Name') }}"
-                           value="{{ old('name', auth()->user()->name) }}" required>
-                    @error('name')
-                    <span class="invalid-feedback">
-                            {{ $message }}
-                        </span>
-                    @enderror
-                </div>
-
-                <div class="input-group mb-3"><span class="input-group-text">
-                    <svg class="icon">
-                      <use xlink:href="{{ asset('icons/coreui.svg#cil-envelope-open') }}"></use>
-                    </svg></span>
-                    <input class="form-control" type="text" name="email" placeholder="{{ __('Email') }}"
-                           value="{{ old('email', auth()->user()->email) }}" required>
-                    @error('email')
-                    <span class="invalid-feedback">
-                            {{ $message }}
-                        </span>
-                    @enderror
-                </div>
-
-                <div class="input-group mb-3"><span class="input-group-text">
-                    <svg class="icon">
-                      <use xlink:href="{{ asset('icons/coreui.svg#cil-lock-locked') }}"></use>
-                    </svg></span>
-                    <input class="form-control @error('password') is-invalid @enderror" type="password"
-                           name="password" placeholder="{{ __('New password') }}" required>
-                    @error('password')
-                    <span class="invalid-feedback">
-                            {{ $message }}
-                        </span>
-                    @enderror
-                </div>
-
-                <div class="input-group mb-4"><span class="input-group-text">
-                    <svg class="icon">
-                      <use xlink:href="{{ asset('icons/coreui.svg#cil-lock-locked') }}"></use>
-                    </svg></span>
-                    <input class="form-control @error('password_confirmation') is-invalid @enderror" type="password"
-                           name="password_confirmation" placeholder="{{ __('New password confirmation') }}" required>
-                </div>
-
+        <div class="card-body">
+            <div class="col-md-6">
+                <form action="{{ route('profile.update') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+    
+                    <label for="name" class="form-label">Name</label>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="name"></span>
+                        <input class="form-control @error('name') is-invalid @enderror" type="text" name="name" placeholder="{{ __('Name') }}"
+                            value="{{ old('name', auth()->user()->name) }}" required>
+                        @error('name')
+                            <span class="invalid-feedback">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                    </div>
+    
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="password"></span>
+                        <input class="form-control @error('password') is-invalid @enderror" type="password"
+                            name="password" placeholder="{{ __('Password') }}" required>
+                        @error('password')
+                            <span class="invalid-feedback">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                    </div>
+    
+                    <label for="password_confirmation" class="form-label">Confirm password</label>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"></span>
+                            <input class="form-control @error('password_confirmation') is-invalid @enderror" type="password"
+                                   name="password_confirmation" placeholder="{{ __('Confirm Password') }}" required>
+                    </div>
+    
+                    <div class="mb-3 text-end me-1">
+                        <button class="btn btn-sm btn-info text-white fw-semibold" type="submit">{{ __('Submit') }}</button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <div class="card-footer">
-                <button class="btn btn-sm btn-primary" type="submit">{{ __('Submit') }}</button>
+        <hr />
+        <div class="card-body">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <h5>
+                        Two factor authentication
+                    </h5>
+        
+                    <p>
+                        {{ __('auth.two_factor_description') }}
+                    </p>
+                    <p>
+                        Two factor authentication is {{ auth()->user()->two_factor_enabled ? 'enabled' : 'disabled' }}
+                    </p>
+    
+                    <form action="{{ route('two-factor.update') }}" method="POST" class="mb-3" 
+                        onsubmit="return confirm('{{ auth()->user()->two_factor_enabled ? __('messages.confirm_disable') : __('messages.confirm_logout') }}')">
+                        @csrf
+                        @method('PUT')
+    
+                        <div class="mb-3 text-center mb-1">
+                            <button class="btn btn-sm btn-info text-white fw-semibold" type="submit" @if(auth()->user()->hasRole(['Admin', 'Super Admin'])) disabled @endif>
+                                {{ auth()->user()->two_factor_enabled ? 'Disable' : 'Enable'}} two factor
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-        </form>
+        </div>
 
     </div>
 @endsection

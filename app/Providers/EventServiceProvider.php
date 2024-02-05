@@ -2,16 +2,15 @@
 
 namespace App\Providers;
 
+use App\Events\RoleUpdatedEvent;
+use App\Listeners\RoleUpdatedListener;
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
 use App\Observers\ProjectObserver;
 use App\Observers\TaskObserver;
-use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -24,6 +23,9 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        RoleUpdatedEvent::class => [
+            RoleUpdatedListener::class,
+        ],
     ];
 
     /**
@@ -33,7 +35,6 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $observers = [
         Task::class => [TaskObserver::class],
-        User::class => [UserObserver::class],
         Project::class => [ProjectObserver::class],
     ];
 

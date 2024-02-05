@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\RoleUpdatedEvent;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
@@ -43,7 +44,9 @@ class UserController extends Controller
         $user->save();
 
         $user->generatePasswordToken();
-        $user->syncRoles($request->role);
+        $user->syncRoles($request->role ?? 'User');
+        event(new RoleUpdatedEvent($user));
+
         $user->notify(new AccountCreatedNotification());
 
         return redirect()->route('users.index')
@@ -63,9 +66,20 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user)
     {
+        $oldRole = $user->roles->first()->id;
+
+        if ($request->email !== $user->email) {
+            return redirect()->route('users.edit', $user)
+                ->withErrors(['email' => 'The email does not match the original email address']);
+        }
+
         $user->update($request->validated());
 
-        $user->syncRoles($request->role);
+        
+        if ($request->role !== $oldRole) {
+            $user->syncRoles($request->role);
+            event(new RoleUpdatedEvent($user));
+        }
 
         return redirect()->route('users.index')
             ->with('success', $user->name.'\'s account has been updated!');

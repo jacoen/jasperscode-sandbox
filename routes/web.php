@@ -9,8 +9,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskImageController;
-use App\Http\Controllers\TrashedProjectController;
-use App\Http\Controllers\TrashedTaskController;
+use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,19 +30,33 @@ Route::get('/', function () {
 
 Auth::routes(['register' => false]);
 
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::controller(AccountActivationController::class)
+    ->prefix('/change-password')
+    ->name('activate-account.')
+    ->middleware('guest')
+    ->group(function () {
+        Route::get('/{password_token}', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+    });
 
-Route::controller(AccountActivationController::class)->prefix('/change-password')->middleware('guest')->group(function () {
-    Route::get('/{password_token}', 'create')->name('activate-account.create');
-    Route::post('/', 'store')->name('activate-account.store');
-});
+Route::controller(RequestNewTokenController::class)
+    ->prefix('/request-token')
+    ->name('request-token.')
+    ->middleware('guest')
+    ->group(function () {
+        Route::get('/{password_token}', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+    });
 
-Route::controller(RequestNewTokenController::class)->prefix('/request-token')->middleware('guest')->group(function () {
-    Route::get('/{password_token}', 'create')->name('request-token.create');
-    Route::post('/', 'store')->name('request-token.store');
-});
+Route::middleware(['auth', 'twofactor'])->group(function () {
+    Route::controller(TwoFactorController::class)->group(function () {
+        Route::get('/verify', 'create')->name('verify.create');
+        Route::get('/verify/resend', 'resend')->name('verify.resend');
+        Route::post('/verify', 'store')->name('verify.store');
+    });
 
-Route::middleware('auth')->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+
     Route::controller(NewsletterController::class)->prefix('/newsletter')->group(function () {
         Route::get('/', 'create')->name('newsletter.create');
         Route::post('/', 'store')->name('newsletter.store');
@@ -51,11 +64,18 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('/users', UserController::class)->except('show');
 
-    Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::controller(ProfileController::class)->name('profile.')->prefix('/profile')->group(function () {
+        Route::get('/', 'show')->name('show')->middleware('password.confirm');
+        Route::put('/', 'put')->name('update');
+    });
+
+    Route::put('two-factor-settings', [ProfileController::class, 'twoFactorSettings'])->name('two-factor.update');
 
     Route::resource('/projects', ProjectController::class);
-    Route::patch('projects/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('projects.restore');
+    Route::controller(ProjectController::class)->prefix('/projects')->name('projects.')->group(function () {
+        Route::patch('/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('restore');
+        Route::patch('{project}/force_delete', 'forceDelete')->withTrashed()->name('force-delete');
+    });
 
     Route::resource('/tasks', TaskController::class)->except(['create', 'store']);
 
@@ -66,16 +86,18 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
-        Route::patch('/tasks/{task}/force_delete', 'forceDelete')->withTrashed()->name('tasks.delete');
-        Route::get('user/tasks', 'userTasks')->name('tasks.user');
+        Route::patch('/tasks/{task}/force_delete', 'forceDelete')->withTrashed()->name('tasks.force-delete');
+        Route::get('/admin/tasks', 'adminTasks')->name('admin.tasks');
     });
 
     Route::prefix('trashed')->group(function () {
-        Route::get('/projects', TrashedProjectController::class)->name('projects.trashed');
-        Route::get('/tasks', TrashedTaskController::class)->name('tasks.trashed');
+        Route::get('/projects', [ProjectController::class, 'trashed'])->name('projects.trashed');
+        Route::get('/tasks', [TaskController::class, 'trashed'])->name('tasks.trashed');
     });
 
     Route::delete('tasks/{task}/images/{image}', TaskImageController::class)->name('task-image.delete');
 
     Route::get('/activities', ActivityController::class)->name('activities.index');
 });
+
+
