@@ -25,7 +25,6 @@ class ProjectFactory extends Factory
             'description' => fake()->text(),
             'due_date' => now()->addMonths(4),
             'status' => 'open',
-
         ];
     }
 
@@ -37,6 +36,18 @@ class ProjectFactory extends Factory
                 'created_at' => now()->subMinutes(5),
                 'updated_at' => now()->subMinutes(5),
                 'deleted_at' => now(),
+            ];
+        });
+    }
+
+    public function expiredWithStatus(int $days = 1): Factory
+    {
+        return $this->state(function (array $attributes) use ($days) {
+            return [
+                'status' => 'expired',
+                'created_at' => now()->subDays($days + 2),
+                'updated_at' => now()->subDays($days + 2),
+                'due_date' => now()->subDays($days)->format('Y-m-d'),
             ];
         });
     }
