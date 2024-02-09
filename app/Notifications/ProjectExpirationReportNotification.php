@@ -15,7 +15,7 @@ class ProjectExpirationReportNotification extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(protected int $count, protected User $user)
+    public function __construct(protected int $count, protected User $user, protected int $yearWeek)
     {
         //
     }
@@ -38,6 +38,7 @@ class ProjectExpirationReportNotification extends Notification
         return (new MailMessage)->markdown('emails.projects.expiration-report', [
             'user' => $this->user->name,
             'count' => $this->count,
+            'yearWeek' => $this->yearWeek,
         ]); 
     }
 

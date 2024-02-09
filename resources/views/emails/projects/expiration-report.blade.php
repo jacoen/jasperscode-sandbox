@@ -1,14 +1,16 @@
 <x-mail::message>
 # hallo {{ $user }},
 
-Via dit bericht willen wij u ervan op de hoogte brengen dat de eind datum van {{ $count }} afgelopen week verlopen zijn.
-Wanneer u op de knop hieronder drukt dan kunt het overzicht van deze verlopen projecten zien
+Via dit bericht willen wij u ervan op de hoogte brengen dat de eind datum van een aantal projecten de afgelopen week verstreken is.
+In totaal is de eind datum van {{ $count }} projecten verlopen,
+deze projecten kunt u vanaf heden terug vinden in het overzicht van verlopen projecten.
+Wanneer u op de knop in deze mail klikt wordt u naar het overzicht van verlopen projecten gebracht.
 
-<x-mail::button :url="{{ route('projects.expired') }}">
+<x-mail::button :url="route('projects.expired', ['yearWeek' => $yearWeek])">
 Naar overzicht
 </x-mail::button>
 
-Wij hopen dat wij u hiermee voldoende hebben geïnformeerd.
+Wij hopen dat wij u hiermee voldoende hebben ge&iuml;nformeerd.
 
 Met vriendelijke groet,<br>
 {{ config('app.name') }}
