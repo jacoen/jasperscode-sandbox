@@ -29,17 +29,31 @@ class ProjectExpirationReportCommand extends Command
     public function handle()
     {
         $users = User::role(['Admin'])->get();
+        $projects = $this->countExpiredProjectsLastWeek();
 
-        foreach ($users as $user)
-        {
-            $user->notify(new ProjectExpirationReportNotification($this->countExpiredProjectsLastWeek(), $user));
+        if ($projects >= 1) {
+            $yearWeek = $this->generateYearCode();
+            foreach ($users as $user)
+            {
+                $user->notify(new ProjectExpirationReportNotification($projects, $user, $yearWeek));
+            }
+
+            $this->info('The code this week is: '.$yearWeek);
         }
     }
 
-    protected function countExpiredProjectsLastWeek(): int
+    private function countExpiredProjectsLastWeek(): int
     {
         return Project::whereBetween('due_date', [now()->subWeek(), now()])
             ->whereNotIn('status', ['closed', 'completed', 'deleted'])
             ->count();
+    }
+
+    private function generateYearCode()
+    {
+        $year = now()->year;
+        $week = now()->subWeek()->weekOfYear;
+
+        return $year.'-'.$week;
     }
 }
