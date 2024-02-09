@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use Carbon\Carbon;
 
 class ExpiredProjectController extends Controller
 {
@@ -15,20 +16,39 @@ class ExpiredProjectController extends Controller
     /**
      * Handle the incoming request.
      */
-    public function __invoke($recent = null)
+    public function __invoke()
     {
-        $projects = Project::with('manager')->whereIn('status', ['open', 'pending'])->whereBetween('due_date', [ now()->subWeek(), now()])->get();
+        $yearWeek = request()->input('yearweek');
 
         $projects = Project::with('manager')
-            ->when($recent == '1 week', function ($query) {
-                $query->whereBetween('due_date', now()->subWeek(), now());
+            ->when(request()->week == 'last', function ($query) {
+                $query->whereBetween('due_date', [
+                    now()->subWeek(),
+                    now()
+                ]);
+            })
+            ->when($yearWeek, function($query) use ($yearWeek) {
+                [$startWeek, $endweek] = $this->spliceYearWeek($yearWeek);
+                $query->whereBetween('due_date', [
+                    $startWeek,
+                    $endweek
+                ]);
             })
             ->where('due_date', '<', now())
-            ->where('status', 'expired')
-            ->orderBy('due_date', 'desc')
-            ->orderBy('id', 'desc')
+            ->orderByDesc('due_date')
+            ->orderByDesc('id')
             ->paginate(15);
 
         return view('projects.expired', compact('projects'));
+    }
+
+    protected function spliceYearWeek($yearWeek)
+    {
+        [$year, $week] = explode('-', $yearWeek);
+
+        $startWeek = Carbon::now()->setISODate($year, $week)->startOfWeek();
+        $endWeek = Carbon::now()->setISODate($year, $week)->endOfWeek();
+
+        return [$startWeek, $endWeek];
     }
 }
