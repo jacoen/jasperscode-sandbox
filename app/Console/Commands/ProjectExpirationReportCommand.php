@@ -39,7 +39,12 @@ class ProjectExpirationReportCommand extends Command
             }
 
             $this->info('The code this week is: '.$yearWeek);
+            return;
+        } else {
+            $this->info('There was no project with an expired due_date last week. Goob job!');
+            return;
         }
+        
     }
 
     private function countExpiredProjectsLastWeek(): int

@@ -18,15 +18,9 @@ class ExpiredProjectController extends Controller
      */
     public function __invoke()
     {
-        $yearWeek = request()->input('yearweek');
+        $yearWeek = request()->input('yearWeek');
 
         $projects = Project::with('manager')
-            ->when(request()->week == 'last', function ($query) {
-                $query->whereBetween('due_date', [
-                    now()->subWeek(),
-                    now()
-                ]);
-            })
             ->when($yearWeek, function($query) use ($yearWeek) {
                 [$startWeek, $endweek] = $this->spliceYearWeek($yearWeek);
                 $query->whereBetween('due_date', [

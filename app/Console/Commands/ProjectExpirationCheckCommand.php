@@ -36,6 +36,17 @@ class ProjectExpirationCheckCommand extends Command
 
             $count++;
         }
+
+        foreach ($this->expiredPinnedProjects() as $project) {
+            $project->timestamps = false;
+            $project->update([
+                'status' => 'expired',
+                'is_pinned' => false,
+            ]);
+            $project->timestamp = true;
+
+            $count++;
+        }
         
         Log::info($count.' projects have expired, the status has been changed to expired.');
         $this->info('The check has been completed. Please check the log for the results');
@@ -46,6 +57,17 @@ class ProjectExpirationCheckCommand extends Command
     {
         $projects = Project::whereIn('status', ['open', 'pending', 'restored'])
             ->where('due_date', '<', now())
+            ->where('is_pinned', false)
+            ->get();
+
+        return $projects;
+    }
+
+    private function expiredPinnedProjects()
+    {
+        $projects = Project::whereIn('status', ['open', 'pending', 'restored'])
+            ->where('due_date', '<', now())
+            ->where('is_pinned', true)
             ->get();
 
         return $projects;
