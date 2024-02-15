@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Project;
+use App\Models\User;
+use App\Notifications\ProjectExpirationNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -34,6 +36,10 @@ class ProjectExpirationCheckCommand extends Command
             $project->update(['status' => 'expired']);
             $project->timestamp = true;
 
+            if ($project->manager) {
+                $user = User::find($project->manager_id);
+                $this->NotifyManagerExpiredProject($user, $project);
+            }
             $count++;
         }
 
@@ -45,6 +51,10 @@ class ProjectExpirationCheckCommand extends Command
             ]);
             $project->timestamp = true;
 
+            if ($project->manager) {
+                $user = User::find($project->manager_id);
+                $this->NotifyManagerExpiredProject($user, $project);
+            }
             $count++;
         }
         
@@ -71,5 +81,10 @@ class ProjectExpirationCheckCommand extends Command
             ->get();
 
         return $projects;
+    }
+
+    private function NotifyManagerExpiredProject(User $user, Project $project)
+    {
+        $user->notify(new ProjectExpirationNotification($project));
     }
 }

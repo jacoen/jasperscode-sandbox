@@ -41,7 +41,7 @@ class ProjectExpirationReportCommand extends Command
             $this->info('The code this week is: '.$yearWeek);
             return;
         } else {
-            $this->info('There was no project with an expired due_date last week. Goob job!');
+            $this->info('There was no active project with an expired due_date last week. Goob job!');
             return;
         }
         
@@ -49,7 +49,10 @@ class ProjectExpirationReportCommand extends Command
 
     private function countExpiredProjectsLastWeek(): int
     {
-        return Project::whereBetween('due_date', [now()->subWeek(), now()])
+        $startOfWeek = now()->startOfWeek()->subWeek();
+        $endOfWeek = now()->endOfWeek()->subWeek();
+
+        return Project::whereBetween('due_date', [$startOfWeek, $endOfWeek])
             ->whereNotIn('status', ['closed', 'completed', 'deleted'])
             ->count();
     }

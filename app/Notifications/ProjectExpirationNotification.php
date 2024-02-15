@@ -2,20 +2,21 @@
 
 namespace App\Notifications;
 
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ProjectExpirationReportNotification extends Notification
+class ProjectExpirationNotification extends Notification
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(protected int $count, protected User $user, protected string $yearWeek)
+    public function __construct(protected Project $project)
     {
         //
     }
@@ -35,11 +36,14 @@ class ProjectExpirationReportNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('emails.projects.expiration-report', [
-            'user' => $this->user->name,
-            'count' => $this->count,
-            'yearWeek' => $this->yearWeek,
-        ]); 
+        return (new MailMessage)
+                ->subject('Due date of the project has expired.')
+                ->greeting('Hello '.$notifiable->name.', ')
+                ->line('We would like to notify you that '.$this->project->title. 'has an expired.')
+                ->line('You need to update the due date before you can work on the tasks that are related to this project.')
+                ->line('You can edit the project by clicking the button below')
+                ->action('Edit project', route('projects.edit', $this->project))
+                ->line('Thank you for using our application!');
     }
 
     /**
@@ -54,4 +58,3 @@ class ProjectExpirationReportNotification extends Notification
         ];
     }
 }
- 

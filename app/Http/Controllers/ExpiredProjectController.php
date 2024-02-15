@@ -28,7 +28,7 @@ class ExpiredProjectController extends Controller
                     $endweek
                 ]);
             })
-            ->where('due_date', '<', now())
+            ->where('due_date', '<', now()->startOfDay())
             ->orderByDesc('due_date')
             ->orderByDesc('id')
             ->paginate(15);
