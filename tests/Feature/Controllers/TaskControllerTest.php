@@ -154,7 +154,9 @@ class TaskControllerTest extends TestCase
         $closedProject = Project::factory()->create(['status' => 'closed']);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $closedProject), $this->data)
-            ->assertSessionHasErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task when the project is not open or pending.',
+            ]);
 
         $this->assertDatabaseMissing('tasks', [
             'title' => $this->data['title'],
@@ -167,7 +169,9 @@ class TaskControllerTest extends TestCase
         $completedProject = Project::factory()->create(['status' => 'completed']);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $completedProject), $this->data)
-            ->assertSessionHasErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task when the project is not open or pending.',
+            ]);
 
         $this->assertDatabaseMissing('tasks', [
             'title' => $this->data['title'],
@@ -180,11 +184,28 @@ class TaskControllerTest extends TestCase
         $restoredProject = Project::factory()->create(['status' => 'restored']);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $restoredProject), $this->data)
-            ->assertSessionHasErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task when the project is not open or pending.',
+            ]);
 
         $this->assertDatabaseMissing('tasks', [
             'title' => $this->data['title'],
             'project_id' => $restoredProject->id,
+        ]);
+    }
+
+    public function test_a_task_cannot_be_created_for_an_expired_task()
+    {
+        $expiredProject = Project::factory()->expiredWithStatus()->create();
+
+        $this->actingAs($this->employee)->post(route('tasks.store', $expiredProject), $this->data)
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task when the project is not open or pending.',
+            ]);
+
+        $this->assertDatabaseMissing('tasks', [
+            'title' => $this->data['title'],
+            'project_id' => $expiredProject->id
         ]);
     }
 
@@ -380,13 +401,15 @@ class TaskControllerTest extends TestCase
 
     public function test_a_user_cannot_update_a_task_of_a_closed_project()
     {
+        $this->withoutExceptionHandling();
+
         $closedProject = Project::factory()->create(['status' => 'closed']);
         $task = Task::factory()->for($closedProject)->create();
 
         $taskData = array_merge($this->data, ['status' => 'pending']);
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
-            ->assertSessionHasErrors(['error' => 'Could not update this task because the project is inactive.']);
+            ->assertSessionHasErrors(['error' => 'Could not update the task because the project is inactive.']);
 
         $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
     }
@@ -399,7 +422,7 @@ class TaskControllerTest extends TestCase
         $taskData = array_merge($this->data, ['status' => 'pending']);
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
-            ->assertSessionHasErrors(['error' => 'Could not update this task because the project is inactive.']);
+            ->assertSessionHasErrors(['error' => 'Could not update the task because the project is inactive.']);
 
         $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
     }
@@ -412,9 +435,31 @@ class TaskControllerTest extends TestCase
         $taskData = array_merge($this->data, ['status' => 'pending']);
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
-            ->assertSessionHasErrors(['error' => 'Could not update this task because the project is inactive.']);
+            ->assertSessionHasErrors(['error' => 'Could not update the task because the project is inactive.']);
 
         $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
+    }
+
+    // cannot edit a task of an expired project
+    public function test_a_user_cannot_update_a_task_that_belongs_to_an_expired_project()
+    {
+        $expiredProject = Project::factory()->expiredWithStatus()->create();
+        $task = Task::factory()->for($expiredProject)->create();
+
+        $taskData = array_merge($this->data, [
+            'title' => 'The title has changed',
+            'status' => 'pending'
+        ]);
+
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
+            ->assertSessionHasErrors([
+                'error' => 'Could not update the task because the project is inactive.'
+            ]);
+            
+        $this->assertNotEquals($task->fresh()->title, $taskData['title']);
+        $this->assertNotEquals($task->fresh()->status, $taskData['status']);
+
+        $this->assertDatabaseMissing('tasks', array_merge(['id' => $task->id], $taskData));
     }
 
     public function test_the_title_and_status_fields_are_required_when_updating_a_task()
