@@ -37,6 +37,7 @@ class ProjectController extends Controller
                 $query->orderBy('is_pinned', 'desc');
             })
             ->whereNot('status', 'expired')
+            ->where('due_date', '>=', now()->startOfDay())
             ->latest('updated_at')
             ->orderBy('id', 'desc')
             ->paginate(15);
