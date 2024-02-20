@@ -86,12 +86,12 @@ class TaskController extends Controller
 
     public function edit(Task $task): View|RedirectResponse
     {
-        if (! $task->project->is_open_or_pending) {
-            return redirect()->route('projects.show', $task->project)
-                ->withErrors([
-                    'error' => 'Could not update the task because the project is inactive.',
-                ]);
-        }
+        // if (! $task->project->is_open_or_pending) {
+        //     return redirect()->route('projects.show', $task->project)
+        //         ->withErrors([
+        //             'error' => 'Could not update the task because the project is inactive.',
+        //         ]);
+        // }
 
         $task->load('project');
 
@@ -121,13 +121,13 @@ class TaskController extends Controller
             }
         }
 
-        if (isset($request->user_id) && $task->wasChanged('user_id')) {
-            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
-        }
+        // if (isset($request->user_id) && $task->wasChanged('user_id')) {
+        //     User::find($request->user_id)->notify(new TaskAssignedNotification($task));
+        // }
 
-        if ($task->wasChanged('title')) {
-            $task = $task->fresh();
-        }
+        // if ($task->wasChanged('title')) {
+        //     $task = $task->fresh();
+        // }
 
         return redirect()->route('tasks.show', $task)
             ->with('success', 'The task '.$task->title.' has been updated.');

@@ -25,6 +25,7 @@ class ProjectFactory extends Factory
             'description' => fake()->text(),
             'due_date' => now()->addMonths(4),
             'status' => 'open',
+            'is_pinned' => false,
         ];
     }
 
