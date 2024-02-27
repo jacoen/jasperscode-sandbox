@@ -58,10 +58,14 @@ class ProjectObserverTest extends TestCase
         $this->assertEquals($this->trashedProject->fresh()->status, 'restored');
     }
 
-    public function test_When_a_project_is_restored_all_tasks_deleted_at_the_same_or_later_time_are_also_restored()
+    public function test_when_a_project_is_restored_all_tasks_deleted_at_the_same_or_later_time_are_also_restored()
     {
-        $task = Task::factory()->for($this->trashedProject)->trashed()->create();
-    
+        $task = Task::factory()->for($this->trashedProject)->create(['user_id' => null]);
+        $task->delete();
+
+        $this->assertSoftDeleted($task);
+        $this->assertTrue($task->deleted_at >= $this->trashedProject->deleted_at);
+        
         $this->trashedProject->restore();
 
         $this->assertNotSoftDeleted($this->trashedProject);

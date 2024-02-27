@@ -5,6 +5,7 @@ namespace Tests\Feature\Controllers;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ExpiredProjectControllerTest extends TestCase
@@ -37,7 +38,7 @@ class ExpiredProjectControllerTest extends TestCase
         $this->actingAs($this->admin)->get(route('projects.expired'))
             ->assertOk()
             ->assertSeeText([
-                $this->project->title,
+                Str::limit($this->project->title, 55),
                 $this->project->manager->name,
                 'expired',
                 $this->project->due_date->format('d M Y'),
@@ -51,11 +52,24 @@ class ExpiredProjectControllerTest extends TestCase
         $trashedProject = Project::factory()->trashed()->create(['manager_id' => $this->manager->id]);
 
         $this->actingAs($this->admin)->get(route('projects.expired'))
-            ->assertSeeText($this->project->title)
+            ->assertSeeText(Str::limit($this->project->title, 55))
             ->assertDontSeeText([
                 $openProject->title,
                 $completedProject->title,
                 $trashedProject->title
+            ]);
+    }
+
+    public function test_a_user_with_the_read_expired_project_permission_can_see_a_expired_project_with_the_restored_status_on_the_expired_project_overview()
+    {
+        $expiredRestoredProject = Project::factory()->expiredWithStatus($days = 1)->create(['deleted_at' => now()->subDays(2)]);
+        $expiredRestoredProject->restore();
+
+        $this->actingAs($this->admin)->get(route('projects.expired'))
+            ->assertSeeText([
+                Str::limit($expiredRestoredProject->title, 55),
+                'restored',
+                $expiredRestoredProject->due_date->format('d M Y'),
             ]);
     }
 
@@ -71,7 +85,7 @@ class ExpiredProjectControllerTest extends TestCase
 
         $this->actingAs($this->admin)->get(route('projects.expired', ['yearWeek' => $yearWeek]))
             ->assertSeeText([
-                $projectExpiredTwoWeeksAgo->title,
+                Str::limit($projectExpiredTwoWeeksAgo->title, 55),
                 $projectExpiredTwoWeeksAgo->manager->name,
             ])->assertDontSeeText([
                 $projectExpiredOneWeekAgo->title,

@@ -25,10 +25,6 @@ class TaskControllerTest extends TestCase
     {
         parent::setUp();
 
-        Storage::fake('media');
-
-        Notification::fake();
-
         $this->project = Project::factory()->create(['manager_id' => $this->manager->id]);
 
         $this->data = [
@@ -36,6 +32,10 @@ class TaskControllerTest extends TestCase
             'title' => 'A new task for testing',
             'description' => 'Here is a description for this new task',
         ];
+
+        Storage::fake('media');
+
+        Notification::fake();
     }
 
     public function test_a_guest_cannot_visit_the_task_overview_page()
@@ -305,12 +305,12 @@ class TaskControllerTest extends TestCase
             ->assertRedirect(route('projects.show', $this->project))
             ->assertSessionHas('success', 'A new task has been created.');
 
-        $task = Task::first();
+        $task = Task::latest()->first();
 
         $this->assertEquals($task->getFirstMedia('attachments')->file_name, $file->getClientOriginalName());
         $this->assertFileExists($task->getFirstMedia('attachments')->getPath());
 
-        Storage::disk('media')->assertExists('/'.$task->id.'/'.$file->getClientOriginalName());
+        Storage::disk('media')->assertExists('/'.$task->getFirstMedia('attachments')->id.'/'.$file->getClientOriginalName());
     }
 
     public function test_when_a_tasks_get_assigned_to_a_user_this_user_receives_a_notification()
@@ -782,5 +782,12 @@ class TaskControllerTest extends TestCase
         $this->post(route('verify.store'), [
             'two_factor_code' => $user->two_factor_code,
         ]);
+    }
+
+    public function teardown():void
+    {
+        Storage::disk('media')->deleteDirectory('');
+
+        parent::tearDown();
     }
 }

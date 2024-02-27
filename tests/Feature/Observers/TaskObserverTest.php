@@ -72,8 +72,10 @@ class TaskObserverTest extends TestCase
         );
     }
 
-    public function test_it_does_not_updated_the_updated_at_timestamp_of_the_related_project_when_the_task_gets_restored()
+    public function test_it_does_not_update_the_updated_at_timestamp_of_the_related_project_when_the_task_gets_restored()
     {
+        $this->assertNotEqualsWithDelta($this->project->updated_at, now(), 1);
+
         $this->task->delete();
         $this->assertSoftDeleted($this->task);
                 
@@ -122,6 +124,12 @@ class TaskObserverTest extends TestCase
 
     public function test_it_changes_the_status_of_the_task_to_restored_if_a_trashed_task_gets_restored()
     {
-        
+        $task = Task::factory()->for($this->project)->trashed()->create();
+
+        $task->restore();
+
+        $this->assertNotSoftDeleted($task);
+
+        $this->assertEquals($task->fresh()->status, 'restored');
     }
 }
