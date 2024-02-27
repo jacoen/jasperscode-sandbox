@@ -15,13 +15,13 @@
                     <div>
                         <h3 class="card-title">{{ $task->title }}</h3>
                     </div>
-                    @can('update task')
+                    @if ($task->project->is_open_or_pending && auth()->user()->can('update task'))
                         <div class="justify-content-end me-2">
                             <a href="{{ route('tasks.edit', $task) }}" class="btn btn-info fw-semibold text-white">
                                 Edit task
                             </a>
                         </div>
-                    @endcan
+                    @endif
                 </div>
             </div>
 

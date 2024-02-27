@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class UserControllerTest extends TestCase
@@ -148,9 +149,11 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_create_user_permission_can_create_a_new_user()
     {
+        $employeeRole = Role::where('name', 'Employee')->first();
+
         $this->actingAs($this->admin);
 
-        $userData = array_merge($this->data, ['role' => 4]);
+        $userData = array_merge($this->data, ['role' => $employeeRole->id]);
 
         $this->get(route('users.create'))
             ->assertOk();
@@ -183,12 +186,14 @@ class UserControllerTest extends TestCase
         $this->assertTrue($user->hasRole('User'));
     }
 
-    public function test_a_user_that_gets_created_with_a_role_does_get_the_default_role_assigned()
+    public function test_a_user_that_gets_created_with_a_role_does_not_get_the_default_role_assigned()
     {
+        $employeeRole = Role::where('name', 'Employee')->first();
+
         $this->actingAs($this->admin);
 
         $userData = array_merge($this->data, [
-            'role' => 4, //Employee
+            'role' => $employeeRole->id
         ]);
 
         $this->post(route('users.store'), $userData)
@@ -213,9 +218,11 @@ class UserControllerTest extends TestCase
 
     public function test_when_a_new_user_has_been_created_this_user_receives_a_notification()
     {
+        $employeeRole = Role::where('name', 'Employee')->first();
+
         $this->actingAs($this->admin);
 
-        $userData = array_merge($this->data, ['role' => 4]);
+        $userData = array_merge($this->data, ['role' => $employeeRole->id]);
 
         Notification::fake();
 
@@ -296,6 +303,8 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_update_user_permission_cannot_change_the_email_address_of_an_existing_user()
     {
+        $employeeRole = Role::where('name', 'Employee')->first();
+
         $this->actingAs($this->admin);
 
         $user = User::factory()->create(['email' => 'Scott.price@example.com'])->assignRole('Employee');
@@ -303,7 +312,7 @@ class UserControllerTest extends TestCase
         $userData = array_merge($this->data, [
             'name' => $user->name,
             'email' => 'David.Smith@example.com',
-            'role' => 4,
+            'role' => $employeeRole->id,
         ]);
 
         $this->put(route('users.update', $user), $userData)
@@ -322,6 +331,8 @@ class UserControllerTest extends TestCase
 
     public function test_a_user_with_the_update_user_permission_can_edit_an_existing_user()
     {
+        $employeeRole = Role::where('name', 'Employee')->first();
+
         $this->actingAs($this->admin);
 
         $user = User::factory()->create()->assignRole('Employee');
@@ -329,7 +340,7 @@ class UserControllerTest extends TestCase
         $userData = [
             'name' => 'Roger Davids',
             'email' => $user->email,
-            'role' => 4, // Employee
+            'role' => $employeeRole->id, // Employee
         ];
 
         $this->get(route('users.edit', $user))

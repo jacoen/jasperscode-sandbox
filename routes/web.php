@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
+use App\Http\Controllers\ExpiredProjectController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
@@ -71,6 +72,7 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
 
     Route::put('two-factor-settings', [ProfileController::class, 'twoFactorSettings'])->name('two-factor.update');
 
+    Route::get('/projects/expired', ExpiredProjectController::class)->name('projects.expired');
     Route::resource('/projects', ProjectController::class);
     Route::controller(ProjectController::class)->prefix('/projects')->name('projects.')->group(function () {
         Route::patch('/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('restore');

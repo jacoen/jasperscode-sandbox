@@ -65,5 +65,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         // 'password.changed' => \App\Http\Middleware\EnsurePasswordHasChanged::class,
         'twofactor' => \App\Http\Middleware\TwoFactorMiddleware::class,
+        'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
     ];
 }
