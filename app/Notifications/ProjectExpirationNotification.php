@@ -37,9 +37,9 @@ class ProjectExpirationNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                ->subject('Due date of the project has expired.')
+                ->subject('project has an expired due date')
                 ->greeting('Hello '.$notifiable->name.', ')
-                ->line('We would like to notify you that '.$this->project->title. 'has an expired.')
+                ->line('We would like to notify you that '.$this->project->title. 'has an expired due date.')
                 ->line('You need to update the due date before you can work on the tasks that are related to this project.')
                 ->line('You can edit the project by clicking the button below')
                 ->action('Edit project', route('projects.edit', $this->project))
