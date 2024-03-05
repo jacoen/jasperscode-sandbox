@@ -5,20 +5,23 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
-use App\Models\User;
-use App\Notifications\ProjectAssignedNotification;
+use App\Services\ProjectService;
+use App\Services\TaskService;
+use Exception;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Arr;
 use Illuminate\View\View;
 
 class ProjectController extends Controller
 {
+    private ProjectService $projectService;
+
     /**
      * @see app\Observers\ProjectObserver for the model events
      */
-    public function __construct()
+    public function __construct(ProjectService $projectService)
     {
         $this->authorizeResource(Project::class, 'project');
+        $this->projectService = $projectService;
     }
 
     /**
@@ -26,21 +29,10 @@ class ProjectController extends Controller
      */
     public function index(): View
     {
-        $projects = Project::with('manager')
-            ->when(request('search'), function ($query) {
-                $query->where('title', 'LIKE', '%'.request('search').'%');
-            })
-            ->when(request()->status, function ($query) {
-                $query->where('status', request()->status);
-            })
-            ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
-                $query->orderBy('is_pinned', 'desc');
-            })
-            ->whereNot('status', 'expired')
-            ->where('due_date', '>=', now()->startOfDay())
-            ->latest('updated_at')
-            ->orderBy('id', 'desc')
-            ->paginate(15);
+        $projects = $this->projectService->listProjects(
+            request()->input('search'),
+            request()->input('status'),
+        );
 
         return view('projects.index', compact(['projects']));
     }
@@ -50,7 +42,7 @@ class ProjectController extends Controller
      */
     public function create(): View
     {
-        $managers = User::role(['Admin', 'Manager'])->pluck('name', 'id');
+        $managers = $this->projectService->getManagers();
 
         return view('projects.create', compact('managers'));
     }
@@ -60,11 +52,7 @@ class ProjectController extends Controller
      */
     public function store(StoreProjectRequest $request): RedirectResponse
     {
-        $project = Project::create($request->validated());
-
-        if (isset($request->manager_id)) {
-            User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
-        }
+        $this->projectService->store($request->validated());
 
         return redirect()->route('projects.index')
             ->with('success', 'A new project has been created.');
@@ -73,22 +61,11 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Project $project): View
+    public function show(Project $project, TaskService $taskService): View
     {
         $pending_or_open = $project->is_open_or_pending;
 
-        $tasks = $project->tasks()
-        
-            ->when(request()->search, function ($query) {
-                $query->where('title', 'LIKE', '%'.request()->search.'%');
-            })
-            ->when(request()->status, function ($query) {
-                $query->where('status', request()->status);
-            })
-            ->with('author', 'user')
-            ->latest('updated_at')
-            ->orderBy('id', 'desc')
-            ->paginate();
+        $tasks = $taskService->findTasksByProject($project, request()->search, request()->status);
 
         return view('projects.show', compact(['project', 'tasks', 'pending_or_open']));
     }
@@ -98,9 +75,11 @@ class ProjectController extends Controller
      */
     public function edit(Project $project): View
     {
-        $managers = User::role(['Admin', 'Manager'])->pluck('name', 'id');
-        $statuses = Arr::add(config('definitions.statuses'), 'Restored', 'restored');
-        $statuses = Arr::add($statuses, 'Expired', 'expired');
+        $managers = $this->projectService->getManagers();
+        $statuses = array_merge(config('definitions.statuses'), [
+            'Restored' => 'restored', 
+            'Expired' => 'expired'
+        ]);
 
         return view('projects.edit', compact(['project', 'managers', 'statuses']));
     }
@@ -110,25 +89,14 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
-        $pinnedProject = Project::where('is_pinned', true)->first();
+        try {
+            $updatedProject = $this->projectService->update($project, $request->validated());
 
-        if (! auth()->user()->can('pin project') && $request->is_pinned) {
-            return back()->withErrors(['error' => 'User is not authorized to pin a project']);
+            return redirect()->route('projects.show', $updatedProject)
+                ->with('success', 'The project has been updated.');
+        } catch (Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
-
-        if ($request->is_pinned && $pinnedProject && $pinnedProject->id != $project->id) {
-            return back()
-                ->withErrors(['error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.']);
-        }
-
-        $project->update($request->validated());
-
-        if (isset($request->manager_id) && $project->wasChanged('manager_id')) {
-            User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
-        }
-
-        return redirect()->route('projects.show', $project)
-            ->with('success', 'The project has been updated.');
     }
 
     /**
@@ -136,27 +104,21 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project): RedirectResponse
     {
-        if ($project->is_pinned) {
-            return back()
-                ->withErrors(['error' => 'Project could not be deleted because it was pinned.
-                Remove the pin from the project before deleting it.']);
+        try{
+            $this->projectService->destroy($project);
+    
+            return redirect()->route('projects.index')
+                ->with('success', 'The project has been deleted.');
+        } catch (Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
-
-        $project->delete();
-
-        return redirect()->route('projects.index')
-            ->with('success', 'The project has been deleted.');
     }
 
     public function trashed(): View
     {
         $this->authorize('restore project', Project::class);
 
-        $projects = Project::onlyTrashed()
-            ->with('manager')
-            ->latest('deleted_at')
-            ->orderBy('id', 'desc')
-            ->paginate();
+        $projects = $this->projectService->listTrashedProjects();
 
         return view('projects.trashed', compact('projects'));
     }
