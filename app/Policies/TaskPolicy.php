@@ -63,7 +63,7 @@ class TaskPolicy
         return $user->can('delete task') && $user->hasRole(['Admin', 'Super Admin']);
     }
 
-    public function adminTasks(User $user, Task $task)
+    public function adminTasks(User $user)
     {
         return $user->can('read task') && $user->hasRole(['Super Admin|Admin']);
     }

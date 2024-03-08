@@ -7,9 +7,8 @@ use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
-use App\Notifications\TaskAssignedNotification;
+use App\Services\TaskService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\View;
 
@@ -18,7 +17,7 @@ class TaskController extends Controller
     /**
      * @see app\Observers\TaskObserver for the model events
      */
-    public function __construct()
+    public function __construct(private TaskService $taskService)
     {
         $this->authorizeResource(Task::class, 'task');
     }
@@ -26,17 +25,11 @@ class TaskController extends Controller
     public function index(): View
     {
         $route = Route::currentRouteName();
-        $tasks = Task::with('project', 'author', 'user')
-            ->where('user_id', auth()->id())
-            ->when(request()->search, function ($query) {
-                $query->where('title', 'LIKE', '%'.request()->search.'%');
-            })
-            ->when(request()->status, function ($query) {
-                $query->where('status', request()->status);
-            })
-            ->latest('updated_at')
-            ->orderBy('id', 'desc')
-            ->paginate();
+        $tasks = $this->taskService->listTasks(
+            request()->search,
+            request()->status,
+            auth()->id(),
+        );
 
         return view('tasks.index', compact('tasks', 'route'));
     }
@@ -55,28 +48,15 @@ class TaskController extends Controller
 
     public function store(Project $project, StoreTaskRequest $request): RedirectResponse
     {
-        if (! $project->is_open_or_pending) {
+        try {
+            $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
+
             return redirect()->route('projects.show', $project)
-                ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+                ->with('success', 'A new task has been created.');
+        } catch (\Exception $e) {
+            return redirect()->route('projects.show', $project)
+                ->withErrors(['error' => $e->getMessage()]);
         }
-
-        $data = Arr::add($request->validated(), 'author_id', auth()->id());
-        $task = $project->tasks()->create($data);
-
-        if ($attachments = $request->file('attachments')) {
-            foreach ($attachments as $attachment) {
-                $task->addMedia($attachment)
-                    ->usingName($task->title)
-                    ->toMediaCollection('attachments');
-            }
-        }
-
-        if (isset($request->user_id)) {
-            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
-        }
-
-        return redirect()->route('projects.show', $project)
-            ->with('success', 'A new task has been created.');
     }
 
     public function show(Task $task): View
@@ -96,86 +76,56 @@ class TaskController extends Controller
         $task->load('project');
 
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
-        $statuses = Arr::add(config('definitions.statuses'), 'Restored', 'restored');
+        $statuses = array_merge(config('definitions.statuses'), ['Restored' => 'restored']);
 
         return view('tasks.edit', compact(['task', 'employees', 'statuses']));
     }
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
-        if (! $task->project->is_open_or_pending) {
+        try {
+            $task = $this->taskService->updateTask($task, $request->validated(),  $request->file('attachments'));
+    
+            return redirect()->route('tasks.show', $task)
+                ->with('success', 'The task '.$task->title.' has been updated.');
+        } catch (\Exception $e) {
             return redirect()->route('projects.show', $task->project)
-                ->withErrors([
-                    'error' => 'Could not update the task because the project is inactive.',
-                ]);
+                ->withErrors(['error' => $e->getMessage()]);
         }
-
-        $task->update($request->validated());
-
-        if ($attachments = $request->file('attachments')) {
-            $task->clearMediaCollection();
-            foreach ($attachments as $attachment) {
-                $task->addMedia($attachment)
-                    ->usingName($task->title)
-                    ->toMediaCollection('attachments');
-            }
-        }
-
-        if (isset($request->user_id) && $task->wasChanged('user_id')) {
-            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
-        }
-
-        if ($task->wasChanged('title')) {
-            $task = $task->fresh();
-        }
-
-        return redirect()->route('tasks.show', $task)
-            ->with('success', 'The task '.$task->title.' has been updated.');
     }
 
     public function destroy(Task $task): RedirectResponse
     {
         $project = $task->project_id;
 
-        $taskTitle = $task->title;
-
         $task->delete();
 
         return redirect()->route('projects.show', $project)
-            ->with('success', 'The task '.$taskTitle.' has been deleted.');
+            ->with('success', 'The task has been deleted.');
     }
 
     public function trashed(): View
     {
-        $this->authorize('restore task', Task::class);
+        $this->authorize('restore', Task::class);
 
-        $tasks = Task::onlyTrashed()
-            ->with('project')
-            ->latest('deleted_at')
-            ->orderBy('id', 'desc')
-            ->paginate();
-
-        return view('tasks.trashed', compact('tasks'));
+        return view('tasks.trashed', [
+            'tasks' => $this->taskService->trashedTasks(),
+        ]);
     }
 
     public function restore(Task $task): RedirectResponse
     {
         $this->authorize('restore', $task);
 
-        if ($task->project->trashed()) {
+        try {
+            $this->taskService->restoreTask($task);
+
+            return redirect()->route('projects.show', $task->project)
+                ->with('success', 'The task '.$task->title.'has been restored.');
+        } catch (\Exception $e) {
             return redirect()->route('tasks.trashed')
-                ->withErrors(['error' => 'Could not restore task because the project has been deleted.']);
+                ->withErrors(['error' => $e->getMessage()]);
         }
-
-        if ($task->project->status == 'closed' || $task->project->status == 'completed' || $task->project->status == 'expired') {
-            return redirect()
-                ->route('tasks.trashed')->withErrors(['error' => 'Could not restore task becaues the project is either closed, completed or expired.']);
-        }
-
-        $task->restore();
-
-        return redirect()->route('tasks.trashed')
-            ->with('success', 'The task '.$task->title.'has been restored.');
     }
 
     public function forceDelete(Task $task): RedirectResponse
@@ -190,19 +140,13 @@ class TaskController extends Controller
 
     public function adminTasks(): View
     {
-        abort_if(! auth()->user()->hasRole('Admin'), 403);
+        $this->authorize('adminTasks', Task::class);
 
         $route = Route::currentRouteName();
-        $tasks = Task::with('project', 'author', 'user')
-            ->when(request()->search, function ($query) {
-                $query->where('title', 'LIKE', '%'.request()->search.'%');
-            })
-            ->when(request()->status, function ($query) {
-                $query->where('status', request()->status);
-            })
-            ->latest('updated_at')
-            ->orderByDesc('id')
-            ->paginate();
+        $tasks = $this->taskService->listTasks(
+            request()->search,
+            request()->status,
+        );
 
         return view('tasks.index', compact('tasks', 'route'));
     }
