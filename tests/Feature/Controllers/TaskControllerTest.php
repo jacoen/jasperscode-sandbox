@@ -440,7 +440,6 @@ class TaskControllerTest extends TestCase
         $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
     }
 
-    // cannot edit a task of an expired project
     public function test_a_user_cannot_update_a_task_that_belongs_to_an_expired_project()
     {
         $expiredProject = Project::factory()->expiredWithStatus()->create();
@@ -541,7 +540,7 @@ class TaskControllerTest extends TestCase
 
         $this->actingAs($this->employee)->delete(route('tasks.destroy', $task))
             ->assertRedirect(route('projects.show', $task->project))
-            ->assertSessionHas('success', 'The task '.$task->title.' has been deleted.');
+            ->assertSessionHas('success', 'The task has been deleted.');
 
         $this->assertSoftDeleted($task);
     }
@@ -631,7 +630,7 @@ class TaskControllerTest extends TestCase
         $task = Task::factory()->for($this->project)->trashed()->create();
 
         $this->actingAs($this->manager)->patch(route('tasks.restore', $task))
-            ->assertRedirect(route('tasks.trashed'))
+            ->assertRedirect(route('projects.show', $this->project))
             ->assertSessionHas('success', 'The task '.$task->title.'has been restored.');
 
         $this->assertNotSoftDeleted($task);

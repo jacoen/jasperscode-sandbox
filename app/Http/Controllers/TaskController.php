@@ -106,11 +106,11 @@ class TaskController extends Controller
 
     public function trashed(): View
     {
-        $this->authorize('restore', Task::class);
+        $this->authorize('trashed', Task::class);
 
-        return view('tasks.trashed', [
-            'tasks' => $this->taskService->trashedTasks(),
-        ]);
+        $tasks = $this->taskService->trashedTasks();
+
+        return view('tasks.trashed', compact('tasks'));
     }
 
     public function restore(Task $task): RedirectResponse
