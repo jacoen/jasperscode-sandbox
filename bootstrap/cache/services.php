@@ -40,6 +40,7 @@
     36 => 'App\\Providers\\AuthServiceProvider',
     37 => 'App\\Providers\\EventServiceProvider',
     38 => 'App\\Providers\\RouteServiceProvider',
+    39 => 'App\\Providers\\RequestMarcroServiceProvider',
   ),
   'eager' => 
   array (
@@ -68,6 +69,7 @@
     22 => 'App\\Providers\\AuthServiceProvider',
     23 => 'App\\Providers\\EventServiceProvider',
     24 => 'App\\Providers\\RouteServiceProvider',
+    25 => 'App\\Providers\\RequestMarcroServiceProvider',
   ),
   'deferred' => 
   array (
