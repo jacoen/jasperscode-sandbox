@@ -70,7 +70,7 @@ class UserControllerTest extends TestCase
         $this->assertDatabaseMissing('users', $this->data);
     }
 
-    public function test_the_name_and_email_fileds_are_required_when_creating_a_user()
+    public function test_the_name_and_email_fields_are_required_when_creating_a_user()
     {
         $this->actingAs($this->admin);
 
@@ -169,6 +169,7 @@ class UserControllerTest extends TestCase
         ]);
     }
 
+    // functionaliteit van een custom event
     public function test_when_a_user_gets_created_without_a_role_this_user_gets_assigned_a_default_role()
     {
         $this->actingAs($this->admin);
@@ -317,7 +318,7 @@ class UserControllerTest extends TestCase
 
         $this->put(route('users.update', $user), $userData)
             ->assertSessionHasErrors([
-                'email' => 'The email does not match the original email address',
+                'error' => 'The email does not match the original email address',
             ]);
 
         $this->assertNotEquals($user->fresh()->email, $userData['email']);

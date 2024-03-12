@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\RoleUpdatedEvent;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
-use App\Notifications\AccountCreatedNotification;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use App\Services\UserService;
+
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct()
+    public function __construct(private UserService $userService)
     {
         $this->authorizeResource(User::class, 'user');
     }
@@ -39,15 +37,7 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request)
     {
-        $user = User::make($request->validated());
-        $user->password = Hash::make(Str::password(64));
-        $user->save();
-
-        $user->generatePasswordToken();
-        $user->syncRoles($request->role ?? 'User');
-        event(new RoleUpdatedEvent($user));
-
-        $user->notify(new AccountCreatedNotification());
+        $this->userService->store($request->validated());
 
         return redirect()->route('users.index')
             ->with('success', 'A new user was created.');
@@ -66,23 +56,15 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user)
     {
-        $oldRole = $user->roles->first()->id;
+        try {
+            $this->userService->update($user, $request->validatedExcept(['role']), $request->validatedOnly(['role']));
 
-        if ($request->email !== $user->email) {
-            return redirect()->route('users.edit', $user)
-                ->withErrors(['email' => 'The email does not match the original email address']);
-        }
-
-        $user->update($request->validated());
-
-        
-        if ($request->role !== $oldRole) {
-            $user->syncRoles($request->role);
-            event(new RoleUpdatedEvent($user));
-        }
-
-        return redirect()->route('users.index')
+            return redirect()->route('users.index')
             ->with('success', $user->name.'\'s account has been updated!');
+        } catch(\Exception $e) {
+            return redirect()->route('users.edit', $user)
+                ->withErrors(['error' => $e->getMessage()]);
+        }
     }
 
     public function destroy(User $user)
