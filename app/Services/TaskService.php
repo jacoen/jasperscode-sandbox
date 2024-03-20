@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\InvalidProjectStatusException;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -12,7 +13,7 @@ class TaskService
 {
     public function listTasks($search = null, $status = null, $userId = null): LengthAwarePaginator
     {
-        return Task::with('project', 'author', 'user')
+        return Task::with('project.manager', 'author', 'user')
             ->when($search, function($query) use ($search) {
                 $query->where('title', 'LIKE', '%'.$search.'%');
             })
@@ -30,12 +31,10 @@ class TaskService
     public function storeTask(Project $project, array $validData, array $attachments = null): Task
     {
         if (! $project->is_open_or_pending) {
-            throw new \Exception('Cannot create a task when the project is not open or pending.');
+            throw new InvalidProjectStatusException('Could create a task when the status of the project is not open or pending.');
         }
 
-        $data = array_merge($validData, ['author_id' => auth()->id()]);
-
-        $task = $project->tasks()->create($data);
+        $task = $project->tasks()->create($validData);
 
         if ($attachments) {
             foreach ($attachments as $attachment) {
@@ -45,8 +44,8 @@ class TaskService
             }
         }
 
-        if (isset($data['user_id'])) {
-            User::find($data['user_id'])->notify(new TaskAssignedNotification($task));
+        if (isset($validData['user_id'])) {
+            User::find($validData['user_id'])->notify(new TaskAssignedNotification($task));
         }
 
         return $task;
@@ -55,13 +54,13 @@ class TaskService
     public function updateTask(Task $task, array $validData, array $attachments = null)
     {
         if (! $task->project->is_open_or_pending) {
-            throw new \Exception('Could not update the task because the project is inactive.');
+            throw new InvalidProjectStatusException('Could not update the task because the project is inactive.');
         }
 
         $task->update($validData);
 
         if ($attachments) {
-            $task->clearMediaCollection();
+            $task->clearMediaCollection('attachments');
             foreach ($attachments as $attachment) {
                 $task->addMedia($attachment)
                     ->usingName($task->title)
@@ -71,10 +70,6 @@ class TaskService
 
         if (isset($validData['user_id']) && $task->wasChanged('user_id')) {
             User::find($validData['user_id'])->notify(new TaskAssignedNotification($task));
-        }
-
-        if ($task->wasChanged('title')) {
-            $task = $task->fresh();
         }
 
         return $task;
@@ -92,12 +87,14 @@ class TaskService
 
     public function restoreTask(Task $task)
     {
-        if ($task->project->trashed()) {
-            throw new \Exception('Could not restore task because the project has been trashed.');
+        $project = $task->project;
+
+        if ($project->trashed()) {
+            throw new InvalidProjectStatusException('Could not restore task because the project has been trashed.');
         }
         
-        if ($task->project->status == 'closed' || $task->project->status == 'completed' || $task->project->status == 'expired') {
-            throw new \Exception('Could not restore task because the related project is inactive');
+        if (! $project->is_open_or_pending) {
+            throw new InvalidProjectStatusException('Could not restore task because the related project is inactive');
         }
 
         $task->restore();

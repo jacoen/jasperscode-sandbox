@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InvalidProjectStatusException;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Project;
@@ -38,7 +39,7 @@ class TaskController extends Controller
     {
         if (! $project->is_open_or_pending) {
             return redirect()->route('projects.show', $project)
-                ->withErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+                ->withErrors(['error' => 'Cannot create a task when the project is inactive.']);
         }
 
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
@@ -53,9 +54,9 @@ class TaskController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'A new task has been created.');
-        } catch (\Exception $e) {
+        } catch (InvalidProjectStatusException $e) {
             return redirect()->route('projects.show', $project)
-                ->withErrors(['error' => $e->getMessage()]);
+                ->withErrors(['errors' => $e->getMessage()]);
         }
     }
 
@@ -69,7 +70,7 @@ class TaskController extends Controller
         if (! $task->project->is_open_or_pending) {
             return redirect()->route('projects.show', $task->project)
                 ->withErrors([
-                    'error' => 'Could not update the task because the project is inactive.',
+                    'errors' => 'Could not update the task because the project is inactive.',
                 ]);
         }
 
@@ -88,9 +89,9 @@ class TaskController extends Controller
     
             return redirect()->route('tasks.show', $task)
                 ->with('success', 'The task '.$task->title.' has been updated.');
-        } catch (\Exception $e) {
+        } catch (InvalidProjectStatusException $e) {
             return redirect()->route('projects.show', $task->project)
-                ->withErrors(['error' => $e->getMessage()]);
+                ->withErrors(['errors' => $e->getMessage()]);
         }
     }
 
