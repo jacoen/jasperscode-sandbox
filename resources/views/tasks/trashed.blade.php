@@ -36,7 +36,7 @@
                                     </form>
 
                                     @if (auth()->user()->can('delete task') && auth()->user()->hasAnyRole(['Admin', 'Super Admin']))
-                                        <form action="{{ route('tasks.delete', $task) }}" method="POST" onsubmit="return confirm('Are you sure you want to force delete this task? This process cannot be reversed!')">
+                                        <form action="{{ route('tasks.force-delete', $task) }}" method="POST" onsubmit="return confirm('Are you sure you want to force delete this task? This process cannot be reversed!')">
                                             @csrf
                                             @method('PATCH')
                                             <input type="submit" class="btn btn-sm btn-danger text-white fw-semibold ms-2 text-capitalize" value="Force Delete">

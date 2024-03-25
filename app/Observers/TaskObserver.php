@@ -21,7 +21,7 @@ class TaskObserver
     {
         $task->load('project');
 
-        if (! $task->project->trashed()) {
+        if ($task->status != 'closed' && $task->status != 'restored') {
             $task->project->touch();
         }
     }

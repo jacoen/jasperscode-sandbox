@@ -36,6 +36,8 @@ class ProjectController extends Controller
             ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
                 $query->orderBy('is_pinned', 'desc');
             })
+            ->whereNot('status', 'expired')
+            ->where('due_date', '>=', now()->startOfDay())
             ->latest('updated_at')
             ->orderBy('id', 'desc')
             ->paginate(15);
@@ -76,6 +78,7 @@ class ProjectController extends Controller
         $pending_or_open = $project->is_open_or_pending;
 
         $tasks = $project->tasks()
+        
             ->when(request()->search, function ($query) {
                 $query->where('title', 'LIKE', '%'.request()->search.'%');
             })
@@ -97,6 +100,7 @@ class ProjectController extends Controller
     {
         $managers = User::role(['Admin', 'Manager'])->pluck('name', 'id');
         $statuses = Arr::add(config('definitions.statuses'), 'Restored', 'restored');
+        $statuses = Arr::add($statuses, 'Expired', 'expired');
 
         return view('projects.edit', compact(['project', 'managers', 'statuses']));
     }

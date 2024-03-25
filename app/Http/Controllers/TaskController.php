@@ -86,6 +86,13 @@ class TaskController extends Controller
 
     public function edit(Task $task): View|RedirectResponse
     {
+        if (! $task->project->is_open_or_pending) {
+            return redirect()->route('projects.show', $task->project)
+                ->withErrors([
+                    'error' => 'Could not update the task because the project is inactive.',
+                ]);
+        }
+
         $task->load('project');
 
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
@@ -97,9 +104,9 @@ class TaskController extends Controller
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
         if (! $task->project->is_open_or_pending) {
-            return redirect()->route('tasks.edit', $task)
+            return redirect()->route('projects.show', $task->project)
                 ->withErrors([
-                    'error' => 'Could not update this task because the project is inactive.',
+                    'error' => 'Could not update the task because the project is inactive.',
                 ]);
         }
 
@@ -160,9 +167,9 @@ class TaskController extends Controller
                 ->withErrors(['error' => 'Could not restore task because the project has been deleted.']);
         }
 
-        if ($task->project->status == 'closed' || $task->project->status == 'completed') {
+        if ($task->project->status == 'closed' || $task->project->status == 'completed' || $task->project->status == 'expired') {
             return redirect()
-                ->route('tasks.trashed')->withErrors(['error' => 'Could not restore task becaues the project is either closed or completed.']);
+                ->route('tasks.trashed')->withErrors(['error' => 'Could not restore task becaues the project is either closed, completed or expired.']);
         }
 
         $task->restore();

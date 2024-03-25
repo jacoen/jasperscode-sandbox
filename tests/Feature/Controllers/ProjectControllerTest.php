@@ -237,7 +237,7 @@ class ProjectControllerTest extends TestCase
             ->assertDontSeeText('Info This project is due in 25 days.');
     }
 
-    public function test_when_a_project_has_tasks_the_user_can_see_those_on_the_project_detail_page()
+    public function test_when_a_project_has_tasks_the_user_can_see_these_tasks_on_the_project_detail_page()
     {
         $project = Project::factory()->create();
 
@@ -366,16 +366,23 @@ class ProjectControllerTest extends TestCase
             'title' => $project->title,
             'description' => $project->description,
             'manager_id' => $this->manager->id,
-            'status' => 'restored',
         ];
 
-        $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($data, ['status' => 'restored']))
             ->assertSessionHasErrors([
                 'status' => 'The selected status is invalid.',
             ]);
 
-        $this->assertNotEquals($project->fresh()->status, $data['status']);
-        $this->assertDatabaseMissing('projects', array_merge($data, ['id' => $project->id]));
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($data, ['status' => 'expired']))
+            ->assertSessionHasErrors([
+                'status' => 'The selected status is invalid.',
+            ]);
+
+        $this->assertNotEquals($project->fresh()->status, 'restored');
+        $this->assertDatabaseMissing('projects', array_merge($data, ['id' => $project->id, 'status' => 'restored']));
+
+        $this->assertNotEquals($project->fresh()->status, 'expired');
+        $this->assertDatabaseMissing('projects', array_merge($data, ['id' => $project->id, 'status' => 'expired']));
     }
 
     public function test_a_user_with_the_update_project_permission_can_update_a_project()
@@ -383,11 +390,11 @@ class ProjectControllerTest extends TestCase
         $project = Project::factory()->create();
 
         $data = [
-            'title' => $project->title,
+            'title' => 'A new title',
             'description' => $project->description,
             'manager_id' => $this->manager->id,
-            'due_date' => $project->due_date->format('d M Y'),
-            'status' => 'open',
+            'due_date' => $project->due_date,
+            'status' => 'pending',
         ];
 
         $this->actingAs($this->manager)->get(route('projects.edit', $project))
@@ -395,6 +402,8 @@ class ProjectControllerTest extends TestCase
 
         $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
             ->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('projects', array_merge(['id' => $project->id], $data));
     }
 
     public function test_only_a_user_with_the_admin_role_can_pin_a_project()
@@ -417,6 +426,8 @@ class ProjectControllerTest extends TestCase
 
     public function test_only_one_project_can_be_pinned_at_a_time()
     {
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
         $firstProject = Project::factory()->create(['manager_id' => $this->manager->id]);
         $secondProject = Project::factory()->create(['manager_id' => $this->manager->id]);
 
@@ -437,10 +448,10 @@ class ProjectControllerTest extends TestCase
             'is_pinned' => 1,
         ];
 
-        $this->actingAs($this->admin)->put(route('projects.update', $secondProject), $secondData)
+        $this->put(route('projects.update', $secondProject), $secondData)
             ->assertRedirect(route('projects.show', $secondProject));
 
-        $this->actingAs($this->admin)->put(route('projects.update', $firstProject), $data)
+        $this->put(route('projects.update', $firstProject), $data)
             ->assertSessionHasErrors([
                 'error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.',
             ]);
@@ -514,14 +525,16 @@ class ProjectControllerTest extends TestCase
 
     public function test_a_user_with_the_restore_project_permission_can_visit_the_trashed_project_page()
     {
-        $this->actingAs($this->admin)->get(route('projects.trashed'))
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
+        $this->get(route('projects.trashed'))
             ->assertOk()
             ->assertSeeText('No trashed projects yet.');
 
         $project1 = Project::factory()->trashed()->create();
         $project2 = Project::factory()->trashed()->create();
 
-        $this->actingAs($this->admin)->get(route('projects.trashed'))
+        $this->get(route('projects.trashed'))
             ->assertOk()
             ->assertSeeText([
                 Str::limit($project1->title, 35),
@@ -541,9 +554,11 @@ class ProjectControllerTest extends TestCase
 
     public function test_a_user_with_the_restore_project_permission_can_restore_a_project()
     {
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
         $project = project::factory()->trashed()->create();
 
-        $this->actingAs($this->admin)->patch(route('projects.restore', $project))
+        $this->patch(route('projects.restore', $project))
             ->assertRedirect(route('projects.trashed'))
             ->assertSessionHas('success', 'The project '.$project->title.' has been restored.');
 
@@ -552,14 +567,25 @@ class ProjectControllerTest extends TestCase
 
     public function test_a_user_with_the_force_delete_permission_can_permanently_delete_a_project()
     {
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
         $project = Project::factory()->trashed()->create();
 
         $this->assertSoftDeleted($project);
 
-        $this->actingAs($this->admin)->patch(route('projects.force-delete', $project))
+        $this->patch(route('projects.force-delete', $project))
             ->assertRedirect(route('projects.trashed'))
             ->assertSessionHas('success', 'The project has been permanently deleted.');
 
         $this->assertNull($project->fresh());
+    }
+
+    protected function actingAsVerifiedTwoFactor($user)
+    {
+        $this->actingAs($user);
+
+        $this->post(route('verify.store'), [
+            'two_factor_code' => $user->two_factor_code,
+        ]);
     }
 }

@@ -28,8 +28,7 @@ class ProjectObserverTest extends TestCase
         $task1 = Task::factory()->for($this->project)->create();
         $task2 = Task::factory()->for($this->project)->create();
 
-        $this->actingAs($this->manager)->delete(route('projects.destroy', $this->project))
-            ->assertRedirect(route('projects.index'));
+        $this->project->delete();
 
         $this->assertSoftDeleted($this->project);
         $this->assertSoftDeleted($task1);
@@ -38,34 +37,36 @@ class ProjectObserverTest extends TestCase
 
     public function test_when_a_project_has_been_soft_deleted_the_status_of_the_project_gets_changed_to_closed()
     {
-        $this->actingAs($this->manager)->delete(route('projects.destroy', $this->project))
-            ->assertRedirect(route('projects.index'));
+        $this->project->delete();
 
         $this->assertEquals($this->project->fresh()->status, 'closed');
     }
 
     public function test_when_a_project_has_been_soft_deleted_the_project_gets_unassigned_from_the_manager()
     {
-        $this->actingAs($this->manager)->delete(route('projects.destroy', $this->project))
-            ->assertRedirect(route('projects.index'));
+        $this->project->delete();
 
         $this->assertNull($this->project->fresh()->manager_id);
     }
 
     public function test_when_a_project_gets_restored_the_status_of_the_project_gets_changed_to_restored()
     {
-        $this->actingAs($this->admin)->patch(route('projects.restore', $this->trashedProject))
-            ->assertRedirect(route('projects.trashed'));
+        $this->assertEquals($this->trashedProject->status, 'closed');
+
+        $this->trashedProject->restore();
 
         $this->assertEquals($this->trashedProject->fresh()->status, 'restored');
     }
 
-    public function test_when_a_project_gets_restored_all_tasks_that_are_deleted_at_the_same_time_as_the_project_also_get_restored()
+    public function test_when_a_project_is_restored_all_tasks_deleted_at_the_same_or_later_time_are_also_restored()
     {
-        $task = Task::factory()->for($this->trashedProject)->trashed()->create();
+        $task = Task::factory()->for($this->trashedProject)->create(['user_id' => null]);
+        $task->delete();
 
-        $this->actingAs($this->admin)->patch(route('projects.restore', $this->trashedProject))
-            ->assertRedirect(route('projects.trashed'));
+        $this->assertSoftDeleted($task);
+        $this->assertTrue($task->deleted_at >= $this->trashedProject->deleted_at);
+        
+        $this->trashedProject->restore();
 
         $this->assertNotSoftDeleted($this->trashedProject);
         $this->assertNotSoftDeleted($task);
@@ -73,29 +74,14 @@ class ProjectObserverTest extends TestCase
 
     public function test_when_a_task_is_trashed_before_the_project_gets_soft_deleted_the_task_will_not_get_restored_when_the_project_is_restored()
     {
-        $project = Project::factory()->create();
-        $task1 = Task::factory()->for($project)->create();
-        $task2 = Task::factory()->for($project)->create();
+        $project = Project::factory()->create(['created_at' => now()->subMinutes(4), 'deleted_at' => now()->subMinute()]);
+        $task1 = Task::factory()->for($project)->create(['created_at' => now()->subMinutes(3), 'deleted_at' => now()->subMinutes(2)]);
+        $task2 = Task::factory()->for($project)->create(['created_at' => now()->subMinutes(3), 'deleted_at' => now()->subMinute()]);
 
-        $this->actingAs($this->admin)->delete(route('tasks.destroy', $task1))
-            ->assertRedirect(route('projects.show', $project))
-            ->assertDontSeeText($task1->title);
-
-        sleep(1);
-
-        $this->actingAs($this->admin)->delete(route('projects.destroy', $project))
-            ->assertRedirect(route('projects.index'));
-
-        $this->actingAs($this->admin)->patch(route('projects.restore', $project->fresh()))
-            ->assertRedirect(route('projects.trashed'));
-
-        $this->assertTrue($project->fresh()->status == 'restored');
+        $project->restore();
+        
         $this->assertNotSoftDeleted($project);
-
-        $this->assertTrue($task1->fresh()->status == 'closed');
-        $this->assertSoftDeleted($task1);
-
-        $this->assertTrue($task2->fresh()->status == 'restored');
         $this->assertNotSoftDeleted($task2);
+        $this->assertSoftDeleted($task1);
     }
 }

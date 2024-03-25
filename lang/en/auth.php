@@ -16,5 +16,5 @@ return [
     'failed' => 'These credentials do not match our records.',
     'password' => 'The provided password is incorrect.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
-
+    'two_factor_description' => 'When two factor authentication is enabled, you will be prompted for a 6-digit code during authentication. You may retrieve this code from your email.',
 ];

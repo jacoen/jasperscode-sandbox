@@ -34,7 +34,7 @@ class TaskFactory extends Factory
                 'status' => 'closed',
                 'created_at' => now()->subMinutes(5),
                 'updated_at' => now()->subMinutes(5),
-                'deleted_at' => now(),
+                'deleted_at' => now()->subMinute(),
             ];
         });
     }

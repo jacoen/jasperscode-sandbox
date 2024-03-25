@@ -33,9 +33,19 @@
             <a class="nav-link" href="{{ route('projects.trashed') }}">
                 <svg class="nav-icon">
                 </svg>
-                {{ __('trashed projects') }}
+                {{ __('Trashed projects') }}
             </a>
         </li>
+    @endcan
+
+    @can('read expired projects')
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('projects.expired') }}">
+            <svg class="nav-icon">
+            </svg>
+            {{ __('Expired projects') }}
+        </a>
+    </li>
     @endcan
 
     @can('read task')

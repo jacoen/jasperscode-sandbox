@@ -26,6 +26,9 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'password_token' => null,
             'password_changed_at' => now(),
+            'two_factor_enabled' => false,
+            'two_factor_code' => null,
+            'two_factor_expires_at' => null,
         ];
     }
 
@@ -44,7 +47,7 @@ class UserFactory extends Factory
         return $this->state(function () {
             return [];
         })->afterCreating(function (User $user) {
-            $user->assignRole('Super admin');
+            $user->assignRole('Super Admin');
         });
     }
 
@@ -68,6 +71,17 @@ class UserFactory extends Factory
                 'password_token' => Str::random(32),
                 'token_expires_at' => now()->addHour(),
                 'password_changed_at' => null,
+            ];
+        });
+    }
+
+    public function withTwoFactorEnabled()
+    {
+        return $this->state(function () {
+            return [
+                'two_factor_enabled' => true,
+                'two_factor_code' => generateDigitCode(),
+                'two_factor_expires_at' => now()->addMinutes(),
             ];
         });
     }

@@ -25,10 +25,6 @@ class TaskControllerTest extends TestCase
     {
         parent::setUp();
 
-        Storage::fake('media');
-
-        Notification::fake();
-
         $this->project = Project::factory()->create(['manager_id' => $this->manager->id]);
 
         $this->data = [
@@ -36,6 +32,10 @@ class TaskControllerTest extends TestCase
             'title' => 'A new task for testing',
             'description' => 'Here is a description for this new task',
         ];
+
+        Storage::fake('media');
+
+        Notification::fake();
     }
 
     public function test_a_guest_cannot_visit_the_task_overview_page()
@@ -154,7 +154,9 @@ class TaskControllerTest extends TestCase
         $closedProject = Project::factory()->create(['status' => 'closed']);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $closedProject), $this->data)
-            ->assertSessionHasErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task when the project is not open or pending.',
+            ]);
 
         $this->assertDatabaseMissing('tasks', [
             'title' => $this->data['title'],
@@ -167,7 +169,9 @@ class TaskControllerTest extends TestCase
         $completedProject = Project::factory()->create(['status' => 'completed']);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $completedProject), $this->data)
-            ->assertSessionHasErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task when the project is not open or pending.',
+            ]);
 
         $this->assertDatabaseMissing('tasks', [
             'title' => $this->data['title'],
@@ -180,11 +184,28 @@ class TaskControllerTest extends TestCase
         $restoredProject = Project::factory()->create(['status' => 'restored']);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $restoredProject), $this->data)
-            ->assertSessionHasErrors(['error' => 'Cannot create a task when the project is not open or pending.']);
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task when the project is not open or pending.',
+            ]);
 
         $this->assertDatabaseMissing('tasks', [
             'title' => $this->data['title'],
             'project_id' => $restoredProject->id,
+        ]);
+    }
+
+    public function test_a_task_cannot_be_created_for_an_expired_task()
+    {
+        $expiredProject = Project::factory()->expiredWithStatus()->create();
+
+        $this->actingAs($this->employee)->post(route('tasks.store', $expiredProject), $this->data)
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task when the project is not open or pending.',
+            ]);
+
+        $this->assertDatabaseMissing('tasks', [
+            'title' => $this->data['title'],
+            'project_id' => $expiredProject->id
         ]);
     }
 
@@ -284,12 +305,12 @@ class TaskControllerTest extends TestCase
             ->assertRedirect(route('projects.show', $this->project))
             ->assertSessionHas('success', 'A new task has been created.');
 
-        $task = Task::first();
+        $task = Task::latest()->first();
 
         $this->assertEquals($task->getFirstMedia('attachments')->file_name, $file->getClientOriginalName());
         $this->assertFileExists($task->getFirstMedia('attachments')->getPath());
 
-        Storage::disk('media')->assertExists('/'.$task->id.'/'.$file->getClientOriginalName());
+        Storage::disk('media')->assertExists('/'.$task->getFirstMedia('attachments')->id.'/'.$file->getClientOriginalName());
     }
 
     public function test_when_a_tasks_get_assigned_to_a_user_this_user_receives_a_notification()
@@ -380,13 +401,15 @@ class TaskControllerTest extends TestCase
 
     public function test_a_user_cannot_update_a_task_of_a_closed_project()
     {
+        $this->withoutExceptionHandling();
+
         $closedProject = Project::factory()->create(['status' => 'closed']);
         $task = Task::factory()->for($closedProject)->create();
 
         $taskData = array_merge($this->data, ['status' => 'pending']);
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
-            ->assertSessionHasErrors(['error' => 'Could not update this task because the project is inactive.']);
+            ->assertSessionHasErrors(['error' => 'Could not update the task because the project is inactive.']);
 
         $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
     }
@@ -399,7 +422,7 @@ class TaskControllerTest extends TestCase
         $taskData = array_merge($this->data, ['status' => 'pending']);
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
-            ->assertSessionHasErrors(['error' => 'Could not update this task because the project is inactive.']);
+            ->assertSessionHasErrors(['error' => 'Could not update the task because the project is inactive.']);
 
         $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
     }
@@ -412,9 +435,31 @@ class TaskControllerTest extends TestCase
         $taskData = array_merge($this->data, ['status' => 'pending']);
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
-            ->assertSessionHasErrors(['error' => 'Could not update this task because the project is inactive.']);
+            ->assertSessionHasErrors(['error' => 'Could not update the task because the project is inactive.']);
 
         $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
+    }
+
+    // cannot edit a task of an expired project
+    public function test_a_user_cannot_update_a_task_that_belongs_to_an_expired_project()
+    {
+        $expiredProject = Project::factory()->expiredWithStatus()->create();
+        $task = Task::factory()->for($expiredProject)->create();
+
+        $taskData = array_merge($this->data, [
+            'title' => 'The title has changed',
+            'status' => 'pending'
+        ]);
+
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
+            ->assertSessionHasErrors([
+                'error' => 'Could not update the task because the project is inactive.'
+            ]);
+            
+        $this->assertNotEquals($task->fresh()->title, $taskData['title']);
+        $this->assertNotEquals($task->fresh()->status, $taskData['status']);
+
+        $this->assertDatabaseMissing('tasks', array_merge(['id' => $task->id], $taskData));
     }
 
     public function test_the_title_and_status_fields_are_required_when_updating_a_task()
@@ -616,7 +661,9 @@ class TaskControllerTest extends TestCase
     {
         $task = Task::factory()->for($this->project)->trashed()->create();
 
-        $this->actingAs($this->admin)->patch(route('tasks.force-delete', $task))
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
+        $this->patch(route('tasks.force-delete', $task))
             ->assertRedirect(route('tasks.trashed'))
             ->assertSessionHas('success', 'The task has been permanently deleted.');
 
@@ -649,7 +696,9 @@ class TaskControllerTest extends TestCase
         $firstTask = Task::first();
         $secondTask = Task::latest()->first();
 
-        $this->actingAs($this->admin)->get(route('admin.tasks'))
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
+        $this->get(route('admin.tasks'))
             ->assertOk()
             ->assertSeeText([
                 Str::limit($firstTask->title, 25),
@@ -674,7 +723,9 @@ class TaskControllerTest extends TestCase
         $task3 = Task::factory()->for($projectExtra)->create(['status' => 'pending']);
         $task4 = Task::factory()->for($projectExtra)->create(['status' => 'completed']);
 
-        $this->actingAs($this->admin)->get(route('admin.tasks'))
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
+        $this->get(route('admin.tasks'))
             ->assertOk()
             ->assertSeeText([
                 Str::limit($task1->title, 25),
@@ -683,7 +734,7 @@ class TaskControllerTest extends TestCase
                 Str::limit($task4->title, 25),
             ]);
 
-        $this->actingAs($this->admin)->get(route('admin.tasks', ['status' => 'pending']))
+        $this->get(route('admin.tasks', ['status' => 'pending']))
             ->assertSeeText([
                 Str::limit($task2->title, 25),
                 Str::limit($task3->title, 25),
@@ -702,7 +753,9 @@ class TaskControllerTest extends TestCase
         $task3 = Task::factory()->for($projectExtra)->create(['title' => 'this is the first task of the extra project']);
         $task4 = Task::factory()->for($projectExtra)->create(['title' => 'this is task number 2 for the extra project']);
 
-        $this->actingAs($this->admin)->get(route('admin.tasks'))
+        $this->actingAsVerifiedTwoFactor($this->admin);
+
+        $this->get(route('admin.tasks'))
             ->assertOk()
             ->assertSeeText([
                 Str::limit($task1->title, 25),
@@ -711,7 +764,7 @@ class TaskControllerTest extends TestCase
                 Str::limit($task4->title, 25),
             ]);
 
-        $this->actingAs($this->admin)->get(route('admin.tasks', ['search' => 'first']))
+        $this->get(route('admin.tasks', ['search' => 'first']))
             ->assertSeeText([
                 Str::limit($task1->title, 25),
                 Str::limit($task3->title, 25),
@@ -720,5 +773,21 @@ class TaskControllerTest extends TestCase
                 Str::limit($task2->title, 25),
                 Str::limit($task4->title, 25),
             ]);
+    }
+
+    protected function actingAsVerifiedTwoFactor($user)
+    {
+        $this->actingAs($user);
+
+        $this->post(route('verify.store'), [
+            'two_factor_code' => $user->two_factor_code,
+        ]);
+    }
+
+    public function teardown():void
+    {
+        Storage::disk('media')->deleteDirectory('');
+
+        parent::tearDown();
     }
 }
