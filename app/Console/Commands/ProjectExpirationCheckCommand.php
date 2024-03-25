@@ -65,7 +65,8 @@ class ProjectExpirationCheckCommand extends Command
 
     private function ActiveProjects()
     {
-        $projects = Project::whereIn('status', ['open', 'pending', 'restored'])
+        $projects = Project::with('manager')
+            ->whereIn('status', ['open', 'pending', 'restored'])
             ->where('due_date', '<', now())
             ->where('is_pinned', false)
             ->get();
@@ -75,7 +76,8 @@ class ProjectExpirationCheckCommand extends Command
 
     private function expiredPinnedProjects()
     {
-        $projects = Project::whereIn('status', ['open', 'pending', 'restored'])
+        $projects = Project::with('manager')
+            ->whereIn('status', ['open', 'pending', 'restored'])
             ->where('due_date', '<', now())
             ->where('is_pinned', true)
             ->get();
