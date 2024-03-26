@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Exceptions\CannotDeletePinnedProjectException;
+use App\Exceptions\InvalidPinnedProjectException;
 use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
@@ -28,7 +30,7 @@ class ProjectService
             ->paginate(15);
     }
 
-    public function store(array $projectData): Project
+    public function storeProject(array $projectData): Project
     {
         $project = $project = Project::create($projectData);
 
@@ -39,14 +41,14 @@ class ProjectService
         return $project;
     }
 
-    public function update(Project $project, array $validatedData): Project
+    public function updateProject(Project $project, array $validatedData): Project
     {
-        if (! auth()->user()->can('pin project') && $validatedData['is_pinned']) {
-            throw new \Exception('User is not authorized to pin a project');
+        if (! auth()->user()->can('pin project') && isset($project->is_pinned) && $validatedData['is_pinned']) {
+            throw new InvalidPinnedProjectException('User is not authorized to pin a project');
         }
 
         if ($validatedData['is_pinned'] && $this->getPinnedProject() && $this->getPinnedProject()->id != $project->id) {
-            throw new \Exception('There is a pinned project already. If you want to pin this project you will have to unpin the other project.');
+            throw new InvalidPinnedProjectException('There is a pinned project already. If you want to pin this project you will have to unpin the other project.');
         }
 
         $project->update($validatedData);
@@ -61,8 +63,7 @@ class ProjectService
     public function destroy(Project $project): void
     {
         if ($project->is_pinned) {
-            throw new \Exception('Project could not be deleted because it was pinned.
-            Remove the pin from the project before deleting it.');
+            throw new CannotDeletePinnedProjectException('Cannot delete a project that is pinned.');
         }
 
         $project->delete();
