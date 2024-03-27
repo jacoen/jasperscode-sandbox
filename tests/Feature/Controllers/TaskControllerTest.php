@@ -4,8 +4,6 @@ namespace Tests\Feature\Controllers;
 
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
-use App\Notifications\TaskAssignedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
@@ -118,6 +116,7 @@ class TaskControllerTest extends TestCase
         ]);
     }
 
+    // Test aanpassen voor alleen het aanmaken van een task
     public function test_a_user_cannot_upload_anything_other_than_an_image_when_creating_or_updating_a_task()
     {
         $document = UploadedFile::fake()->create('test.txt', 15);
@@ -223,13 +222,18 @@ class TaskControllerTest extends TestCase
             ->assertSee($task->getFirstMediaUrl('attachments'));
     }
 
-    public function test_a_guest_cannot_edit_a_task()
+    public function test_a_guest_cannot_visit_the_edit_task_route()
+    {
+        $task = Task::factory()->create();
+
+        $this->get(route('tasks.edit', $task))->assertRedirect();
+    }
+
+    public function test_a_guest_cannot_update_a_task()
     {
         $task = Task::factory()->for($this->project)->create();
 
-        $taskData = array_merge($this->data, ['status' => 'pending']);
-
-        $this->get(route('tasks.edit', $task))->assertRedirect('login');
+        $taskData = array_merge($this->data, ['status' => 'pending']);  
 
         $this->put(route('tasks.update', $task), $taskData)->assertRedirect('login');
 
@@ -241,14 +245,19 @@ class TaskControllerTest extends TestCase
         ]);
     }
 
-    public function test_a_user_without_the_update_task_permission_cannot_edit_a_task()
+    public function test_a_user_without_the_update_task_permission_cannot_visit_the_edit_task_route()
+    {
+        $task = Task::factory()->for($this->project)->create();
+
+        $this->actingAs($this->user)->get(route('tasks.edit', $task))
+            ->assertForbidden();
+    }
+
+    public function test_a_user_without_the_update_task_permission_cannot_update_a_task()
     {
         $task = Task::factory()->for($this->project)->create();
 
         $taskData = array_merge($this->data, ['status' => 'pending']);
-
-        $this->actingAs($this->user)->get(route('tasks.edit', $task))
-            ->assertForbidden();
 
         $this->actingAs($this->user)->put(route('tasks.update', $task), $taskData)
             ->assertForbidden();
@@ -275,6 +284,13 @@ class TaskControllerTest extends TestCase
         $this->assertNotEquals($task->fresh()->status, $taskData['status']);
 
         $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
+    }
+
+    public function test_a_user_with_the_update_task_permission_can_visit_the_edit_task_route()
+    {
+        $task = Task::factory()->for($this->project)->create();
+        
+        $this->actingAs($this->employee)->get(route('tasks.edit', $task));
     }
 
     public function test_a_user_with_update_task_permission_can_update_an_existing_task()

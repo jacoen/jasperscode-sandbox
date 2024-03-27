@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ActiveTaskForceDeleteException;
 use App\Exceptions\InvalidProjectStatusException;
 use App\Models\Project;
 use App\Models\Task;
@@ -75,6 +76,11 @@ class TaskService
         return $task;
     }
 
+    public function destroyTask(Task $task): void
+    {
+        $task->delete();
+    }
+
     public function trashedTasks(): LengthAwarePaginator
     {
         return Task::onlyTrashed()
@@ -85,7 +91,7 @@ class TaskService
 
     }
 
-    public function restoreTask(Task $task)
+    public function restoreTask(Task $task): Task
     {
         $project = $task->project;
 
@@ -100,6 +106,15 @@ class TaskService
         $task->restore();
 
         return $task;
+    }
+
+    public function forceDelete(Task $task): void
+    {
+        if (! $task->trashed()) {
+            throw new ActiveTaskForceDeleteException('Cannot force delete this task.');
+        }
+
+        $task->forceDelete();
     }
 
     public function findTasksByProject($project, $search = null, $status = null): LengthAwarePaginator
