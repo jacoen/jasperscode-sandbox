@@ -28,6 +28,7 @@ class StoreTaskRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'attachments' => ['nullable', 'array', 'max:3'],
             'attachments.*' => ['image'],
+            'author_id' => ['required', 'exists:users,id']
         ];
     }
 
@@ -35,6 +36,7 @@ class StoreTaskRequest extends FormRequest
     {
         $this->merge([
             'description' => strip_tags($this->description),
+            'author_id' => auth()->id(),
         ]);
     }
 
