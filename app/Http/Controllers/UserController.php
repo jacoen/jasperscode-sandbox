@@ -48,7 +48,7 @@ class UserController extends Controller
         if (auth()->user()->hasRole('Super Admin')) {
             $roles = Role::all();
         } else {
-            $roles = Role::whereIn('name', ['manager', 'employee', 'user'])->orderBy('id', 'asc')->get(['id', 'name']);
+            $roles = Role::whereIn('name', ['Manager', 'Employee', 'User'])->orderBy('id', 'asc')->get(['id', 'name']);
         }
 
         return view('users.edit', compact(['user', 'roles']));
