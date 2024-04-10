@@ -43,11 +43,13 @@ class ProjectService
 
     public function updateProject(Project $project, array $validatedData): Project
     {
+        $pinnedProject = Project::where('is_pinned', true)->first();
+
         if (! auth()->user()->can('pin project') && isset($project->is_pinned) && $validatedData['is_pinned']) {
             throw new InvalidPinnedProjectException('User is not authorized to pin a project');
         }
 
-        if ($validatedData['is_pinned'] && $this->getPinnedProject() && $this->getPinnedProject()->id != $project->id) {
+        if ($validatedData['is_pinned'] && $pinnedProject && $pinnedProject->id != $project->id) {
             throw new InvalidPinnedProjectException('There is a pinned project already. If you want to pin this project you will have to unpin the other project.');
         }
 
@@ -81,10 +83,5 @@ class ProjectService
     public function getManagers()
     {
         return User::role(['Admin', 'Manager'])->pluck('name', 'id');
-    }
-
-    public function getPinnedProject()
-    {
-        return Project::where('is_pinned', true)->first();
     }
 }

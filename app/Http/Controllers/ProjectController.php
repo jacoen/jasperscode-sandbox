@@ -52,7 +52,7 @@ class ProjectController extends Controller
      */
     public function store(StoreProjectRequest $request): RedirectResponse
     {
-        $this->projectService->store($request->validated());
+        $this->projectService->storeProject($request->validated());
 
         return redirect()->route('projects.index')
             ->with('success', 'A new project has been created.');
@@ -90,7 +90,7 @@ class ProjectController extends Controller
     public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
         try {
-            $updatedProject = $this->projectService->update($project, $request->validated());
+            $updatedProject = $this->projectService->updateProject($project, $request->validated());
 
             return redirect()->route('projects.show', $updatedProject)
                 ->with('success', 'The project has been updated.');
