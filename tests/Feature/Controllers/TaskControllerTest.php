@@ -116,8 +116,7 @@ class TaskControllerTest extends TestCase
         ]);
     }
 
-    // Test aanpassen voor alleen het aanmaken van een task
-    public function test_a_user_cannot_upload_anything_other_than_an_image_when_creating_or_updating_a_task()
+    public function test_a_user_cannot_upload_anything_other_than_an_image_when_creating_a_task()
     {
         $document = UploadedFile::fake()->create('test.txt', 15);
         $pdf = UploadedFile::fake()->create('test.pdf', 101);
@@ -138,7 +137,7 @@ class TaskControllerTest extends TestCase
         Storage::disk('media')->assertMissing($pdf);
     }
 
-    public function test_a_user_can_upload_a_maximum_of_3_images_when_creating_or_updating_a_task()
+    public function test_a_user_can_upload_a_maximum_of_3_images_when_creating_a_task()
     {
         $image1 = UploadedFile::fake()->image('test1.jpg');
         $image2 = UploadedFile::fake()->image('test2.jpg');
