@@ -5,6 +5,8 @@ namespace Tests\Feature\Services;
 use App\Events\RoleUpdatedEvent;
 use App\Exceptions\InvalidEmailException;
 use App\Listeners\RoleUpdatedListener;
+use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
 use App\Services\UserService;
@@ -160,5 +162,50 @@ class UserServiceTest extends TestCase
         $this->assertDatabaseHas('users', array_merge($data, ['id' => $user->id]));
     }
 
-    // it can delete a user
+    public function test_it_can_delete_a_user()
+    {
+        $user = User::factory()->create()->assignRole('employee');
+
+        $this->userService->delete($user);
+
+        $this->assertDatabaseMissing('users', [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
+
+        $this->assertDatabaseHas('users', ['id' => $this->employee->id]);
+    }
+
+    public function test_it_unassigns_the_related_project_when_deleting_a_user()
+    {
+        $user = User::factory()->create()->assignRole('manager');
+        $project = Project::factory()->create(['manager_id' => $user->id]);
+
+        $this->userService->delete($user);
+
+        $this->assertNull($project->fresh()->manager_id);
+    }
+
+    public function test_it_deletes_a_task_when_deleting_the_user_who_is_the_author()
+    {
+        $user = User::factory()->create()->assignRole('manager');
+        $task = Task::factory()->create(['author_id' => $user->id]);
+        
+        $this->userService->delete($user);
+
+        $this->assertDatabaseMissing('tasks', ['id' => $task->id, 'author_id' => $task->author_id]);
+    }
+
+    public function test_it_unassigns_the_related_task_when_deleting_the_user()
+    {
+        $user = User::factory()->create()->assignRole('manager');
+        $task = Task::factory()->create(['user_id' => $user->id]);
+        
+        $this->userService->delete($user);
+
+        $this->assertNull($task->fresh()->user_id);
+    }
+
+
 }

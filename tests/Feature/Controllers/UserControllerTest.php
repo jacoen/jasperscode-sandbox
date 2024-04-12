@@ -229,7 +229,7 @@ class UserControllerTest extends TestCase
 
         $this->actingAs($this->admin)->put(route('users.update', $user), array_merge($this->data, ['role' => $this->employeeRole->id]))
             ->assertRedirect(route('users.index'))
-            ->assertSessionHas('success', $user->name.'\'s account has been updated!');
+            ->assertSessionHas('success', $user->fresh()->name.'\'s account has been updated!');
 
         $user->refresh();
 
@@ -300,26 +300,105 @@ class UserControllerTest extends TestCase
 
     public function test_a_valid_email_address_must_be_provided_when_updating_an_existing_user()
     {
+        $user = User::factory()->create()->assignRole('User');
 
+        $data = [
+            'name' => 'David Smith',
+            'email' => 'david.smith',
+            'role' => $user->roles()->first()->id,
+        ];
+
+        $this->actingAs($this->admin)->put(route('users.update', $user), $data)
+            ->assertSessionHasErrors([
+                'email' => 'The email field must be a valid email address.',
+                
+            ]);
+
+        $this->assertNotEquals($user->fresh()->email, $data['email']);
+    }
+
+    public function test_the_email_address_cannot_be_duplicated_when_updating_an_existing_user()
+    {
+        $user = User::factory()->create()->assignRole('User');
+        User::factory()->create(['email' => 'jane@example.com'])->assignRole('User');
+
+        $data = [
+            'name' => 'David Smith',
+            'email' => 'jane@example.com',
+            'role' => $user->roles()->first()->id,
+        ];
+
+        $this->actingAs($this->admin)->put(route('users.update', $user), $data)
+            ->assertSessionHasErrors([
+                'email' => 'The email has already been taken.',
+                
+            ]);
+
+        $this->assertNotEquals($user->fresh()->email, $data['email']);
     }
 
     public function test_an_existing_role_must_be_provided_when_updating_an_existing_user()
     {
+        $user = $user = User::factory()->create()->assignRole('User');
 
+        $data = array_merge($this->data, ['role' => 99]);
+
+        $this->actingAs($this->admin)->put(route('users.update', $user), $data)
+            ->assertSessionHasErrors([
+                'role' => 'The selected role is invalid.',
+            ]);
+
+        $this->assertNotEquals($user->roles()->first()->id, 99);
     }
 
     public function test_a_guest_cannot_delete_an_existing_user()
     {
+        $user = User::factory()->create();
 
+        $initialCount = User::count();
+
+        $this->delete(route('users.destroy', $user))
+            ->assertRedirect(route('login'));
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
+
+        $this->assertEquals($initialCount, User::count());
     }
 
     public function test_a_user_without_the_delete_user_permission_cannot_delete_an_existing_user()
     {
+        $user = User::factory()->create()->assignRole('User');
+        $secondUser = User::factory()->create();
 
+        $initialCount = User::count();
+
+        $this->actingAs($user)->delete(route('users.destroy', $secondUser))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $secondUser->id,
+            'name' => $secondUser->name,
+            'email' => $secondUser->email,
+        ]);
+
+        $this->assertEquals($initialCount, User::count());
     }
 
     public function test_a_user_with_the_delete_user_permission_can_delete_an_existing_user()
     {
+        $user = User::factory()->create()->assignRole('Admin');
+        $secondUser = User::factory()->create();
 
+        $initialCount = User::count();
+
+        $this->actingAs($user)->delete(route('users.destroy', $secondUser))
+            ->assertRedirect(route('users.index'))
+            ->assertSessionHas('success', 'User has been deleted!');
+
+        $this->assertEquals($initialCount-1, User::count());
     }
 }
