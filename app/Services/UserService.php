@@ -8,11 +8,10 @@ use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
 
 class UserService
 {
-    public function store(array $validData)
+    public function store(array $validData): User
     {
         $user = User::make($validData);
         $user->password = Hash::make(Str::password(64));
@@ -27,7 +26,7 @@ class UserService
         return $user;
     }
 
-    public function update(User $user, array $validData, array $roleData)
+    public function update(User $user, array $validData): User
     {
         $oldRole = $user->roles->first()->id;
 
@@ -35,17 +34,22 @@ class UserService
             throw new InvalidEmailException('The email does not match the original email address');
         }
 
-        if ($user->hasRole('Super Admin') && $roleData['role'] != Role::where('name', 'Super Admin')->value('id')) {
+        if ($user->hasRole('Super Admin') && (int)$user->roles()->first()->id !== (int)$validData['role']) {
             throw new \Exception('Not able to change the role of this user');
         }
 
         $user->update($validData);
 
-        if ($roleData['role'] !== $oldRole) {
-            $user->syncRoles($roleData['role']);
+        if ($validData['role'] !== $oldRole) {
+            $user->syncRoles($validData['role']);
             event(new RoleUpdatedEvent($user));
         }
 
-        return $user->fresh();
+        return $user();
+    }
+
+    public function delete(User $user): void
+    {
+        $user->delete();
     }
 }
