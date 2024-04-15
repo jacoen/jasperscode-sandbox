@@ -51,16 +51,18 @@ class UserController extends Controller
             $roles = Role::whereIn('name', ['Manager', 'Employee', 'User'])->orderBy('id', 'asc')->get(['id', 'name']);
         }
 
-        return view('users.edit', compact(['user', 'roles']));
+        $userRole = $user->roles->pluck('id')->first();
+
+        return view('users.edit', compact(['user', 'roles', 'userRole']));
     }
 
     public function update(UpdateUserRequest $request, User $user)
     {
         try {
-            $this->userService->update($user, $request->validatedExcept(['role']), $request->validatedOnly(['role']));
+            $this->userService->update($user, $request->validated());
 
             return redirect()->route('users.index')
-            ->with('success', $user->name.'\'s account has been updated!');
+                ->with('success', $user->name.'\'s account has been updated!');
         } catch(\Exception $e) {
             return redirect()->route('users.edit', $user)
                 ->withErrors(['error' => $e->getMessage()]);
