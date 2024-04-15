@@ -52,7 +52,7 @@ class TaskService
         return $task;
     }
 
-    public function updateTask(Task $task, array $validData, array $attachments = null)
+    public function updateTask(Task $task, array $validData, array $attachments = null): Task
     {
         if (! $task->project->is_open_or_pending) {
             throw new InvalidProjectStatusException('Could not update the task because the project is inactive.');
