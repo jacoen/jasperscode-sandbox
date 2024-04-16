@@ -23,6 +23,26 @@ class TwoFactorController extends Controller
         */
 
         if ($request->two_factor_code !== auth()->user()->two_factor_code) {
+            $attempts = session()->get('two_factor_attempts', 0);
+            $lastAttemptTime = session()->get('last_attempt_time');
+
+            $attempts++;
+
+            if ($lastAttemptTime <= now()->subMinutes(15)->timestamp) {
+                $attempts = 0;
+            }
+
+            if ($attempts >= 5 ) {
+                auth()->user()->lockUser();
+                auth()->logout();
+
+                return redirect()->route('login')
+                    ->withErrors(['error' => 'Too many failed attempts. This account will now be locked for a period of 10 minutes.']);
+            }
+
+            session()->put('two_factor_attempts', $attempts);
+            session()->put('last_attempt_time', now()->timestamp);
+
             return redirect()->route('verify.create')->withErrors([
                 'two_factor_code' => 'The two factor code you have entered does not match.',
             ]);
