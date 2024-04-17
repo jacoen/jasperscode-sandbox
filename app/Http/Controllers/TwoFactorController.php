@@ -17,10 +17,6 @@ class TwoFactorController extends Controller
 
     public function store(TwoFactorRequest $request)
     {
-        /**
-         * Misschien hier in de toekomst nog valid timestamp veld toevoegen met een bepaalde tijdsduur
-         * Dit zou inhouden dat de meer gegegevens gewist moeten worden als 2fa wordt uitgeschakeld
-        */
         if ($request->two_factor_code !== auth()->user()->two_factor_code) {
             $attempts = session()->get('two_factor_attempts', 0);
 
@@ -32,6 +28,7 @@ class TwoFactorController extends Controller
 
             if ($attempts > 3 ) {
                 auth()->user()->lockUser();
+                auth()->user()->resetTwoFactorCode();
                 auth()->logout();
                 
                 session()->forget(['two_factor_attempts', 'last_attempt_time']);

@@ -149,7 +149,42 @@ class TwoFactorControllerTest extends TestCase
         $this->assertEquals(session('last_attempt_time'), now()->timestamp);
     }
 
-    public function test_the_user_gets_signed_out_after_the_maximum_attempt_limit_has_been_exceeded()
+    public function test_the_account_of_the_user_gets_locked_when_the_maximum_attempt_limit_has_been_exceeded()
+    {
+        $user = User::factory()->create([
+            'two_factor_enabled' => true,
+            'two_factor_code' => '426897',
+            'two_factor_expires_at' => now()->addMinutes(5),
+        ]);
+
+        session(['two_factor_attempts' => 3]);
+
+        $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ])->assertSessionHasErrors();
+
+        $this->assertEqualsWithDelta($user->locked_until, now()->addMinutes(10), 1);
+    }
+
+    public function test_the_two_factor_code_gets_erased_after_the_user_account_has_been_locked()
+    {
+        $user = User::factory()->create([
+            'two_factor_enabled' => true,
+            'two_factor_code' => '426897',
+            'two_factor_expires_at' => now()->addMinutes(5),
+        ]);
+
+        session(['two_factor_attempts' => 3]);
+
+        $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ])->assertSessionHasErrors();
+
+        $this->assertNull($user->two_factor_code);
+        $this->assertNull($user->two_factor_expires_at);
+    }
+
+    public function test_the_user_gets_signed_out_after_the_account_has_been_locked()
     {
         $user = User::factory()->create([
             'two_factor_enabled' => true,
