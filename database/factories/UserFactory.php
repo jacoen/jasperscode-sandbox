@@ -29,6 +29,7 @@ class UserFactory extends Factory
             'two_factor_enabled' => false,
             'two_factor_code' => null,
             'two_factor_expires_at' => null,
+            'locked_until' => null,
         ];
     }
 
