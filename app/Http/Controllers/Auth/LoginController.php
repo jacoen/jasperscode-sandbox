@@ -58,9 +58,17 @@ class LoginController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        if ($user && $user->locked_until && now()->gt($user->locked_until)) {
+            $user->timestamps = false;
+            $user->update([
+                'locked_until' => null,
+            ]);
+            $user->timestamp = true;
+        }
+
         if ($user && $this->isAccountLocked($user)) {
             throw ValidationException::withMessages([
-                'error' => 'This account has been temporarily locked. Please wait a few minutes before trying again',
+                'error' => 'This account has been temporarily locked. Please try again at a later moment.',
             ]);
         }
 
@@ -101,6 +109,6 @@ class LoginController extends Controller
 
     protected function isAccountLocked($user)
     {
-        return now()->lt($user->locked_until);
+        return isset($user->locked_until) && now()->lt($user->locked_until);
     }
 }

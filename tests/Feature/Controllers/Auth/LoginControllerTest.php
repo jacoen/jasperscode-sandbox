@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Controllers\Auth;
 
+use App\Models\User;
 use App\Notifications\TwoFactorCodeNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -16,6 +17,32 @@ class LoginControllerTest extends TestCase
         parent::setUp();
 
         Notification::fake();
+    }
+
+    public function test_a_user_with_an_account_that_is_locked_cannot_sign_in()
+    {
+        $user = User::factory()->create(['locked_until' => now()->addMinutes(5)]);
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password'
+        ])->assertSessionHasErrors([
+            'error' => 'This account has been temporarily locked. Please try again at a later moment.',
+        ]);
+
+        $this->assertGuest();
+    }
+
+    public function test_a_user_with_an_account_that_is_not_locked_can_sign_in()
+    {
+        $user = User::factory()->create();
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password'
+        ])->assertRedirect(route('home'));
+
+        $this->assertAuthenticatedAs($user);
     }
     
     public function test_when_a_user_without_two_factor_signs_in_no_two_factor_code_will_be_generated()
