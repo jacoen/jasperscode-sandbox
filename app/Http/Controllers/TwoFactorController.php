@@ -21,27 +21,24 @@ class TwoFactorController extends Controller
          * Misschien hier in de toekomst nog valid timestamp veld toevoegen met een bepaalde tijdsduur
          * Dit zou inhouden dat de meer gegegevens gewist moeten worden als 2fa wordt uitgeschakeld
         */
-
         if ($request->two_factor_code !== auth()->user()->two_factor_code) {
             $attempts = session()->get('two_factor_attempts', 0);
-            $lastAttemptTime = session()->get('last_attempt_time');
 
             $attempts++;
 
-            if ($lastAttemptTime <= now()->subMinutes(15)->timestamp) {
-                $attempts = 0;
-            }
+            session()->put('two_factor_attempts', $attempts);
+            session()->put('last_attempt_time', now()->timestamp);
 
-            if ($attempts >= 5 ) {
+
+            if ($attempts > 3 ) {
                 auth()->user()->lockUser();
                 auth()->logout();
+                
+                session()->forget(['two_factor_attempts', 'last_attempt_time']);
 
                 return redirect()->route('login')
                     ->withErrors(['error' => 'Too many failed attempts. This account will now be locked for a period of 10 minutes.']);
             }
-
-            session()->put('two_factor_attempts', $attempts);
-            session()->put('last_attempt_time', now()->timestamp);
 
             return redirect()->route('verify.create')->withErrors([
                 'two_factor_code' => 'The two factor code you have entered does not match.',
@@ -49,6 +46,7 @@ class TwoFactorController extends Controller
         }
 
         auth()->user()->resetTwoFactorCode();
+        session()->forget(['two_factor_attempts', 'last_attempt_time']);
 
         return redirect()->route('home');
     }

@@ -117,6 +117,74 @@ class TwoFactorControllerTest extends TestCase
         ]);
     }
 
+    public function test_the_attempt_counter_will_increase_when_the_user_enters_an_incorrect_two_factor_code()
+    {
+        $user = User::factory()->create([
+            'two_factor_enabled' => true,
+            'two_factor_code' => '426897',
+            'two_factor_expires_at' => now()->addMinutes(2),
+        ]);
+
+        $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ])->assertSessionHasErrors();
+
+        $this->assertTrue(session()->has('two_factor_attempts'));
+        $this->assertEquals(session('two_factor_attempts'), 1);
+    }
+
+    public function test_the_timestamp_of_the_last_two_factor_code_input_will_be_remembered_when_the_user_provides_an_incorrect_two_factor_code()
+    {
+        $user = User::factory()->create([
+            'two_factor_enabled' => true,
+            'two_factor_code' => '426897',
+            'two_factor_expires_at' => now()->addMinutes(2),
+        ]);
+
+        $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ])->assertSessionHasErrors();
+
+        $this->assertTrue(session()->has('last_attempt_time'));
+        $this->assertEquals(session('last_attempt_time'), now()->timestamp);
+    }
+
+    public function test_the_user_gets_signed_out_after_the_maximum_attempt_limit_has_been_exceeded()
+    {
+        $user = User::factory()->create([
+            'two_factor_enabled' => true,
+            'two_factor_code' => '426897',
+            'two_factor_expires_at' => now()->addMinutes(5),
+        ]);
+
+        session(['two_factor_attempts' => 3]);
+
+        $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ])->assertRedirect(route('login'));
+
+        $this->assertGuest();
+    }
+
+    public function test_a_message_will_be_displayed_when_the_user_has_exceeded_the_maximum_attempt_limit_for_two_factor_authentication()
+    {
+        $user = User::factory()->create([
+            'two_factor_enabled' => true,
+            'two_factor_code' => '426897',
+            'two_factor_expires_at' => now()->addMinutes(5),
+        ]);
+
+        session(['two_factor_attempts' => 3]);
+
+        $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors([
+                'error' => 'Too many failed attempts. This account will now be locked for a period of 10 minutes.',
+            ]);
+    }
+
     public function test_the_two_factor_code_gets_erased_after_the_user_enters_their_code_correctly()
     {
         $this->actingAs($this->admin)->post(route('verify.store'), [
