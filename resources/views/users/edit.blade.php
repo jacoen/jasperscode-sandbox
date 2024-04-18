@@ -19,7 +19,7 @@
 
                 <div class="mb-3">
                     <label for="email" class="form-label">E-mail</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="user@email.com" value="{{ old('email', $user->email) }}" readonly>
+                    <input type="text" id="email" name="email" class="form-control" placeholder="user@email.com" value="{{ old('email', $user->email) }}" required>
                 </div>
 
                 <div class="mb-3">
@@ -29,10 +29,10 @@
                             <option value="" selected>Select a role...</option>
                         @endif
                         @foreach($roles as $role)     
-                                    <option value="{{ $role->id }}" {{ old('role', $user->roles)->contains($role->id) ? 'selected' : '' }}>
-                                        {{ $role->name }}
-                                    </option>
-                                @endforeach
+                            <option value="{{ $role->id }}" {{ old('role', $userRole) == $role->id ? 'selected' : '' }}>
+                                {{ $role->name }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
