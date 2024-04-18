@@ -63,7 +63,7 @@ class LoginController extends Controller
             $user->update([
                 'locked_until' => null,
             ]);
-            $user->timestamp = true;
+            $user->timestamps = true;
         }
 
         if ($user && $this->isAccountLocked($user)) {
