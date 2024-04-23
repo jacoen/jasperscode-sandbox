@@ -30,6 +30,8 @@ class User extends Authenticatable
         'two_factor_code',
         'two_factor_expires_at',
         'locked_until',
+        'two_factor_attempts',
+        'last_attempt_at'
     ];
 
     /**
@@ -57,6 +59,7 @@ class User extends Authenticatable
         'two_factor_expires_at' => 'datetime',
         'two_factor_enabled' => 'boolean',
         'locked_until' => 'datetime',
+        'last_attempt_at' => 'datetime',
     ];
 
     public function projects()
