@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dateTime('locked_until')->nullable();
+            $table->unsignedInteger('two_factor_attempts');
+            $table->dateTime('last_attempt_at')->nullable();
         });
     }
 
@@ -23,6 +25,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('locked_until');
+            $table->dropColumn('two_factor_attempts');
+            $table->dropColumn('last_attempt_at');
         });
     }
 };
