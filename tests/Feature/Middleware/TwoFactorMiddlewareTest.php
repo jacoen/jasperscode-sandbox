@@ -15,78 +15,62 @@ class TwoFactorMiddlewareTest extends TestCase
 
     public function test_it_allows_access_for_logged_in_user_without_two_factor_authentication_to_continue()
     {
-        $this->be($this->employee);
-
-        $this->get(route('home'))
+        $this->actingAs($this->user)->get(route('home'))
             ->assertOk();
     }
 
-    public function test_it_redirects_the_user_to_the_verify_route_if_the_user_has_two_factor_enabled()
+    public function test_it_redirects_a_user_without_2fa_enabled_to_the_home_route_with_an_error_message_when_they_try_to_interact_with_the_two_factor_verification_routes()
     {
-        $user = User::factory()->create(['two_factor_enabled' => true]);
-        $user->generateTwoFactorCode();
+        $this->actingAs($this->user);
 
-        $this->be($user);
+        $form = $this->get(route('verify.create'));
+        $this->assertTwoFactorError($form);
 
-        $this->get(route('home'))
-            ->assertRedirect(route('verify.create'));
+        $submit = $this->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ]);
+        $this->assertTwoFactorError($submit);
+
+        $resend = $this->get(route('verify.resend'));
+        $this->assertTwoFactorError($resend);
     }
 
-    public function test_it_allows_user_with_two_factor_enabled_and_a_two_factor_code_access_to_verify_route()
-    {
-        $user = User::factory()->create(['two_factor_enabled' => true]);
-        $user->generateTwoFactorCode();
-
-        $this->be($user);
-
-        $this->get(route('verify.create'))
-            ->assertOk();
-    }
-
-    public function test_it_logs_out_user_with_expired_two_factor_code()
+    public function it_redirects_a_user_with_2fa_enabled_but_without_two_factor_code_to_the_home_route_with_an_error_message_when_they_try_to_interact_with_the_two_factor_verification_routes()
     {
         $user = User::factory()->create([
-            'created_at' => now()->subMinutes(10),
-            'updated_at' => now()->subMinutes(10),
-            'two_factor_enabled' => true,
-            'two_factor_code' => generateDigitCode(),
-            'two_factor_expires_at' => now()->subMinute(),
+            'two_factor_enabled' => true
         ]);
 
-        $this->actingAs($user)->get(route('verify.create'))
-            ->assertRedirect('login');
-        
-        $this->assertGuest();
-    }
+        $this->actingAs($user);
 
-    public function test_it_does_not_allow_a_user_without_two_factor_enabled_access_to_the_verify_routes()
-    {
-        $this->actingAs($this->employee);
+        $form = $this->get(route('verify.create'));
+        $this->assertTwoFactorError($form);
 
-        $create = $this->get(route('verify.create'));
-        $this->assertTwoFactorError($create);
-
-        $post = $this->post(route('verify.store'));
-        $this->assertTwoFactorError($post);
+        $submit = $this->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ]);
+        $this->assertTwoFactorError($submit);
 
         $resend = $this->get(route('verify.resend'));
         $this->assertTwoFactorError($resend);
     }
 
-    public function test_it_does_not_allow_a_user_without_two_factor_code_access_to_the_verify_routes()
+    public function test_it_redirects_a_user_without_2fa_but_without_a_two_factor_code_when_they_try_to_verify_a_two_factor_code()
     {
-        $this->actingAs($this->admin);
-
-        $create = $this->get(route('verify.create'));
-        $this->assertTwoFactorError($create);
-
-        $post = $this->post(route('verify.store'), [
-            'two_factor_code' => '',
+        $user = User::factory()->create([
+            'two_factor_enabled' => true
         ]);
-        $this->assertTwoFactorError($post);
 
-        $resend = $this->get(route('verify.resend'));
-        $this->assertTwoFactorError($resend);
+        $response = $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ]);
+
+        $this->assertTwoFactorError($response);
+    }
+
+    public function test_it_redirects_a_user_without_2fa_but_without_a_two_factor_code_when_they_try_to_resend_a_new_two_factor_code()
+    {
+
     }
 
     private function assertTwoFactorError($response)

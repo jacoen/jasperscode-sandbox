@@ -29,6 +29,9 @@ class User extends Authenticatable
         'two_factor_enabled',
         'two_factor_code',
         'two_factor_expires_at',
+        'locked_until',
+        'two_factor_attempts',
+        'last_attempt_at'
     ];
 
     /**
@@ -55,6 +58,8 @@ class User extends Authenticatable
         'password_changed_at' => 'datetime',
         'two_factor_expires_at' => 'datetime',
         'two_factor_enabled' => 'boolean',
+        'locked_until' => 'datetime',
+        'last_attempt_at' => 'datetime',
     ];
 
     public function projects()
@@ -104,6 +109,14 @@ class User extends Authenticatable
         $this->timestamps = false;
         $this->two_factor_code = null;
         $this->two_factor_expires_at = null;
+        $this->save();
+        $this->timestamps = true;
+    }
+
+    public function lockUser(): void
+    {
+        $this->timestamps = false;
+        $this->locked_until = now()->addMinutes(10);
         $this->save();
         $this->timestamps = true;
     }
