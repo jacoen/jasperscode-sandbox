@@ -93,7 +93,6 @@ class ProjectServiceTest extends TestCase
         $this->assertCount(6, $projects);
 
         $this->assertEquals($pinnedProject->id, $projects->first()->id);
-
     }
 
     public function test_it_can_create_a_new_project()
@@ -239,5 +238,47 @@ class ProjectServiceTest extends TestCase
         $this->assertCount(5, $projects);
         $this->assertTrue($projects->contains($trashedProject));
         $this->assertFalse($projects->contains($activeProject));
+    }
+
+    public function test_it_can_list_all_projects_with_an_expired_due_date_that_were_not_completed()
+    {
+        Project::factory(4)->expiredWithStatus()->create();
+        $openExpiredProject = Project::factory()->expiredWithStatus()->create(['status' => 'open']);
+        $completedProject = Project::factory()->create([
+            'status' => 'completed',
+            'due_date' => now()->subDay(),
+        ]);
+        $activeProject = Project::factory()->create(['due_date' => now()->addMonths(3)]);
+
+        $projects = $this->projectService->listExpiredProjects();
+
+        $this->assertInstanceOf(LengthAwarePaginator::class, $projects);
+
+        $this->assertCount(5, $projects);
+        $this->assertTrue($projects->contains($openExpiredProject));
+        $this->assertFalse($projects->contains($completedProject));
+        $this->assertFalse($projects->contains($activeProject));
+    }
+
+    public function test_it_can_filter_the_projects_with_an_expired_due_date_by_year_and_week()
+    {
+        Project::factory(2)->create([
+            'due_date' => '2024-04-17',
+            'status' => 'expired',
+        ]);
+        $expiredProject = Project::factory()->create([
+            'due_date' => '2024-04-19',
+            'status' => 'expired',
+        ]);
+        $projectExpiredMarch = Project::factory()->create([
+            'due_date' => '2024-03-19',
+            'status' => 'expired',
+        ]);
+
+        $projects = $this->projectService->listExpiredProjects('2024-16');
+
+        $this->assertCount(3, $projects);
+        $this->assertTrue($projects->contains($expiredProject));
+        $this->assertFalse($projects->contains($projectExpiredMarch));
     }
 }

@@ -33,7 +33,7 @@ class ExpiredProjectControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_a_user_with_the_read_expired_project_permission_can_visit_the_expired_project_overview()
+    public function test_a_user_with_the_read_expired_project_permission_can_visit_the_expired_project_overview_and_will_see_the_truncated_titles_of_the_projects()
     {
         $this->actingAs($this->admin)->get(route('projects.expired'))
             ->assertOk()
@@ -42,34 +42,6 @@ class ExpiredProjectControllerTest extends TestCase
                 $this->project->manager->name,
                 'expired',
                 $this->project->due_date->format('d M Y'),
-            ]);
-    }
-
-    public function test_a_user_with_the_read_expired_project_permission_can_only_see_expired_projects_on_the_expired_project_overview()
-    {
-        $openProject = Project::factory()->create(['manager_id' => $this->manager->id]);
-        $completedProject = Project::factory()->create(['manager_id' => $this->manager->id]);
-        $trashedProject = Project::factory()->trashed()->create(['manager_id' => $this->manager->id]);
-
-        $this->actingAs($this->admin)->get(route('projects.expired'))
-            ->assertSeeText(Str::limit($this->project->title, 55))
-            ->assertDontSeeText([
-                $openProject->title,
-                $completedProject->title,
-                $trashedProject->title
-            ]);
-    }
-
-    public function test_a_user_with_the_read_expired_project_permission_can_see_a_expired_project_with_the_restored_status_on_the_expired_project_overview()
-    {
-        $expiredRestoredProject = Project::factory()->expiredWithStatus($days = 1)->create(['deleted_at' => now()->subDays(2)]);
-        $expiredRestoredProject->restore();
-
-        $this->actingAs($this->admin)->get(route('projects.expired'))
-            ->assertSeeText([
-                Str::limit($expiredRestoredProject->title, 55),
-                'restored',
-                $expiredRestoredProject->due_date->format('d M Y'),
             ]);
     }
 
