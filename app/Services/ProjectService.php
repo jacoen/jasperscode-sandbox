@@ -7,6 +7,7 @@ use App\Exceptions\InvalidPinnedProjectException;
 use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
+use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProjectService
@@ -23,8 +24,10 @@ class ProjectService
             ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
                 $query->orderBy('is_pinned', 'desc');
             })
-            ->whereNot('status', 'expired')
+            ->whereIn('status', ['open', 'pending', 'closed', 'restored'])
             ->where('due_date', '>=', now()->startOfDay())
+            ->orWhere('status', 'completed')
+            ->whereNot('status', 'expired')
             ->latest('updated_at')
             ->orderBy('id', 'desc')
             ->paginate(15);
@@ -80,8 +83,48 @@ class ProjectService
         ->paginate();
     }
 
+    // TODO: Refactor to UserService
     public function getManagers()
     {
         return User::role(['Admin', 'Manager'])->pluck('name', 'id');
+    }
+
+    public function listExpiredProjects(string $yearWeek = null): LengthAwarePaginator
+    {
+        $startDate = null;
+        $endDate = null;
+        
+        if ($yearWeek) {
+            $startDate = $this->spliceYearWeek($yearWeek)['startDate'];
+            $endDate = $this->spliceYearWeek($yearWeek)['endDate'];
+        }
+
+        return Project::with('manager')
+            ->when($yearWeek, function($query) use ($startDate, $endDate) {
+                $query->whereBetween('due_date', [
+                    $startDate,
+                    $endDate,
+                ]);
+            })
+            ->where('due_date', '<', now()->startOfDay())
+            ->whereNot('status', 'completed')
+            ->orderByDesc('due_date')
+            ->orderByDesc('id')
+            ->paginate(15);
+    }
+
+    private function spliceYearWeek($yearWeek): array
+    {
+        $parts = explode('-', $yearWeek);
+        $year =  (int)$parts[0];
+        $week = (int)$parts[1];
+
+        $startOfWeek = Carbon::now()->setISODate($year, $week)->startOfWeek();
+        $endOfWeek = Carbon::now()->setISODate($year, $week)->endOfWeek();
+
+        return [
+            'startDate' => $startOfWeek, 
+            'endDate' => $endOfWeek
+        ];
     }
 }
