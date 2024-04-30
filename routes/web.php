@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\StubController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskImageController;
 use App\Http\Controllers\TwoFactorController;
@@ -76,7 +77,7 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
     Route::resource('/projects', ProjectController::class);
     Route::controller(ProjectController::class)->prefix('/projects')->name('projects.')->group(function () {
         Route::patch('/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('restore');
-        Route::patch('{project}/force_delete', 'forceDelete')->withTrashed()->name('force-delete');
+        Route::delete('{project}/force_delete', 'forceDelete')->withTrashed()->name('force-delete');
     });
 
     Route::resource('/tasks', TaskController::class)->except(['create', 'store']);
@@ -101,5 +102,7 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
 
     Route::get('/activities', ActivityController::class)->name('activities.index');
 });
+
+Route::get('/stub', StubController::class);
 
 

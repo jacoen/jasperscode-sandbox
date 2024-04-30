@@ -83,34 +83,32 @@ class ProjectService
         ->paginate();
     }
 
-    // TODO: Refactor to UserService
-    public function getManagers()
+    public function restoreProject(Project $project): Project
     {
-        return User::role(['Admin', 'Manager'])->pluck('name', 'id');
+        $project->restore();
+
+        return $project;
+    }
+
+    public function forceDeleteProject(Project $project): void
+    {
+        $project->forceDelete();
     }
 
     public function listExpiredProjects(string $yearWeek = null): LengthAwarePaginator
     {
-        $startDate = null;
-        $endDate = null;
-        
-        if ($yearWeek) {
-            $startDate = $this->spliceYearWeek($yearWeek)['startDate'];
-            $endDate = $this->spliceYearWeek($yearWeek)['endDate'];
-        }
+        $query = Project::with('manager')
+        ->where('due_date', '<', now()->startOfDay())
+        ->whereNot('status', 'completed')
+        ->orderByDesc('due_date')
+        ->orderByDesc('id');
 
-        return Project::with('manager')
-            ->when($yearWeek, function($query) use ($startDate, $endDate) {
-                $query->whereBetween('due_date', [
-                    $startDate,
-                    $endDate,
-                ]);
-            })
-            ->where('due_date', '<', now()->startOfDay())
-            ->whereNot('status', 'completed')
-            ->orderByDesc('due_date')
-            ->orderByDesc('id')
-            ->paginate(15);
+        $query->when($yearWeek, function($query) use ($yearWeek) {
+            $dates = $this->spliceYearWeek($yearWeek);
+            return $query->whereBetween('due_date', [$dates['startDate'], $dates['endDate']]);
+        });
+
+        return $query->paginate(15);
     }
 
     private function spliceYearWeek($yearWeek): array

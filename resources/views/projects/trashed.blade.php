@@ -41,7 +41,7 @@
                                     @if (auth()->user()->can('delete project') && auth()->user()->hasRole('Admin'))    
                                         <form action="{{ route('projects.force-delete', $project) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this project? This project cannot be reversed!')">
                                             @csrf
-                                            @method('PATCH')
+                                            @method('DELETE')
                                             <button type="submit" class="btn btn-danger text-white fw-semibold ms-2">
                                                 Force Delete
                                             </button>
