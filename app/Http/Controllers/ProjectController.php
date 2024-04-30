@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
 use App\Services\ProjectService;
 use App\Services\TaskService;
+use App\Services\UserService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -40,9 +41,9 @@ class ProjectController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(UserService $userService): View
     {
-        $managers = $this->projectService->getManagers();
+        $managers = $userService->getUsersByRoles(['Admin', 'Manager']);
 
         return view('projects.create', compact('managers'));
     }
@@ -73,9 +74,9 @@ class ProjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Project $project): View
+    public function edit(Project $project, UserService $userService): View
     {
-        $managers = $this->projectService->getManagers();
+        $managers = $userService->getUsersByRoles(['Admin', 'Manager']);
         $statuses = array_merge(config('definitions.statuses'), [
             'Restored' => 'restored', 
             'Expired' => 'expired'
@@ -127,17 +128,17 @@ class ProjectController extends Controller
     {
         $this->authorize('restore', $project);
 
-        $project->restore();
+        $restoredProject = $this->projectService->restoreProject($project);
 
         return redirect()->route('projects.trashed')
-            ->with('success', 'The project '.$project->title.' has been restored.');
+            ->with('success', 'The project '.$restoredProject->title.' has been restored.');
     }
 
     public function forceDelete(Project $project): RedirectResponse
     {
         $this->authorize('forceDelete', $project);
 
-        $project->forceDelete();
+        $this->projectService->forceDeleteProject($project);
 
         return redirect()->route('projects.trashed')
             ->with('success', 'The project has been permanently deleted.');
