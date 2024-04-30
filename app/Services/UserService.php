@@ -6,6 +6,7 @@ use App\Events\RoleUpdatedEvent;
 use App\Exceptions\InvalidEmailException;
 use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -51,5 +52,10 @@ class UserService
     public function delete(User $user): void
     {
         $user->delete();
+    }
+
+    public function getUsersByRoles(array $roles): Collection
+    {
+        return User::role($roles)->pluck('name', 'id');
     }
 }
