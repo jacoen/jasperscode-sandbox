@@ -64,12 +64,12 @@ class User extends Authenticatable
 
     public function projects()
     {
-        $this->hasMany(Project::class, 'manager_id');
+        return $this->hasMany(Project::class, 'manager_id');
     }
 
     public function tasks()
     {
-        $this->hasMany(Task::class, 'author_id');
+        return $this->hasMany(Task::class, 'author_id');
     }
 
     public function assignedTasks()
