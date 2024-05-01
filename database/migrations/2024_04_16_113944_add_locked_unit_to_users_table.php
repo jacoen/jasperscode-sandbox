@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dateTime('locked_until')->nullable();
-            $table->unsignedInteger('two_factor_attempts');
+            $table->unsignedInteger('two_factor_attempts')->default(0);
             $table->dateTime('last_attempt_at')->nullable();
         });
     }

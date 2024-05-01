@@ -46,7 +46,7 @@ class UserService
             event(new RoleUpdatedEvent($user));
         }
 
-        return $user();
+        return $user;
     }
 
     public function delete(User $user): void
