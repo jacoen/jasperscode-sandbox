@@ -154,7 +154,7 @@ class UserServiceTest extends TestCase
             'email' => 'jane@example.com',
         ];
 
-        $user = $this->userService->update($user, $data, ['role' => $role->id]);
+        $user = $this->userService->update($user, array_merge($data, ['role' => $role->id]));
 
         $this->assertEquals($user->name, $data['name']);
         $this->assertTrue($user->hasRole('Manager'));

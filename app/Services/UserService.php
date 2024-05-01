@@ -39,10 +39,13 @@ class UserService
             throw new \Exception('Not able to change the role of this user');
         }
 
+        $role = $validData['role'];
+        unset($validData['role']);
+
         $user->update($validData);
 
-        if ($validData['role'] !== $oldRole) {
-            $user->syncRoles($validData['role']);
+        if ($role !== $oldRole) {
+            $user->syncRoles($role);
             event(new RoleUpdatedEvent($user));
         }
 
