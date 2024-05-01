@@ -74,7 +74,7 @@ class User extends Authenticatable
 
     public function assignedTasks()
     {
-        $this->hasMany(Task::class, 'user_id');
+        return $this->hasMany(Task::class, 'user_id');
     }
 
     public function generatePasswordToken()

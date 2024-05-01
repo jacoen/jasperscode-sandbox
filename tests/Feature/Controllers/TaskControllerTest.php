@@ -48,7 +48,7 @@ class TaskControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_a_no_tasks_yet_message_will_be_displayed_if_the_current_user_without_an_admin_role_has_no_assigned_tasks_their_account()
+    public function test_a_user_with_the_read_task_permission_without_assigned_tasks_will_see_the_no_assigned_tasks_message_when_visiting_the_task_index_page()
     {
         $task = Task::factory()->for($this->project)->create(['user_id' => $this->manager->id]);
 
@@ -58,7 +58,7 @@ class TaskControllerTest extends TestCase
     }
 
 
-    public function test_it_truncates_the_task_and_project_titles_of_the_tasks_that_are_assigned_to_the_current_user()
+    public function test_a_user_with_the_read_task_permission_can_see_all_their_asssigned_tasks_when_visiting_the_task_index_page ()
     {
         $task = Task::factory()->for($this->project)->create(['user_id' => $this->employee->id]);
 
@@ -72,25 +72,34 @@ class TaskControllerTest extends TestCase
             ]);
     }
 
-    public function test_a_guest_cannot_create_a_new_task()
+    public function test_a_guest_cannot_visit_the_create_task_page()
     {
         $this->get(route('tasks.create', $this->project))->assertRedirect(route('login'));
-
-        $this->post(route('tasks.store', $this->project), $this->data)
-            ->assertRedirect(route('login'));
-
-        $this->assertDatabaseMissing('tasks', $this->data);
     }
 
-    public function test_a_user_without_the_create_task_permission_cannot_create_a_new_task()
+    public function test_a_user_without_the_create_task_permission_cannot_visit_the_create_task_page()
     {
         $this->actingAs($this->user)->get(route('tasks.create', $this->project))
             ->assertForbidden();
+    }
 
-        $this->actingAs($this->user)->post(route('tasks.store', $this->project), $this->data)
-            ->assertForbidden();
+    public function test_a_user_with_the_create_task_permission_can_visit_the_create_task_page()
+    {
+        $this->actingAs($this->employee)->get(route('tasks.create', $this->project))
+            ->assertOk();
+    }
 
-        $this->assertDatabaseMissing('tasks', $this->data);
+    public function test_a_valid_user_must_be_provided_when_creating_a_task()
+    {
+        $data = [
+            'title' => 'Some title',
+            'user_id' => 99,
+        ];
+
+        $this->actingAs($this->employee)->post(route('tasks.store', $this->project), $data)
+            ->assertSessionHasErrors([
+                'user_id' => 'The selected user is invalid.'
+            ]);
     }
 
     public function test_the_title_field_is_required_to_create_a_task()
@@ -102,39 +111,63 @@ class TaskControllerTest extends TestCase
                 'title' => 'The title field is required.',
             ]);
 
-        $this->assertDatabaseMissing('tasks', $taskData);
+        $this->assertEquals(0, Task::count());
     }
 
-    public function test_a_task_can_only_be_created_for_a_valid_project()
+    public function test_the_title_must_be_at_least_3_characters_long_when_creating_a_task()
     {
-        $this->actingAs($this->employee)->post(route('tasks.store', 99), $this->data)
-            ->assertNotFound();
-
-        $this->assertDatabaseMissing('tasks', [
-            'title' => $this->data['title'],
-            'project_id' => 99,
+        $this->actingAs($this->employee)->post(route('tasks.store', $this->project), [
+            'title' => 'aa', 
+        ])->assertSessionHasErrors([
+            'title' => 'The title field must be at least 3 characters.',
         ]);
+
+        $this->assertEquals(0, Task::count());
+    }
+
+    public function test_the_title_cannot_be_longer_than_255_characters_when_creating_a_task()
+    {
+        $this->actingAs($this->employee)->post(route('tasks.store', $this->project), [
+            'title' => Str::repeat('abc', 120), 
+        ])->assertSessionHasErrors([
+            'title' => 'The title field must not be greater than 255 characters.',
+        ]);
+
+        $this->assertEquals(0, Task::count());
+    }
+
+    public function test_the_description_must_be_at_least_3_characters_long_when_creating_a_task()
+    {
+        $this->actingAs($this->employee)->post(route('tasks.store', $this->project), array_merge($this->data, [
+            'description' => 'aa',
+        ]))->assertSessionHasErrors([
+            'description' => 'The description field must be at least 3 characters.',
+        ]);
+
+        $this->assertEquals(0, Task::count());
     }
 
     public function test_a_user_cannot_upload_anything_other_than_an_image_when_creating_a_task()
     {
         $document = UploadedFile::fake()->create('test.txt', 15);
         $pdf = UploadedFile::fake()->create('test.pdf', 101);
-
+    
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project),
             array_merge($this->data, ['attachments' => [$document]])
         )->assertSessionHasErrors([
             'attachments.0' => 'The attachments may only contain images.',
         ]);
-
+    
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project),
             array_merge($this->data, ['attachments' => [$pdf]])
         )->assertSessionHasErrors([
             'attachments.0' => 'The attachments may only contain images.',
         ]);
-
+    
         Storage::disk('media')->assertMissing($document);
         Storage::disk('media')->assertMissing($pdf);
+
+        $this->assertEquals(0, Task::count());
     }
 
     public function test_a_user_can_upload_a_maximum_of_3_images_when_creating_a_task()
@@ -164,6 +197,24 @@ class TaskControllerTest extends TestCase
         $this->assertFileDoesNotExist($image2->getClientOriginalName());
         $this->assertFileDoesNotExist($image3->getClientOriginalName());
         $this->assertFileDoesNotExist($image4->getClientOriginalName());
+
+        $this->assertEquals(0, Task::count());
+    }
+
+    public function test_a_guest_cannot_create_a_new_task()
+    {
+        $this->post(route('tasks.store', $this->project), $this->data)
+            ->assertRedirect(route('login'));
+
+        $this->assertEquals(0, Task::count());
+    }
+
+    public function test_a_user_without_the_create_task_permission_cannot_create_a_new_task()
+    {
+        $this->actingAs($this->user)->post(route('tasks.store', $this->project), $this->data)
+            ->assertForbidden();
+
+        $this->assertEquals(0, Task::count());
     }
 
     public function test_a_user_with_the_create_task_permission_can_create_a_new_task()
@@ -172,22 +223,24 @@ class TaskControllerTest extends TestCase
             ->assertRedirect(route('projects.show', $this->project))
             ->assertSessionHas('success', 'A new task has been created.');
 
-        $this->assertDatabaseHas('tasks', [
-            'title' => $this->data['title'],
-            'description' => $this->data['description'],
-            'status' => 'open',
-            'user_id' => $this->data['user_id'],
-            'project_id' => $this->project->id,
-        ]);
+        $this->assertEquals(1, Task::count());
+
+        $task = Task::first();
+        $this->assertEquals($task->title, $this->data['title']);
+        $this->assertEquals($task->description, $this->data['description']);
+        $this->assertEquals($task->user_id, $this->data['user_id']);
+        $this->assertEquals($task->author_id, $this->employee->id);
     }
 
-    public function test_a_guest_cannot_visit_the_show_task_page()
+    public function test_a_guest_cannot_visit_the_task_detail_page()
     {
         $task = Task::factory()->create();
-        $this->get(route('tasks.show', $task))->assertRedirect(route('login'));
+
+        $this->get(route('tasks.show', $task))
+            ->assertRedirect(route('login'));
     }
 
-    public function test_a_user_without_the_read_task_permission_cannot_visit_the_show_task()
+    public function test_a_user_without_the_read_task_permission_cannot_visit_the_project_detail_page()
     {
         $task = Task::factory()->create();
 
@@ -199,6 +252,9 @@ class TaskControllerTest extends TestCase
     {
         $task = Task::factory()->for($this->project)->create();
 
+        $image = UploadedFile::fake()->image('attachment.jpg');
+        $task->addMedia($image)->usingName($task->title)->toMediaCollection('attachments');
+
         $this->actingAs($this->employee)->get(route('tasks.show', $task))
             ->assertOk()
             ->assertSeeText([
@@ -206,62 +262,31 @@ class TaskControllerTest extends TestCase
                 $task->description,
                 $task->user->name,
                 $task->project->title,
-            ]);
+            ])->assertSee($task->getFirstMediaUrl('attachments'));
     }
 
-    public function test_a_user_with_the_read_task_permission_can_see_the_uploaded_image_of_a_task()
-    {
-        $task = Task::factory()->for($this->project)->create();
-
-        $image = UploadedFile::fake()->image('attachment.jpg');
-
-        $task->addMedia($image)->usingName($task->title)->toMediaCollection('attachments');
-
-        $this->actingAs($this->employee)->get(route('tasks.show', $task))
-            ->assertSee($task->getFirstMediaUrl('attachments'));
-    }
-
-    public function test_a_guest_cannot_visit_the_edit_task_route()
+    public function test_a_guest_cannot_visit_the_edit_task_page()
     {
         $task = Task::factory()->create();
 
-        $this->get(route('tasks.edit', $task))->assertRedirect();
-    }
+        $this->get(route('tasks.edit', $task))->assertRedirect(route('login'));
+    } 
 
-    public function test_a_guest_cannot_update_a_task()
+    public function test_a_user_without_the_update_task_permission_cannot_visit_the_edit_task_page()
     {
-        $task = Task::factory()->for($this->project)->create();
-
-        $taskData = array_merge($this->data, ['status' => 'pending']);  
-
-        $this->put(route('tasks.update', $task), $taskData)->assertRedirect('login');
-
-        $this->assertDatabaseMissing('tasks', [
-            'id' => $task->id,
-            'title' => $taskData['title'],
-            'description' => $taskData['description'],
-            'status' => $taskData['status'],
-        ]);
-    }
-
-    public function test_a_user_without_the_update_task_permission_cannot_visit_the_edit_task_route()
-    {
-        $task = Task::factory()->for($this->project)->create();
+        $task = Task::factory()->create();
 
         $this->actingAs($this->user)->get(route('tasks.edit', $task))
             ->assertForbidden();
     }
 
-    public function test_a_user_without_the_update_task_permission_cannot_update_a_task()
+    public function test_a_user_with_the_update_task_permission_can_visit_the_edit_task_page()
     {
-        $task = Task::factory()->for($this->project)->create();
+        $task = Task::factory()->create();
 
-        $taskData = array_merge($this->data, ['status' => 'pending']);
-
-        $this->actingAs($this->user)->put(route('tasks.update', $task), $taskData)
-            ->assertForbidden();
-
-        $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
+        $this->actingAs($this->employee)->get(route('tasks.edit', $task))
+            ->assertOk()
+            ->assertSeeText($task->title);
     }
 
     public function test_the_title_and_status_fields_are_required_when_updating_a_task()
@@ -281,193 +306,331 @@ class TaskControllerTest extends TestCase
 
         $this->assertNotEquals($task->fresh()->title, $taskData['title']);
         $this->assertNotEquals($task->fresh()->status, $taskData['status']);
-
-        $this->assertDatabaseMissing('tasks', array_merge($taskData, ['id' => $task->id]));
     }
 
-    public function test_a_user_with_the_update_task_permission_can_visit_the_edit_task_route()
+    public function test_a_valid_user_must_be_provided_when_updating_a_task()
     {
-        $task = Task::factory()->for($this->project)->create();
-        
-        $this->actingAs($this->employee)->get(route('tasks.edit', $task));
+        $task = Task::factory()->create();
+
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), array_merge($this->data, [
+            'user_id' => 9999,
+        ]))->assertSessionHasErrors([
+            'user_id' => 'The selected user is invalid.',
+        ]);
+
+        $this->assertNotEquals($task->fresh()->user_id, 9999);
     }
 
-    public function test_a_user_with_update_task_permission_can_update_an_existing_task()
+    public function test_the_title_must_be_at_least_3_characters_long_when_updating_a_task()
     {
-        $task = Task::factory()->for($this->project)->create();
+        $task = Task::factory()->create();
 
-        $taskData = array_merge($this->data, ['status' => 'pending']);
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), array_merge($this->data, [
+            'title' => 'aa',
+        ]))->assertSessionHasErrors([
+            'title' => 'The title field must be at least 3 characters.',
+        ]);
+
+        $this->assertNotEquals($task->fresh()->title, 'aa');
+    }
+
+    public function test_the_title_cannot_be_longer_than_255_characters_when_updating_a_task()
+    {
+        $task = Task::factory()->create();
+
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), array_merge($this->data, [
+            'title' => Str::repeat('abc', 120),
+        ]))->assertSessionHasErrors([
+            'title' => 'The title field must not be greater than 255 characters.',
+        ]);
+
+        $this->assertNotEquals($task->fresh()->title, Str::repeat('abc', 120));
+    }
+
+    public function test_description_must_be_at_least_3_characters_long_when_updating_a_task()
+    {
+        $task = Task::factory()->create();
+
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), array_merge($this->data, [
+            'description' => 'aa',
+        ]))->assertSessionHasErrors([
+            'description' => 'The description field must be at least 3 characters.',
+        ]);
+
+        $this->assertNotEquals($task->fresh()->description, 'aa');
+    }
+
+    public function test_the_status_must_be_valid_when_updating_a_task()
+    {
+        $task = Task::factory()->create();
+
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), array_merge($this->data, [
+            'status' => 'restored',
+        ]))->assertSessionHasErrors([
+            'status' => 'The selected status is invalid.',
+        ]);
+    }
+
+    public function test_the_attachment_can_only_be_an_image_when_updating_a_task()
+    {
+        $task = Task::factory()->create();
+
+        $document = UploadedFile::fake()->create('test.txt', 15, 'txt');
+
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), array_merge($this->data, [
+            'attachments' => [$document],
+        ]))->assertSessionHasErrors([
+            'attachments.0' => 'The attachments may only contain images.',
+        ]);
+
+        $this->assertNull($task->getFirstMedia('media'));
+        Storage::disk('media')->assertMissing($document);
+    }
+
+    public function test_a_maximum_of_3_attachments_can_be_uploaded_when_updating_a_task()
+    {
+        $task = Task::factory()->create();
+
+        $image1 = UploadedFile::fake()->image('test1.jpg');
+        $image2 = UploadedFile::fake()->image('test2.jpg');
+        $image3 = UploadedFile::fake()->image('test3.jpg');
+        $image4 = UploadedFile::fake()->image('test4.jpg');
+
+        $taskData = array_merge($this->data,
+            [
+                'status' => 'pending',
+                'attachments' => [
+                $image1,
+                $image2,
+                $image3,
+                $image4,
+            ],
+        ]);
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
-            ->assertRedirect(route('tasks.show', $task))
-            ->assertSessionHas('success', 'The task '.$task->fresh()->title.' has been updated.');
-
-        $this->assertDatabaseHas('tasks', array_merge($taskData, ['id' => $task->id]));
+            ->assertSessionHasErrors([
+                'attachments' => 'The attachments field must not have more than 3 items.',
+            ]);
+        
+        $this->assertEmpty($task->fresh()->getMedia('media'));
+        Storage::disk('media')->assertMissing($image1);
+        Storage::disk('media')->assertMissing($image2);
+        Storage::disk('media')->assertMissing($image3);
+        Storage::disk('media')->assertMissing($image4);
     }
 
-    public function test_guests_cannot_delete_a_task()
+    public function test_a_guest_cannot_update_a_task()
     {
-        $task = Task::factory()->for($this->project)->create(['user_id' => $this->employee->id]);
+        $task = Task::factory()->create();
+
+        $this->put(route('tasks.update', $task), $this->data)
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_a_user_without_the_update_task_permission_cannot_update_a_task()
+    {
+        $task = Task::factory()->create();
+
+        $this->actingAs($this->user)->put(route('tasks.update', $task), array_merge($this->data, [
+            'status' => 'pending',
+            'user_id' => $this->employee->id,
+        ]))->assertForbidden();
+
+        $task->refresh();
+        $this->assertNotEquals($task->title, $this->data['title']);
+        $this->assertNotEquals($task->description, $this->data['description']);
+        $this->assertNotEquals($task->user_id, $this->employee->id);
+        $this->assertNotEquals($task->status, 'pending');
+    }
+
+    public function test_a_user_with_the_update_task_permission_can_update_a_task()
+    {
+        $task = Task::factory()->create();
+
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), array_merge($this->data, [
+            'status' => 'pending',
+            'user_id' => $this->employee->id,
+        ]))->assertRedirect(route('tasks.show', $task))
+            ->assertSessionHas('success', 'The task '.$task->fresh()->title.' has been updated.');
+
+        $task->refresh();
+        $this->assertEquals($task->title, $this->data['title']);
+        $this->assertEquals($task->description, $this->data['description']);
+        $this->assertEquals($task->user_id, $this->employee->id);
+        $this->assertEquals($task->status, 'pending');
+    }
+
+    public function test_a_guest_cannot_delete_a_task()
+    {
+        $task = Task::factory()->create();
 
         $this->delete(route('tasks.destroy', $task))
             ->assertRedirect(route('login'));
 
         $this->assertNotSoftDeleted($task);
+        $this->assertEquals(1, Task::count());
     }
 
     public function test_a_user_without_the_delete_task_permission_cannot_delete_a_task()
     {
-        $task = Task::factory()->for($this->project)->create();
+        $task = Task::factory()->create();
 
         $this->actingAs($this->user)->delete(route('tasks.destroy', $task))
             ->assertForbidden();
 
         $this->assertNotSoftDeleted($task);
+        $this->assertEquals(1, Task::count());
     }
 
     public function test_a_user_with_the_delete_task_permission_can_delete_a_task()
     {
-        $task = Task::factory()->for($this->project)->create([
-            'status' => 'pending',
-            'user_id' => $this->employee->id,
-        ]);
+        $task = Task::factory()->for($this->project)->create();
 
         $this->actingAs($this->employee)->delete(route('tasks.destroy', $task))
-            ->assertRedirect(route('projects.show', $task->project))
+            ->assertRedirect(route('projects.show', $this->project))
             ->assertSessionHas('success', 'The task has been deleted.');
 
         $this->assertSoftDeleted($task);
+        $this->assertEquals(1, Task::onlyTrashed()->count());
     }
 
-    public function test_a_guest_cannot_visit_the_trashed_task_overview_page()
+    public function test_a_guest_cannot_visit_the_trashed_task_page()
     {
-        $this->get(route('tasks.trashed'))->assertRedirect('login');
+        $this->get(route('tasks.trashed'))
+            ->assertRedirect();
     }
 
-    public function test_a_user_without_the_restore_task_permission_cannot_visit_the_trashed_task_overview_page()
+    public function test_a_user_without_the_restore_task_permission_cannot_visit_the_trashed_task_page()
     {
-        $this->actingAs($this->employee)->get(route('tasks.trashed'))
+        $this->actingAs($this->user)->get(route('tasks.trashed'))
             ->assertForbidden();
     }
 
-    public function test_a_user_with_the_restore_task_permission_can_visit_the_trashed_task_overview_page()
+    public function test_a_user_with_the_restore_task_permission_will_see_a_no_tasks_message_when_there_are_no_trashed_tasks()
     {
-        $this->actingAs($this->manager)->get(route('tasks.trashed'))
-            ->assertOk();
-    }
-
-    public function test_a_no_tasks_yet_message_will_be_displayed_on_the_trashed_tasks_overview_when_there_are_no_trashed_tasks_yet()
-    {
-        $this->actingAs($this->manager)->get(route('tasks.trashed'))
+        $this->actingAs($this->employee)->get(route('tasks.trashed'))
             ->assertOk()
-            ->assertSeeText('No tasks yet.');   
+            ->assertSeeText('No tasks yet');
     }
 
-    public function test_the_project_and_task_titles_are_truncated_on_the_trashed_task_overview()
+    public function test_a_user_with_the_restore_task_permission_can_see_all_the_trashed_tasks_when_visiting_the_trashed_tasks_page()
     {
-        $task = Task::factory()->for($this->project)->trashed()->create();
+        $task = Task::factory()->trashed()->create();
+        $activeTask = Task::factory()->create();
 
-        $this->actingAs($this->manager)->get(route('tasks.trashed'))
+        $this->actingAs($this->employee)->get(route('tasks.trashed'))
             ->assertOk()
             ->assertSeeText([
                 Str::limit($task->title, 30),
-                Str::limit($this->project->title, 30)
+                Str::limit($task->project->title, 30),
+                lastUpdated($task->deleted_at),
+            ])
+            ->assertDontSeeText([
+                Str::limit($activeTask->title),
             ]);
     }
 
-    public function test_a_guest_cannot_restore_a_task()
+    public function test_guest_cannot_restore_a_task()
     {
-        $task = Task::factory()->for($this->project)->trashed()->create();
+        $task = Task::factory()->trashed()->create();
 
         $this->patch(route('tasks.restore', $task))
             ->assertRedirect(route('login'));
 
-        $this->assertSoftDeleted($task);
+        $this->assertEquals(1, Task::onlyTrashed()->count());
     }
 
     public function test_a_user_without_the_restore_task_permission_cannot_restore_a_task()
     {
-        $task = Task::factory()->for($this->project)->trashed()->create();
+        $task = Task::factory()->trashed()->create();
+
+        $this->actingAs($this->user)->patch(route('tasks.restore', $task))
+            ->assertForbidden();
+
+        $this->assertEquals(1, Task::onlyTrashed()->count());
+    }
+
+    public function test_a_user_with_the_restore_task_permission_can_restore_a_task()
+    {
+        $task = Task::factory()->trashed()->create();
 
         $this->actingAs($this->employee)->patch(route('tasks.restore', $task))
-            ->assertForbidden();
+            ->assertRedirect(route('tasks.trashed'))
+            ->assertSessionHas('success', 'The task has been restored.');
 
-        $this->assertSoftDeleted($task);
+        $this->assertEquals(0, Task::onlyTrashed()->count());
     }
 
-    public function test_a_user_with_the_restore_task_permission_can_restore_the_task_of_an_active_project()
+    public function test_a_guest_cannot_delete_a_task_pemanently()
     {
-        $task = Task::factory()->for($this->project)->trashed()->create();
+        $task = Task::factory()->trashed()->create();
 
-        $this->actingAs($this->manager)->patch(route('tasks.restore', $task))
-            ->assertRedirect(route('projects.show', $this->project))
-            ->assertSessionHas('success', 'The task '.$task->title.'has been restored.');
-
-        $this->assertNotSoftDeleted($task);
-    }
-
-    public function test_a_guest_cannot_permanently_delete_a_task()
-    {
-        $task = Task::factory()->for($this->project)->trashed()->create();
-
-        $this->patch(route('tasks.force-delete', $task))
+        $this->delete(route('tasks.force-delete', $task))
             ->assertRedirect(route('login'));
 
-        $this->assertSoftDeleted($task);
+        $this->assertEquals(1, Task::withTrashed()->count());
     }
 
-    public function test_a_user_without_the_force_delete_authorization_cannot_permanently_delete_a_task()
+    public function test_a_user_without_correct_permissions_cannot_delete_a_task_permanently()
     {
-        $task = Task::factory()->for($this->project)->trashed()->create();
+        $task = Task::factory()->trashed()->create();
 
-        $this->actingAs($this->manager)->patch(route('tasks.force-delete', $task))
+        $this->actingAs($this->employee)->delete(route('tasks.force-delete', $task))
             ->assertForbidden();
 
-        $this->assertSoftDeleted($task);
+        $this->assertEquals(1, Task::withTrashed()->count());
     }
 
-    public function test_a_user_with_the_force_delete_authorization_can_permanently_delete_a_task()
+    public function test_a_user_with_the_correct_permissions_can_delete_a_task_permanently()
     {
-        $task = Task::factory()->for($this->project)->trashed()->create();
+        $task = Task::factory()->trashed()->create();
 
-        $this->actingAs($this->admin)->patch(route('tasks.force-delete', $task))
+        $this->actingAs($this->admin)->delete(route('tasks.force-delete', $task))
             ->assertRedirect(route('tasks.trashed'))
             ->assertSessionHas('success', 'The task has been permanently deleted.');
-
-        $this->assertDatabaseMissing('tasks', [
-            'id' => $task->id,
-            'title' => $task->title,
-        ]);
     }
 
-    public function test_guests_cannot_visit_the_admin_task_overview_page()
+    public function test_a_guest_cannot_visit_the_admin_task_page()
     {
         $this->get(route('admin.tasks'))->assertRedirect(route('login'));
     }
 
-    public function test_a_user_without_the_admin_role_cannot_visit_the_admin_task_overview_page()
+    public function test_a_user_without_the_admin_role_cannot_visit_the_admin_task_page()
     {
         $this->actingAs($this->employee)->get(route('admin.tasks'))
             ->assertForbidden();
-
-        $this->actingAs($this->manager)->get(route('admin.tasks'))
-            ->assertForbidden();
     }
 
-    public function test_an_admin_can_reach_the_admin_task_overview_page()
+    public function test_a_user_with_the_admin_role_will_see_the_no_tasks_yet_message_when_they_visit_the_admin_task_page_when_there_are_no_tasks()
     {
         $this->actingAs($this->admin)->get(route('admin.tasks'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSeeText('No tasks yet.');
     }
 
-    public function test_it_truncates_the_task_and_project_titles_when_an_admin_visit_the_admin_task_overview_page()
+    public function test_a_user_with_the_admin_role_can_see_all_active_tasks_on_the_admin_task_page()
     {
-        $task = Task::factory()->for($this->project)->create(['author_id' => $this->manager->id]);
+        $employeeTask = Task::factory()->create(['user_id' => $this->employee->id]);
+        $managerTask = Task::factory()->create(['user_id' => $this->manager->id]);
+        $adminTask = Task::factory()->create(['user_id' => $this->admin->id]);
+
         $this->actingAs($this->admin)->get(route('admin.tasks'))
+            ->assertOk()
             ->assertSeeText([
-                Str::limit($task->title, 25),
-                Str::limit($this->project->title, 25),
-                $task->status,
+                Str::limit($employeeTask->title, 25),
+                Str::limit($employeeTask->project->title, 25),
+                $employeeTask->status,
+                $this->employee->name,
+            ])->assertSeeText([
+                Str::limit($managerTask->title, 25),
+                Str::limit($managerTask->project->title, 25),
+                $managerTask->status,
+                $this->manager->name,
+            ])->assertSeeText([
+                Str::limit($adminTask->title, 25),
+                Str::limit($adminTask->project->title, 25),
+                $adminTask->status,
+                $this->admin->name,
             ]);
     }
 
