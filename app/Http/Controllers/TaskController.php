@@ -7,8 +7,8 @@ use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
 use App\Services\TaskService;
+use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\View;
@@ -35,14 +35,14 @@ class TaskController extends Controller
         return view('tasks.index', compact('tasks', 'route'));
     }
 
-    public function create(Project $project): View|RedirectResponse
+    public function create(Project $project, UserService $userService): View|RedirectResponse
     {
         if (! $project->is_open_or_pending) {
             return redirect()->route('projects.show', $project)
                 ->withErrors(['error' => 'Cannot create a task when the project is inactive.']);
         }
 
-        $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
+        $employees = $userService->getUsersByRoles(['Admin', 'Manager', 'Employee']);
 
         return view('tasks.create', compact(['employees', 'project']));
     }
@@ -65,7 +65,7 @@ class TaskController extends Controller
         return view('tasks.show', compact('task'));
     }
 
-    public function edit(Task $task): View|RedirectResponse
+    public function edit(Task $task, UserService $userService): View|RedirectResponse
     {
         if (! $task->project->is_open_or_pending) {
             return redirect()->route('projects.show', $task->project)
@@ -74,9 +74,7 @@ class TaskController extends Controller
                 ]);
         }
 
-        $task->load('project');
-
-        $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
+        $employees = $userService->getUsersByRoles(['Admin', 'Manager', 'Employee']);
         $statuses = array_merge(config('definitions.statuses'), ['Restored' => 'restored']);
 
         return view('tasks.edit', compact(['task', 'employees', 'statuses']));
@@ -121,8 +119,8 @@ class TaskController extends Controller
         try {
             $this->taskService->restoreTask($task);
 
-            return redirect()->route('projects.show', $task->project)
-                ->with('success', 'The task '.$task->title.'has been restored.');
+            return redirect()->route('tasks.trashed')
+                ->with('success', 'The task has been restored.');
         } catch (\Exception $e) {
             return redirect()->route('tasks.trashed')
                 ->withErrors(['error' => $e->getMessage()]);
