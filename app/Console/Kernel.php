@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('project:due-date-check')->dailyAt('6:00');
-        //$schedule->command('telescope:prune --hours=48')->daily();
+        // $schedule->command('telescope:prune --hours=48')->daily();
         $schedule->command('project:check-expiration')->dailyAt('1:00');
         $schedule->command('project:expiration-report')->weeklyOn(1, '4:00');
     }
