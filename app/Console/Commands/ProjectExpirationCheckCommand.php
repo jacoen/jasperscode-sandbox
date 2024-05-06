@@ -58,8 +58,7 @@ class ProjectExpirationCheckCommand extends Command
             $count++;
         }
         
-        Log::info($count.' projects have expired, the status has been changed to expired.');
-        $this->info('The check has been completed. Please check the log for the results');
+        $this->info('The check has been completed. '.$count.' projects have expired. The status of these projects has been changed to expired.');
         return;
     }
 
