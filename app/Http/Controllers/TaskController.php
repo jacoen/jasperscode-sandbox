@@ -75,7 +75,9 @@ class TaskController extends Controller
         }
 
         $employees = $userService->getUsersByRoles(['Admin', 'Manager', 'Employee']);
-        $statuses = array_merge(config('definitions.statuses'), ['Restored' => 'restored']);
+        $statuses = array_merge(config('definitions.statuses'), [
+            'Restored' => 'restored'
+        ]);
 
         return view('tasks.edit', compact(['task', 'employees', 'statuses']));
     }

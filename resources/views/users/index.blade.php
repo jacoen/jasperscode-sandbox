@@ -35,7 +35,7 @@
                     <tr>
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
-                        <td>{{ $user->roles()->first()->name }}</td>
+                        <td>{{ $user->roles()->first()->name ?? 'N/A' }}</td>
                         <td class="d-flex align-items-center">
                             <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-info text-white fw-semibold">
                                 Edit

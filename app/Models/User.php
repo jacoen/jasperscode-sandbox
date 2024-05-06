@@ -113,6 +113,15 @@ class User extends Authenticatable
         $this->timestamps = true;
     }
 
+    public function resetTwoFactorAttempts(): void
+    {
+        $this->timestamps = false;
+        $this->two_factor_code = 0;
+        $this->last_attempt_at = null;
+        $this->save();
+        $this->timestamps = true;
+    }
+
     public function lockUser(): void
     {
         $this->timestamps = false;
