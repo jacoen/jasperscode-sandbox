@@ -19,7 +19,9 @@ class TwoFactorController extends Controller
     {
         $user = auth()->user();
 
-        $this->resetLoginAttemptsIfNeeded($user);
+        if ($user->last_attempt_at && $user->last_attempt_at->lt(now()->subMinutes(5)) && $user->two_factor_attempts >= 1) {
+            $user->resetTwoFactorAttempts();
+        }
 
         if ($request->two_factor_code !== $user->two_factor_code) {
             $this->incrementAttempt($user);
@@ -33,7 +35,9 @@ class TwoFactorController extends Controller
             ]);
         }
         
-        $this->resetLoginAttemptData($user);
+        if ($user->two_factor_attempts >= 1 && $user->last_attempt_at !== null) {
+            $user->resetTwoFactorAttempts();
+        }
 
         auth()->user()->resetTwoFactorCode();
 
@@ -49,18 +53,6 @@ class TwoFactorController extends Controller
         return redirect()
             ->route('verify.create')
             ->with('success', 'A new code has been sent to your email.');
-    }
-
-    private function resetLoginAttemptsIfNeeded($user)
-    {
-        if ($user->last_attempt_at && $user->last_attempt_at->lt(now()->subMinutes(5)) && $user->two_factor_attempts >= 1) {
-            $user->timestamps = false;
-            $user->update([
-                'two_factor_attempts' => 0,
-                'last_attempt_at' => null,
-            ]);
-            $user->timestamps = true;
-        }
     }
 
     private function incrementAttempt($user)
@@ -80,16 +72,5 @@ class TwoFactorController extends Controller
 
         return redirect()->route('login')
             ->withErrors(['error' => 'Too many failed attempts. This account will now be locked for a period of 10 minutes.']);
-    }
-
-    private function resetLoginAttemptData($user)
-    {
-        if ($user->two_factor_attempts >= 1 && $user->last_attempt_at !== null) {
-            $user->timestamps = false;
-            $user->two_factor_attempts = 0;
-            $user->last_attempt_at = null;
-            $user->save();
-            $user->timestamps = true;
-        }
     }
 }

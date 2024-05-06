@@ -78,7 +78,6 @@ class ProjectController extends Controller
         $pending_or_open = $project->is_open_or_pending;
 
         $tasks = $project->tasks()
-        
             ->when(request()->search, function ($query) {
                 $query->where('title', 'LIKE', '%'.request()->search.'%');
             })
@@ -99,8 +98,10 @@ class ProjectController extends Controller
     public function edit(Project $project): View
     {
         $managers = User::role(['Admin', 'Manager'])->pluck('name', 'id');
-        $statuses = Arr::add(config('definitions.statuses'), 'Restored', 'restored');
-        $statuses = Arr::add($statuses, 'Expired', 'expired');
+        $statuses = array_merge(config('definitions.statuses'), [
+            'Restored' => 'restored',
+            'Expired' => 'expired',
+        ]);
 
         return view('projects.edit', compact(['project', 'managers', 'statuses']));
     }

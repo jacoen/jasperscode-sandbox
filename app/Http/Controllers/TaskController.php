@@ -96,7 +96,9 @@ class TaskController extends Controller
         $task->load('project');
 
         $employees = User::role(['Admin', 'Manager', 'Employee'])->pluck('name', 'id');
-        $statuses = Arr::add(config('definitions.statuses'), 'Restored', 'restored');
+        $statuses = array_merge(config('definitions.statuses'), [
+            'Restored' => 'restored',
+        ]);
 
         return view('tasks.edit', compact(['task', 'employees', 'statuses']));
     }
