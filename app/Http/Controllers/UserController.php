@@ -6,7 +6,6 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Services\UserService;
-
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
@@ -40,7 +39,7 @@ class UserController extends Controller
         $this->userService->store($request->validated());
 
         return redirect()->route('users.index')
-            ->with('success', 'A new user was created.');
+            ->with('success', 'A new user has been created.');
     }
 
     public function edit(User $user)
