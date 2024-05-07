@@ -55,7 +55,7 @@ class TwoFactorMiddlewareTest extends TestCase
         $this->assertTwoFactorError($resend);
     }
 
-    public function test_it_redirects_a_user_without_2fa_but_without_a_two_factor_code_when_they_try_to_verify_a_two_factor_code()
+    public function test_it_redirects_a_user_with_2fa_but_without_a_two_factor_code_when_they_try_to_verify_a_two_factor_code()
     {
         $user = User::factory()->create([
             'two_factor_enabled' => true
@@ -68,9 +68,14 @@ class TwoFactorMiddlewareTest extends TestCase
         $this->assertTwoFactorError($response);
     }
 
-    public function test_it_redirects_a_user_without_2fa_but_without_a_two_factor_code_when_they_try_to_resend_a_new_two_factor_code()
+    public function test_it_redirects_a_user_with_2fa_but_without_a_two_factor_code_when_they_try_to_resend_a_new_two_factor_code()
     {
+        $user = User::factory()->create([
+            'two_factor_enabled' => true,
+        ]);
 
+        $response = $this->actingAs($user)->get(route('verify.resend'));
+        $this->assertTwoFactorError($response);
     }
 
     private function assertTwoFactorError($response)

@@ -103,6 +103,4 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
     Route::get('/activities', ActivityController::class)->name('activities.index');
 });
 
-Route::get('/stub', StubController::class);
-
 

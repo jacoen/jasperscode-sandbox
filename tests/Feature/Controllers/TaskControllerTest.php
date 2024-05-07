@@ -58,7 +58,7 @@ class TaskControllerTest extends TestCase
     }
 
 
-    public function test_a_user_with_the_read_task_permission_can_see_all_their_asssigned_tasks_when_visiting_the_task_index_page ()
+    public function test_a_user_with_the_read_task_permission_can_see_all_their_asssigned_tasks_when_visiting_the_task_index_page()
     {
         $task = Task::factory()->for($this->project)->create(['user_id' => $this->employee->id]);
 

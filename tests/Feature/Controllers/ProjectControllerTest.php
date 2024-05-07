@@ -44,7 +44,7 @@ class ProjectControllerTest extends TestCase
             ->assertSeeText(['No projects yet.']);
     }
 
-    public function test_the_truncated_project_titles_will_be_displayed_for_the_user_with_the_read_project_permission_when_visiting_the_project_overview_page()
+    public function test_a_user_with_the_read_project_permission_can_see_all_active_projects()
     {
         $project = Project::factory()->create(['manager_id' => $this->manager->id]);
 
