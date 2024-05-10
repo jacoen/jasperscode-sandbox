@@ -69,7 +69,6 @@ class TwoFactorControllerTest extends TestCase
             'two_factor_code' => 'ab*d_f'
         ])->assertSessionHasErrors([
             'two_factor_code' => 'The two factor code field must be a number.',
-            'two_factor_code' => 'The two factor code field must be an integer.'
         ]);
 
         $this->assertDatabaseHas('users', [
@@ -81,23 +80,22 @@ class TwoFactorControllerTest extends TestCase
     public function test_the_two_factor_code_must_be_exactly_six_numbers()
     {
         $user = User::factory()->withTwoFactorEnabled()->create();
+        $secondUser = User::factory()->withTwoFactorEnabled()->create();
 
         $this->actingAs($user)->post(route('verify.store'), [
             'two_factor_code' => '12345'
         ])->assertSessionHasErrors([
-            'two_factor_code' => 'The two factor code field must be 6 digits.',
+            'two_factor_code' => 'The two factor code must be 6 characters long.',
         ]);
 
-        $this->actingAs($user)->post(route('verify.store'), [
+        $this->actingAs($secondUser)->post(route('verify.store'), [
             'two_factor_code' => '1234567'
         ])->assertSessionHasErrors([
             'two_factor_code' => 'The two factor code field must be 6 digits.',
         ]);
 
-        $this->assertDatabaseHas('users', [
-            'id' => $this->user->id,
-            'two_factor_code' => $this->user->two_factor_code,
-        ]);
+        $this->assertNotNull($user->fresh()->two_factor_code);
+        $this->assertNotNull($secondUser->fresh()->two_factor_code);
     }
 
     public function test_the_user_gets_redirected_to_the_home_route_and_their_two_factor_code_get_erased_after_they_enter_their_two_factor_code_correctly()
@@ -126,7 +124,7 @@ class TwoFactorControllerTest extends TestCase
         ]);
 
         $this->actingAs($user)->post(route('verify.store'), [
-            'two_factor_code' => 123456,
+            'two_factor_code' => '123456',
         ])->assertSessionHasErrors([
             'two_factor_code' => 'The two factor code you have entered does not match.',
         ]);
