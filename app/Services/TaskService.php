@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Exceptions\ActiveTaskForceDeleteException;
+use App\Exceptions\CreateTaskException;
 use App\Exceptions\InvalidProjectStatusException;
+use App\Exceptions\ProjectDeletedException;
+use App\Exceptions\UpdateTaskException;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -32,7 +35,7 @@ class TaskService
     public function storeTask(Project $project, array $validData, array $attachments = null): Task
     {
         if (! $project->is_open_or_pending) {
-            throw new InvalidProjectStatusException('Could create a task when the status of the project is not open or pending.');
+            throw new CreateTaskException('Could not create a task for an inactive project.');
         }
 
         $task = $project->tasks()->create($validData);
@@ -55,7 +58,7 @@ class TaskService
     public function updateTask(Task $task, array $validData, array $attachments = null): Task
     {
         if (! $task->project->is_open_or_pending) {
-            throw new InvalidProjectStatusException('Could not update the task because the project is inactive.');
+            throw new UpdateTaskException('Could not update the task because the project is inactive.');
         }
 
         $task->update($validData);
@@ -96,7 +99,7 @@ class TaskService
         $project = $task->project;
 
         if ($project->trashed()) {
-            throw new InvalidProjectStatusException('Could not restore task because the project has been trashed.');
+            throw new ProjectDeletedException('Could not restore task because the project has been trashed.');
         }
         
         if (! $project->is_open_or_pending) {

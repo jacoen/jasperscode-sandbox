@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\CreateTaskException;
 use App\Exceptions\InvalidProjectStatusException;
+use App\Exceptions\ProjectDeletedException;
+use App\Exceptions\UpdateTaskException;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Project;
@@ -54,7 +57,7 @@ class TaskController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'A new task has been created.');
-        } catch (InvalidProjectStatusException $e) {
+        } catch (CreateTaskException $e) {
             return redirect()->route('projects.show', $project)
                 ->withErrors(['errors' => $e->getMessage()]);
         }
@@ -89,7 +92,7 @@ class TaskController extends Controller
     
             return redirect()->route('tasks.show', $task)
                 ->with('success', 'The task '.$task->title.' has been updated.');
-        } catch (InvalidProjectStatusException $e) {
+        } catch (UpdateTaskException $e) {
             return redirect()->route('projects.show', $task->project)
                 ->withErrors(['errors' => $e->getMessage()]);
         }
@@ -123,7 +126,10 @@ class TaskController extends Controller
 
             return redirect()->route('tasks.trashed')
                 ->with('success', 'The task has been restored.');
-        } catch (\Exception $e) {
+        } catch (ProjectDeletedException $e) {
+            return redirect()->route('tasks.trashed')
+                ->withErrors(['error' => $e->getMessage()]);
+        } catch (InvalidProjectStatusException $e) {
             return redirect()->route('tasks.trashed')
                 ->withErrors(['error' => $e->getMessage()]);
         }
