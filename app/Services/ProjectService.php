@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\CannotDeletePinnedProjectException;
 use App\Exceptions\InvalidPinnedProjectException;
+use App\Exceptions\UnauthorizedPinException;
 use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
@@ -49,7 +50,7 @@ class ProjectService
         $pinnedProject = Project::where('is_pinned', true)->first();
 
         if (! auth()->user()->can('pin project') && isset($project->is_pinned) && $validatedData['is_pinned']) {
-            throw new InvalidPinnedProjectException('User is not authorized to pin a project');
+            throw new UnauthorizedPinException('User is not authorized to pin a project');
         }
 
         if ($validatedData['is_pinned'] && $pinnedProject && $pinnedProject->id != $project->id) {
@@ -82,19 +83,7 @@ class ProjectService
         ->orderBy('id', 'desc')
         ->paginate();
     }
-
-    public function restoreProject(Project $project): Project
-    {
-        $project->restore();
-
-        return $project;
-    }
-
-    public function forceDeleteProject(Project $project): void
-    {
-        $project->forceDelete();
-    }
-
+    
     public function listExpiredProjects(string $yearWeek = null): LengthAwarePaginator
     {
         $query = Project::with('manager')

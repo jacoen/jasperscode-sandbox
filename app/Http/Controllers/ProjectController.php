@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\PinnedProjectDestructionException;
+use App\Exceptions\PinnedProjectExistsException;
+use App\Exceptions\UnauthorizedPinException;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
 use App\Services\ProjectService;
 use App\Services\TaskService;
 use App\Services\UserService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -95,7 +97,9 @@ class ProjectController extends Controller
 
             return redirect()->route('projects.show', $updatedProject)
                 ->with('success', 'The project has been updated.');
-        } catch (Exception $e) {
+        } catch (UnauthorizedPinException $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        } catch (PinnedProjectExistsException $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
@@ -110,7 +114,7 @@ class ProjectController extends Controller
     
             return redirect()->route('projects.index')
                 ->with('success', 'The project has been deleted.');
-        } catch (Exception $e) {
+        } catch (PinnedProjectDestructionException $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
@@ -128,17 +132,17 @@ class ProjectController extends Controller
     {
         $this->authorize('restore', $project);
 
-        $restoredProject = $this->projectService->restoreProject($project);
+        $project->restore();
 
         return redirect()->route('projects.trashed')
-            ->with('success', 'The project '.$restoredProject->title.' has been restored.');
+            ->with('success', 'The project '.$project->title.' has been restored.');
     }
 
     public function forceDelete(Project $project): RedirectResponse
     {
         $this->authorize('forceDelete', $project);
 
-        $this->projectService->forceDeleteProject($project);
+        $project->forceDelete();
 
         return redirect()->route('projects.trashed')
             ->with('success', 'The project has been permanently deleted.');
