@@ -154,9 +154,12 @@ class UserControllerTest extends TestCase
 
         $user = User::latest('id')->first();
 
+        $count = $this->initialCount;
+        $count ++;
+
         $this->assertEquals($user->name, $this->data['name']);
         $this->assertEquals($user->email, $this->data['email']);
-        $this->assertNotNull($user->password);
+        $this->assertEquals($count, User::count());
     }
 
     public function test_a_guest_cannot_visit_the_edit_user_form()
@@ -334,6 +337,7 @@ class UserControllerTest extends TestCase
         $this->assertEquals($user->name, $this->data['name']);
         $this->assertEquals($user->email, $this->data['email']);
         $this->assertTrue($user->hasRole('Employee'));
+        $this->assertFalse($user->hasRole('User'));
     }
 
     public function test_a_guest_cannot_delete_a_user()

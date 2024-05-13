@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Events\RoleUpdatedEvent;
 use App\Exceptions\InvalidEmailException;
+use App\Exceptions\UnableToChangeRoleException;
 use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
 use Illuminate\Support\Collection;
@@ -36,7 +37,7 @@ class UserService
         }
 
         if ($user->hasRole('Super Admin') && (int)$user->roles()->first()->id !== (int)$validData['role']) {
-            throw new \Exception('Not able to change the role of this user');
+            throw new UnableToChangeRoleException('Not able to change the role of this user');
         }
 
         $role = $validData['role'];
@@ -50,11 +51,6 @@ class UserService
         }
 
         return $user;
-    }
-
-    public function delete(User $user): void
-    {
-        $user->delete();
     }
 
     public function getUsersByRoles(array $roles): Collection
