@@ -340,6 +340,33 @@ class UserControllerTest extends TestCase
         $this->assertFalse($user->hasRole('User'));
     }
 
+    public function test_the_user_get_redirected_to_the_edit_user_page_when_the_invalid_email_exception_occurs_while_updating_a_user()
+    {
+        $user = User::factory()->create(['email' => 'john@example.com'])->assignRole('Employee');
+
+        $this->actingAs($this->admin)->put(route('users.update', $user), array_merge($this->data, [
+            'role' => $this->employeeRole->id,
+        ]))
+            ->assertRedirect(route('users.edit', $user))
+            ->assertSessionHasErrors([
+                'error' => 'The email does not match the original email address.',
+            ]);
+    }
+
+    public function test_the_user_get_redirected_to_the_edit_user_page_when_the_unable_to_change_role_exception_occurs_while_updating_the_user()
+    {
+        $user = User::factory()->create(['email' => 'john@example.com'])->assignRole(['Super Admin']);
+
+        $this->actingAs($this->admin)->put(route('users.update', $user), array_merge($this->data, [
+            'email' => $user->email,
+            'role' => $this->employeeRole->id,
+        ]))
+            ->assertRedirect(route('users.edit', $user))
+            ->assertSessionHasErrors([
+                'error' => 'Unable to change the role of this user.'
+            ]);
+    }
+
     public function test_a_guest_cannot_delete_a_user()
     {
         $user = User::factory()->create();

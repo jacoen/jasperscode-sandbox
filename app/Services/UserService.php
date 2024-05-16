@@ -33,11 +33,11 @@ class UserService
         $oldRole = $user->roles->first()->id;
 
         if ($validData['email'] !== $user->email) {
-            throw new InvalidEmailException('The email does not match the original email address');
+            throw new InvalidEmailException('The email does not match the original email address.', $user);
         }
 
         if ($user->hasRole('Super Admin') && (int)$user->roles()->first()->id !== (int)$validData['role']) {
-            throw new UnableToChangeRoleException('Not able to change the role of this user');
+            throw new UnableToChangeRoleException('Unable to change the role of this user.', $user);
         }
 
         $role = $validData['role'];

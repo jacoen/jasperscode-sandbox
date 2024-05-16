@@ -7,13 +7,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-class InvalidEmailException extends Exception
+class UnableToChangeRoleException extends Exception
 {
     protected $user;
 
     public function __construct($message, $user)
     {
         parent::__construct($message);
+
         $this->user = $user;
     }
 
