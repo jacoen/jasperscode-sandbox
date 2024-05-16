@@ -98,9 +98,11 @@ class ProjectController extends Controller
             return redirect()->route('projects.show', $updatedProject)
                 ->with('success', 'The project has been updated.');
         } catch (UnauthorizedPinException $e) {
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return redirect()->route('projects.edit', $project)
+                ->withErrors(['error' => $e->getMessage()]);
         } catch (PinnedProjectExistsException $e) {
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return redirect()->route('projects.edit', $project)
+                ->withErrors(['error' => $e->getMessage()]);
         }
     }
 
@@ -115,7 +117,8 @@ class ProjectController extends Controller
             return redirect()->route('projects.index')
                 ->with('success', 'The project has been deleted.');
         } catch (PinnedProjectDestructionException $e) {
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return redirect()->route('projects.index')
+                ->withErrors(['error' => $e->getMessage()]);
         }
     }
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\CannotDeletePinnedProjectException;
 use App\Exceptions\InvalidPinnedProjectException;
+use App\Exceptions\PinnedProjectDestructionException;
 use App\Exceptions\UnauthorizedPinException;
 use App\Models\Project;
 use App\Models\User;
@@ -36,7 +37,7 @@ class ProjectService
 
     public function storeProject(array $projectData): Project
     {
-        $project = $project = Project::create($projectData);
+        $project = Project::create($projectData);
 
         if (isset($projectData['manager_id'])) {
             User::find($projectData['manager_id'])->notify(new ProjectAssignedNotification($project));
@@ -50,7 +51,7 @@ class ProjectService
         $pinnedProject = Project::where('is_pinned', true)->first();
 
         if (! auth()->user()->can('pin project') && isset($project->is_pinned) && $validatedData['is_pinned']) {
-            throw new UnauthorizedPinException('User is not authorized to pin a project');
+            throw new UnauthorizedPinException('User is not authorized to pin a project.');
         }
 
         if ($validatedData['is_pinned'] && $pinnedProject && $pinnedProject->id != $project->id) {
@@ -69,7 +70,7 @@ class ProjectService
     public function destroy(Project $project): void
     {
         if ($project->is_pinned) {
-            throw new CannotDeletePinnedProjectException('Cannot delete a project that is pinned.');
+            throw new PinnedProjectDestructionException('Cannot delete a project that is pinned.');
         }
 
         $project->delete();

@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Services;
 
-use App\Exceptions\ActiveTaskForceDeleteException;
+use App\Exceptions\CreateTaskException;
 use App\Exceptions\InvalidProjectStatusException;
+use App\Exceptions\ProjectDeletedException;
+use App\Exceptions\UpdateTaskException;
 use App\Models\Project;
 use App\Models\Task;
 use App\Notifications\TaskAssignedNotification;
@@ -112,7 +114,7 @@ class TaskServiceTest extends TestCase
             'user_id' => $this->employee->id,
         ];
 
-        $this->expectException(InvalidProjectStatusException::class);
+        $this->expectException(CreateTaskException::class);
         $this->taskService->storeTask($project, $validData);
 
         $this->assertDatabaseMissing('tasks', $validData);
@@ -128,7 +130,7 @@ class TaskServiceTest extends TestCase
             'user_id' => $this->employee->id,
         ];
 
-        $this->expectException(InvalidProjectStatusException::class);
+        $this->expectException(CreateTaskException::class);
         $this->taskService->storeTask($project, $validData);
 
         $this->assertDatabaseMissing('tasks', $validData);
@@ -144,7 +146,7 @@ class TaskServiceTest extends TestCase
             'user_id' => $this->employee->id,
         ];
 
-        $this->expectException(InvalidProjectStatusException::class);
+        $this->expectException(CreateTaskException::class);
         $this->taskService->storeTask($project, $validData);
 
         $this->assertDatabaseMissing('tasks', $validData);
@@ -170,7 +172,7 @@ class TaskServiceTest extends TestCase
         $this->assertDatabaseHas('tasks', $validData);
     }
 
-    public function test_it_can_upload_attachments_when_a_task_has_been_created()
+    public function test_it_can_upload_attachments_when_creating_a_task()
     {
         $project = Project::factory()->create(['status' => 'open']);
         $file = UploadedFile::fake()->image('test.jpg');
@@ -216,7 +218,7 @@ class TaskServiceTest extends TestCase
             'author_id' => $task->author_id,
         ];
 
-        $this->expectException(InvalidProjectStatusException::class);
+        $this->expectException(UpdateTaskException::class);
         $this->taskService->updateTask($task, $validData);
 
         $this->assertNotEquals($task->fresh()->title, $validData['title']);
@@ -236,7 +238,7 @@ class TaskServiceTest extends TestCase
             'author_id' => $task->author_id,
         ];
 
-        $this->expectException(InvalidProjectStatusException::class);
+        $this->expectException(UpdateTaskException::class);
         $this->taskService->updateTask($task, $validData);
 
         $this->assertNotEquals($task->fresh()->title, $validData['title']);
@@ -256,7 +258,7 @@ class TaskServiceTest extends TestCase
             'author_id' => $task->author_id,
         ];
 
-        $this->expectException(InvalidProjectStatusException::class);
+        $this->expectException(UpdateTaskException::class);
         $this->taskService->updateTask($task, $validData);
 
         $this->assertNotEquals($task->fresh()->title, $validData['title']);
@@ -376,15 +378,6 @@ class TaskServiceTest extends TestCase
         Notification::assertSentTo($this->employee, TaskAssignedNotification::class);
     }
 
-    public function test_it_can_soft_delete_a_task()
-    {
-        $task = Task::factory()->create();
-
-        $this->taskService->destroyTask($task);
-
-        $this->assertSoftDeleted($task);
-    }
-
     public function test_it_can_only_list_all_soft_deleted_tasks()
     {
         $activeTask = Task::factory()->create();
@@ -415,7 +408,7 @@ class TaskServiceTest extends TestCase
         $project = Project::factory()->trashed()->create();
         $task = Task::factory()->for($project)->trashed()->create();
 
-        $this->expectException(InvalidProjectStatusException::class);
+        $this->expectException(ProjectDeletedException::class);
         $this->taskService->restoreTask($task);
 
         $this->assertSoftDeleted($task);
@@ -441,27 +434,6 @@ class TaskServiceTest extends TestCase
 
         $this->assertNull($task->deleted_at);
         $this->assertNotSoftDeleted($task);
-    }
-
-    public function test_it_throws_an_exception_when_force_deleting_an_active_task()
-    {
-         $task = Task::factory()->create();
-
-         $this->expectException(ActiveTaskForceDeleteException::class);
-         $this->expectExceptionMessage('Cannot force delete this task.');
-    }
-
-    public function test_it_can_force_delete_a_task()
-    {
-        $task = Task::factory()->trashed()->create();
-
-        $this->taskService->forceDelete($task);
-
-        $this->assertDatabaseMissing('tasks', [
-            'id' => $task->id,
-            'title' => $task->title,
-            'description' => $task->description,
-        ]);
     }
 
     public function test_it_can_list_all_active_tasks_of_a_project()

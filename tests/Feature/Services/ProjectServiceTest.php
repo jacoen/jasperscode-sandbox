@@ -4,6 +4,7 @@ namespace Tests\Feature\Services;
 
 use App\Exceptions\CannotDeletePinnedProjectException;
 use App\Exceptions\InvalidPinnedProjectException;
+use App\Exceptions\UnauthorizedPinException;
 use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
@@ -136,7 +137,7 @@ class ProjectServiceTest extends TestCase
             'is_pinned' => true,
         ];
 
-        $this->expectException(InvalidPinnedProjectException::class);
+        $this->expectException(UnauthorizedPinException::class);
         $this->expectExceptionMessage('User is not authorized to pin a project');
         $this->projectService->updateproject($project, $data);
 

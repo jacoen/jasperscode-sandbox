@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Exceptions\ActiveTaskForceDeleteException;
 use App\Exceptions\CreateTaskException;
 use App\Exceptions\InvalidProjectStatusException;
 use App\Exceptions\ProjectDeletedException;
@@ -35,7 +34,7 @@ class TaskService
     public function storeTask(Project $project, array $validData, array $attachments = null): Task
     {
         if (! $project->is_open_or_pending) {
-            throw new CreateTaskException('Could not create a task for an inactive project.');
+            throw new CreateTaskException('Cannot create a task for an inactive project.');
         }
 
         $task = $project->tasks()->create($validData);
@@ -58,7 +57,7 @@ class TaskService
     public function updateTask(Task $task, array $validData, array $attachments = null): Task
     {
         if (! $task->project->is_open_or_pending) {
-            throw new UpdateTaskException('Could not update the task because the project is inactive.');
+            throw new UpdateTaskException('Cannot update the task because the project is inactive.');
         }
 
         $task->update($validData);
@@ -77,11 +76,6 @@ class TaskService
         }
 
         return $task;
-    }
-
-    public function destroyTask(Task $task): void
-    {
-        $task->delete();
     }
 
     public function trashedTasks(): LengthAwarePaginator
@@ -109,15 +103,6 @@ class TaskService
         $task->restore();
 
         return $task;
-    }
-
-    public function forceDelete(Task $task): void
-    {
-        if (! $task->trashed()) {
-            throw new ActiveTaskForceDeleteException('Cannot force delete this task.');
-        }
-
-        $task->forceDelete();
     }
 
     public function findTasksByProject($project, $search = null, $status = null): LengthAwarePaginator
