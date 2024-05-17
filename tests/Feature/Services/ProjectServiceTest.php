@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Services;
 
-use App\Exceptions\CannotDeletePinnedProjectException;
 use App\Exceptions\InvalidPinnedProjectException;
+use App\Exceptions\PinnedProjectDestructionException;
 use App\Exceptions\UnauthorizedPinException;
 use App\Models\Project;
 use App\Models\User;
@@ -138,7 +138,7 @@ class ProjectServiceTest extends TestCase
         ];
 
         $this->expectException(UnauthorizedPinException::class);
-        $this->expectExceptionMessage('User is not authorized to pin a project');
+        $this->expectExceptionMessage('You are not authorized to pin a project.');
         $this->projectService->updateproject($project, $data);
 
         $this->assertNotEquals($project->fresh()->title, $data['title']);
@@ -209,7 +209,7 @@ class ProjectServiceTest extends TestCase
     {
         $project = Project::factory()->create(['is_pinned' => true]);
 
-        $this->expectException(CannotDeletePinnedProjectException::class);
+        $this->expectException(PinnedProjectDestructionException::class);
         $this->expectExceptionMessage('Cannot delete a project that is pinned.');
         $this->projectService->destroy($project);
 
