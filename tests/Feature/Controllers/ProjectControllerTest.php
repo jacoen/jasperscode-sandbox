@@ -270,7 +270,7 @@ class ProjectControllerTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_a_user_without_the_update_project_permission_cannot_edit_an_existing_project()
+    public function test_a_user_without_the_update_project_permission_cannot_visit_the_edit_project_page()
     {
         $project = Project::factory()->create();
 
@@ -278,7 +278,7 @@ class ProjectControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_a_user_with_the_update_project_permission_can_edit_an_existing_project()
+    public function test_a_user_with_the_update_project_permission_can_visit_the_edit_project_page()
     {
         $project = Project::factory()->create();
 
@@ -417,7 +417,7 @@ class ProjectControllerTest extends TestCase
         $this->assertNotEquals($project->due_date->format('Y-m-d'), now()->addMonths(6)->format('Y-m-d'));
     }
 
-    public function test_a_user_with_the_update_project_permission_cannot_update_a_project()
+    public function test_a_user_without_the_update_project_permission_cannot_update_a_project()
     {
         $project = Project::factory()->create();
 
@@ -432,7 +432,7 @@ class ProjectControllerTest extends TestCase
         $this->assertNotEquals($project->due_date->format('Y-m-d'), now()->addMonths(6)->format('Y-m-d'));
     }
 
-    public function test_a_user_with_the_update_project_permission_can_update_an_existing_project()
+    public function test_a_user_with_the_update_project_permission_can_update_a_project()
     {
         $project = Project::factory()->create();
 
@@ -446,6 +446,33 @@ class ProjectControllerTest extends TestCase
         $this->assertEquals($project->description, $this->data['description']);
         $this->assertEquals($project->status, 'pending');
         $this->assertEquals($project->due_date->format('Y-m-d'), now()->addMonths(6)->format('Y-m-d'));
+    }
+
+    public function test_the_user_gets_redirected_to_the_edit_project_page_when_the_unauthorized_pin_exception_occurs_while_updating_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
+            'status' => 'pending',
+            'is_pinned' => true,
+        ]))->assertRedirect(route('projects.edit', $project))
+            ->assertSessionHasErrors([
+                'error' => 'You are not authorized to pin a project.',
+            ]);
+    }
+
+    public function test_the_user_gets_redirected_to_the_edit_project_page_when_invalid_pinned_project_exception_occurs_while_updating_a_project()
+    {
+        Project::factory()->create(['is_pinned' => true]);
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->admin)->put(route('projects.update', $project), array_merge($this->data, [
+            'status' => 'pending',
+            'is_pinned' => true,
+        ]))->assertRedirect(route('projects.edit', $project))
+            ->assertSessionHasErrors([
+                'error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.'
+            ]);
     }
 
     public function test_a_guest_cannot_delete_a_project()
@@ -477,6 +504,17 @@ class ProjectControllerTest extends TestCase
             ->assertSessionHas('success', 'The project has been deleted.');
 
         $this->assertSoftDeleted($project);
+    }
+
+    public function test_the_user_gets_redirected_to_the_projects_index_page_when_the_pinned_project_destruction_exception_occurs_while_deleting_a_project()
+    {
+        $project = Project::factory()->create(['is_pinned' => true]);
+
+        $this->actingAs($this->manager)->delete(route('projects.destroy', $project))
+            ->assertRedirect(route('projects.index'))
+            ->assertSessionHasErrors([
+                'error' => 'Cannot delete a project that is pinned.',
+            ]);
     }
 
     public function test_a_guest_cannot_visit_the_trashed_projects_page()

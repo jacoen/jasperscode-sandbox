@@ -92,18 +92,10 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
-        try {
-            $updatedProject = $this->projectService->updateProject($project, $request->validated());
+        $updatedProject = $this->projectService->updateProject($project, $request->validated());
 
-            return redirect()->route('projects.show', $updatedProject)
-                ->with('success', 'The project has been updated.');
-        } catch (UnauthorizedPinException $e) {
-            return redirect()->route('projects.edit', $project)
-                ->withErrors(['error' => $e->getMessage()]);
-        } catch (PinnedProjectExistsException $e) {
-            return redirect()->route('projects.edit', $project)
-                ->withErrors(['error' => $e->getMessage()]);
-        }
+        return redirect()->route('projects.show', $updatedProject)
+            ->with('success', 'The project has been updated.');
     }
 
     /**
@@ -111,15 +103,10 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project): RedirectResponse
     {
-        try{
-            $this->projectService->destroy($project);
-    
-            return redirect()->route('projects.index')
-                ->with('success', 'The project has been deleted.');
-        } catch (PinnedProjectDestructionException $e) {
-            return redirect()->route('projects.index')
-                ->withErrors(['error' => $e->getMessage()]);
-        }
+        $this->projectService->destroy($project);
+
+        return redirect()->route('projects.index')
+            ->with('success', 'The project has been deleted.');
     }
 
     public function trashed(): View

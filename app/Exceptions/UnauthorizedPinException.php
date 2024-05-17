@@ -3,11 +3,9 @@
 namespace App\Exceptions;
 
 use Exception;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
-class InvalidPinnedProjectException extends Exception
+class UnauthorizedPinException extends Exception
 {
     protected $project;
 
@@ -17,7 +15,7 @@ class InvalidPinnedProjectException extends Exception
         $this->project = $project;
     }
 
-    public function render(Request $request): RedirectResponse|Response
+    public function render(Request $request)
     {
         return redirect()->route('projects.edit', $this->project)
             ->withErrors([

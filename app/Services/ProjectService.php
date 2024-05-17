@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Exceptions\CannotDeletePinnedProjectException;
 use App\Exceptions\InvalidPinnedProjectException;
 use App\Exceptions\PinnedProjectDestructionException;
 use App\Exceptions\UnauthorizedPinException;
@@ -51,11 +50,11 @@ class ProjectService
         $pinnedProject = Project::where('is_pinned', true)->first();
 
         if (! auth()->user()->can('pin project') && isset($project->is_pinned) && $validatedData['is_pinned']) {
-            throw new UnauthorizedPinException('User is not authorized to pin a project.');
+            throw new UnauthorizedPinException('You are not authorized to pin a project.', $project);
         }
 
         if ($validatedData['is_pinned'] && $pinnedProject && $pinnedProject->id != $project->id) {
-            throw new InvalidPinnedProjectException('There is a pinned project already. If you want to pin this project you will have to unpin the other project.');
+            throw new InvalidPinnedProjectException('There is a pinned project already. If you want to pin this project you will have to unpin the other project.', $project);
         }
 
         $project->update($validatedData);
