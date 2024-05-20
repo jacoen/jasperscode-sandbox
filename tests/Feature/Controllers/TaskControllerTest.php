@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Controllers;
 
+use App\Exceptions\CreateTaskException;
+use App\Exceptions\UpdateTaskException;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -232,6 +234,17 @@ class TaskControllerTest extends TestCase
         $this->assertEquals($task->author_id, $this->employee->id);
     }
 
+    public function test_the_user_gets_redirected_to_the_project_detail_page_when_a_create_task_exception_occurs()
+    {
+        $project = Project::factory()->create(['status' => 'closed']);
+
+        $this->actingAs($this->employee)->post(route('tasks.store', $project), $this->data)
+            ->assertRedirect(route('projects.show', $project))
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task for an inactive project.'
+            ]);
+    }
+
     public function test_a_guest_cannot_visit_the_task_detail_page()
     {
         $task = Task::factory()->create();
@@ -458,6 +471,20 @@ class TaskControllerTest extends TestCase
         $this->assertEquals($task->description, $this->data['description']);
         $this->assertEquals($task->user_id, $this->employee->id);
         $this->assertEquals($task->status, 'pending');
+    }
+
+    public function test_the_user_gets_redirected_when_an_update_task_exception_occurs()
+    {
+        $project = Project::factory()->create(['status' => 'closed']);
+        $task = Task::factory()->for($project)->create();
+
+        $this->actingAs($this->employee)->put(route('tasks.update', $task), array_merge($this->data, [
+            'status' => 'pending',
+            'user_id' => $this->employee->id,
+        ]))->assertRedirect(route('tasks.show', $task))
+        ->assertSessionHasErrors([
+            'error' => 'Cannot update the task because the project is inactive.',
+        ]);
     }
 
     public function test_a_guest_cannot_delete_a_task()

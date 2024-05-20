@@ -20,7 +20,7 @@
 
                 <div class="mb-3">
                     <label for="description" class="form-label">Description</label>
-                    <textarea 
+                    <textarea
                         id="description" 
                         name="description" 
                         class="form-control @error('description') is-invalid @enderror" 
@@ -57,10 +57,12 @@
                     </div>    
                 </div>
 
-                <div class="form-check mb-3">
-                    <input type="checkbox" name="is_pinned" id="is_pinned" class="form-check-input"  value="1" {{ $project->is_pinned == 1 ? 'checked' : ''}}>
-                    <label for="is_pinned" class="form-check-label">Pin project</label>
-                </div>
+                @can('pin project')    
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="is_pinned" id="is_pinned" class="form-check-input"  value="1" {{ $project->is_pinned == 1 ? 'checked' : ''}}>
+                        <label for="is_pinned" class="form-check-label">Pin project</label>
+                    </div>
+                @endcan
 
                 <div class="d-flex justify-content-between align-items-center">
                     <div>

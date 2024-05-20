@@ -52,15 +52,10 @@ class TaskController extends Controller
 
     public function store(Project $project, StoreTaskRequest $request): RedirectResponse
     {
-        try {
-            $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
+        $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
 
-            return redirect()->route('projects.show', $project)
-                ->with('success', 'A new task has been created.');
-        } catch (CreateTaskException $e) {
-            return redirect()->route('projects.show', $project)
-                ->withErrors(['errors' => $e->getMessage()]);
-        }
+        return redirect()->route('projects.show', $project)
+            ->with('success', 'A new task has been created.');
     }
 
     public function show(Task $task): View
@@ -87,15 +82,11 @@ class TaskController extends Controller
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
-        try {
-            $task = $this->taskService->updateTask($task, $request->validated(),  $request->file('attachments'));
-    
-            return redirect()->route('tasks.show', $task)
-                ->with('success', 'The task '.$task->title.' has been updated.');
-        } catch (UpdateTaskException $e) {
-            return redirect()->route('projects.show', $task->project)
-                ->withErrors(['errors' => $e->getMessage()]);
-        }
+        $task = $this->taskService->updateTask($task, $request->validated(),  $request->file('attachments'));
+
+        return redirect()->route('tasks.show', $task)
+            ->with('success', 'The task '.$task->title.' has been updated.');
+       
     }
 
     public function destroy(Task $task): RedirectResponse

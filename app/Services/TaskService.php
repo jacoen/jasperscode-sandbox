@@ -34,7 +34,7 @@ class TaskService
     public function storeTask(Project $project, array $validData, array $attachments = null): Task
     {
         if (! $project->is_open_or_pending) {
-            throw new CreateTaskException('Cannot create a task for an inactive project.');
+            throw new CreateTaskException('Cannot create a task for an inactive project.',$project);
         }
 
         $task = $project->tasks()->create($validData);
@@ -57,7 +57,7 @@ class TaskService
     public function updateTask(Task $task, array $validData, array $attachments = null): Task
     {
         if (! $task->project->is_open_or_pending) {
-            throw new UpdateTaskException('Cannot update the task because the project is inactive.');
+            throw new UpdateTaskException('Cannot update the task because the project is inactive.', $task);
         }
 
         $task->update($validData);
