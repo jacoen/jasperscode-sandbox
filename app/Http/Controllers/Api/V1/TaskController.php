@@ -43,9 +43,9 @@ class TaskController extends Controller
             $task = $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
 
             return new TaskResource($task);
-        } catch(InvalidProjectStatusException $e) {
+        } catch (InvalidProjectStatusException $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
@@ -69,7 +69,7 @@ class TaskController extends Controller
             $data = $this->taskService->updateTask($task, $request->validated(), $request->file('attachments'));
 
             return new TaskResource($data);
-        } catch(InvalidProjectStatusException $e) {
+        } catch (InvalidProjectStatusException $e) {
             return response()->json([
                 'message' => $e->getMessage(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);

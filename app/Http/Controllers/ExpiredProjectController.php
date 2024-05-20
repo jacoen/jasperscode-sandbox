@@ -6,7 +6,6 @@ use App\Services\ProjectService;
 
 class ExpiredProjectController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware(['permission:read expired projects']);

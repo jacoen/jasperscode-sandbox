@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\PinnedProjectDestructionException;
-use App\Exceptions\PinnedProjectExistsException;
-use App\Exceptions\UnauthorizedPinException;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
@@ -80,8 +77,8 @@ class ProjectController extends Controller
     {
         $managers = $userService->getUsersByRoles(['Admin', 'Manager']);
         $statuses = array_merge(config('definitions.statuses'), [
-            'Restored' => 'restored', 
-            'Expired' => 'expired'
+            'Restored' => 'restored',
+            'Expired' => 'expired',
         ]);
 
         return view('projects.edit', compact(['project', 'managers', 'statuses']));

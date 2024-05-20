@@ -2,10 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\CreateTaskException;
-use App\Exceptions\InvalidProjectStatusException;
-use App\Exceptions\ProjectDeletedException;
-use App\Exceptions\UpdateTaskException;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Project;
@@ -74,7 +70,7 @@ class TaskController extends Controller
 
         $employees = $userService->getUsersByRoles(['Admin', 'Manager', 'Employee']);
         $statuses = array_merge(config('definitions.statuses'), [
-            'Restored' => 'restored'
+            'Restored' => 'restored',
         ]);
 
         return view('tasks.edit', compact(['task', 'employees', 'statuses']));
@@ -83,14 +79,13 @@ class TaskController extends Controller
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
         $task = $this->taskService->updateTask(
-            $task, 
-            $request->validated(),  
-            $request->file('attachments')
+            $task,
+            $request->validated(),
+            $request->file('attachments'),
         );
 
         return redirect()->route('tasks.show', $task)
             ->with('success', 'The task '.$task->title.' has been updated.');
-       
     }
 
     public function destroy(Task $task): RedirectResponse

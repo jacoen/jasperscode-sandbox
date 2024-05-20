@@ -33,8 +33,7 @@ class ProjectExpirationReportCommand extends Command
 
         if ($projects >= 1) {
             $yearWeek = $this->generateYearCode();
-            foreach ($users as $user)
-            {
+            foreach ($users as $user) {
                 $user->notify(new ProjectExpirationReportNotification($projects, $user, $yearWeek));
             }
 
@@ -44,7 +43,7 @@ class ProjectExpirationReportCommand extends Command
             $this->info('There was no active project with an expired due_date last week. Goob job!');
             return;
         }
-        
+
     }
 
     private function countExpiredProjectsLastWeek(): int

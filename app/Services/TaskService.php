@@ -17,10 +17,10 @@ class TaskService
     public function listTasks($search = null, $status = null, $userId = null): LengthAwarePaginator
     {
         return Task::with('project.manager', 'author', 'user')
-            ->when($search, function($query) use ($search) {
+            ->when($search, function ($query) use ($search) {
                 $query->where('title', 'LIKE', '%'.$search.'%');
             })
-            ->when($status, function($query) use ($status) {
+            ->when($status, function ($query) use ($status) {
                 $query->where('status', $status);
             })
             ->when($userId, function ($query) use ($userId) {
@@ -34,7 +34,7 @@ class TaskService
     public function storeTask(Project $project, array $validData, array $attachments = null): Task
     {
         if (! $project->is_open_or_pending) {
-            throw new CreateTaskException('Cannot create a task for an inactive project.',$project);
+            throw new CreateTaskException('Cannot create a task for an inactive project.', $project);
         }
 
         $task = $project->tasks()->create($validData);
@@ -81,10 +81,10 @@ class TaskService
     public function trashedTasks(): LengthAwarePaginator
     {
         return Task::onlyTrashed()
-        ->with('project')
-        ->latest('deleted_at')
-        ->orderBy('id', 'desc')
-        ->paginate();
+            ->with('project')
+            ->latest('deleted_at')
+            ->orderBy('id', 'desc')
+            ->paginate();
 
     }
 
@@ -95,7 +95,7 @@ class TaskService
         if ($project->trashed()) {
             throw new ProjectDeletedException('Could not restore task because the project has been trashed.');
         }
-        
+
         if (! $project->is_open_or_pending) {
             throw new InvalidProjectStatusException('Could not restore task because the related project is inactive');
         }
@@ -108,10 +108,10 @@ class TaskService
     public function findTasksByProject($project, $search = null, $status = null): LengthAwarePaginator
     {
         return $project->tasks()
-            ->when($search, function ($query) use($search) {
+            ->when($search, function ($query) use ($search) {
                 $query->where('title', 'LIKE', '%'.$search.'%');
             })
-            ->when($status, function ($query) use($status) {
+            ->when($status, function ($query) use ($status) {
                 $query->where('status', $status);
             })
             ->with('author', 'user')

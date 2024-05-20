@@ -6,7 +6,6 @@ use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectExpirationNotification;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class ProjectExpirationCheckCommand extends Command
 {
@@ -47,9 +46,8 @@ class ProjectExpirationCheckCommand extends Command
             }
             $count++;
         }
-        
+
         $this->info('The check has been completed. '.$count.' projects have expired. The status of these projects has been changed to expired.');
-        return;
     }
 
     private function ActiveProjects()
