@@ -2,8 +2,6 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Exceptions\CreateTaskException;
-use App\Exceptions\UpdateTaskException;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -59,7 +57,6 @@ class TaskControllerTest extends TestCase
             ->assertSeeText('No tasks yet.');
     }
 
-
     public function test_a_user_with_the_read_task_permission_can_see_all_their_asssigned_tasks_when_visiting_the_task_index_page()
     {
         $task = Task::factory()->for($this->project)->create(['user_id' => $this->employee->id]);
@@ -100,7 +97,7 @@ class TaskControllerTest extends TestCase
 
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), $data)
             ->assertSessionHasErrors([
-                'user_id' => 'The selected user is invalid.'
+                'user_id' => 'The selected user is invalid.',
             ]);
     }
 
@@ -119,7 +116,7 @@ class TaskControllerTest extends TestCase
     public function test_the_title_must_be_at_least_3_characters_long_when_creating_a_task()
     {
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), [
-            'title' => 'aa', 
+            'title' => 'aa',
         ])->assertSessionHasErrors([
             'title' => 'The title field must be at least 3 characters.',
         ]);
@@ -130,7 +127,7 @@ class TaskControllerTest extends TestCase
     public function test_the_title_cannot_be_longer_than_255_characters_when_creating_a_task()
     {
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), [
-            'title' => Str::repeat('abc', 120), 
+            'title' => Str::repeat('abc', 120),
         ])->assertSessionHasErrors([
             'title' => 'The title field must not be greater than 255 characters.',
         ]);
@@ -153,19 +150,19 @@ class TaskControllerTest extends TestCase
     {
         $document = UploadedFile::fake()->create('test.txt', 15);
         $pdf = UploadedFile::fake()->create('test.pdf', 101);
-    
+
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project),
             array_merge($this->data, ['attachments' => [$document]])
         )->assertSessionHasErrors([
             'attachments.0' => 'The attachments may only contain images.',
         ]);
-    
+
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project),
             array_merge($this->data, ['attachments' => [$pdf]])
         )->assertSessionHasErrors([
             'attachments.0' => 'The attachments may only contain images.',
         ]);
-    
+
         Storage::disk('media')->assertMissing($document);
         Storage::disk('media')->assertMissing($pdf);
 
@@ -186,7 +183,7 @@ class TaskControllerTest extends TestCase
                 $image3,
                 $image4,
             ],
-        ]);
+            ]);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), $taskData)
             ->assertSessionHasErrors([
@@ -241,7 +238,7 @@ class TaskControllerTest extends TestCase
         $this->actingAs($this->employee)->post(route('tasks.store', $project), $this->data)
             ->assertRedirect(route('projects.show', $project))
             ->assertSessionHasErrors([
-                'error' => 'Cannot create a task for an inactive project.'
+                'error' => 'Cannot create a task for an inactive project.',
             ]);
     }
 
@@ -283,7 +280,7 @@ class TaskControllerTest extends TestCase
         $task = Task::factory()->create();
 
         $this->get(route('tasks.edit', $task))->assertRedirect(route('login'));
-    } 
+    }
 
     public function test_a_user_without_the_update_task_permission_cannot_visit_the_edit_task_page()
     {
@@ -413,18 +410,18 @@ class TaskControllerTest extends TestCase
             [
                 'status' => 'pending',
                 'attachments' => [
-                $image1,
-                $image2,
-                $image3,
-                $image4,
-            ],
-        ]);
+                    $image1,
+                    $image2,
+                    $image3,
+                    $image4,
+                ],
+            ]);
 
         $this->actingAs($this->employee)->put(route('tasks.update', $task), $taskData)
             ->assertSessionHasErrors([
                 'attachments' => 'The attachments field must not have more than 3 items.',
             ]);
-        
+
         $this->assertEmpty($task->fresh()->getMedia('media'));
         Storage::disk('media')->assertMissing($image1);
         Storage::disk('media')->assertMissing($image2);
@@ -482,9 +479,9 @@ class TaskControllerTest extends TestCase
             'status' => 'pending',
             'user_id' => $this->employee->id,
         ]))->assertRedirect(route('tasks.show', $task))
-        ->assertSessionHasErrors([
-            'error' => 'Cannot update the task because the project is inactive.',
-        ]);
+            ->assertSessionHasErrors([
+                'error' => 'Cannot update the task because the project is inactive.',
+            ]);
     }
 
     public function test_a_guest_cannot_delete_a_task()
@@ -661,7 +658,7 @@ class TaskControllerTest extends TestCase
             ]);
     }
 
-    public function teardown():void
+    public function teardown(): void
     {
         Storage::disk('media')->deleteDirectory('');
 

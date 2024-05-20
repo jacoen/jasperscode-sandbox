@@ -46,7 +46,7 @@ class ProfileControllerTest extends TestCase
         $this->put(route('two-factor.update'))
             ->assertRedirect(route('profile.show'))
             ->assertSessionHasErrors([
-                'error' => 'You cannot disable the two factor authentication.'
+                'error' => 'You cannot disable the two factor authentication.',
             ]);
 
         $this->assertTrue($this->admin->fresh()->two_factor_enabled);

@@ -23,7 +23,7 @@ class TaskServiceTest extends TestCase
 
     protected $taskService;
 
-    public function setUp():void
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -206,7 +206,7 @@ class TaskServiceTest extends TestCase
 
         Notification::assertSentTo($this->manager, TaskAssignedNotification::class);
     }
-    
+
     public function test_it_throws_an_exception_when_updating_a_task_for_a_closed_or_completed_project()
     {
         $project = Project::factory()->create(['status' => 'closed']);
@@ -223,7 +223,7 @@ class TaskServiceTest extends TestCase
 
         $this->assertNotEquals($task->fresh()->title, $validData['title']);
         $this->assertNotEquals($task->fresh()->description, $validData['description']);
-  
+
         $this->assertDatabaseMissing('tasks', array_merge($validData, ['id' => $task->id]));
     }
 
@@ -363,8 +363,8 @@ class TaskServiceTest extends TestCase
     {
         $project = Project::factory()->create(['status' => 'pending']);
         $task = Task::factory()->for($project)->create([
-            'author_id' => $this->employee->id, 
-            'user_id' => $this->manager->id
+            'author_id' => $this->employee->id,
+            'user_id' => $this->manager->id,
         ]);
 
         $validData = [

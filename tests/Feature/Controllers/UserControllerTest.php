@@ -3,9 +3,7 @@
 namespace Tests\Feature\Controllers;
 
 use App\Models\User;
-use App\Notifications\AccountCreatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -15,7 +13,9 @@ class UserControllerTest extends TestCase
     use RefreshDatabase;
 
     protected array $data;
+
     protected $employeeRole;
+
     protected int $initialCount;
 
     public function setUp(): void
@@ -155,7 +155,7 @@ class UserControllerTest extends TestCase
         $user = User::latest('id')->first();
 
         $count = $this->initialCount;
-        $count ++;
+        $count++;
 
         $this->assertEquals($user->name, $this->data['name']);
         $this->assertEquals($user->email, $this->data['email']);
@@ -217,7 +217,7 @@ class UserControllerTest extends TestCase
             'role' => $this->employeeRole->id,
         ]))->assertSessionHasErrors([
             'name' => 'The name field must be at least 5 characters.',
-        ]); 
+        ]);
 
         $this->assertNotEquals($user->fresh()->name, 'abcd');
     }
@@ -259,7 +259,7 @@ class UserControllerTest extends TestCase
 
         $this->actingAs($this->admin)->put(route('users.update', $user), $userData)
             ->assertSessionHasErrors([
-                'email' => 'The email field must not be greater than 255 characters.'
+                'email' => 'The email field must not be greater than 255 characters.',
             ]);
 
         $this->assertNotEquals($user->fresh()->email, $userData['email']);
@@ -273,7 +273,7 @@ class UserControllerTest extends TestCase
         $this->actingAs($this->admin)->put(route('users.update', $user), array_merge($this->data, [
             'email' => 'john@example.com',
         ]))->assertSessionHasErrors([
-            'email' => 'The email has already been taken.'
+            'email' => 'The email has already been taken.',
         ]);
 
         $this->assertNotEquals($user->fresh()->email, 'john@example.com');
@@ -323,7 +323,7 @@ class UserControllerTest extends TestCase
     public function test_a_user_with_the_update_user_permission_may_update_a_user()
     {
         $user = User::factory()->create([
-            'email' => 'david.smith@example.com'
+            'email' => 'david.smith@example.com',
         ])->assignRole('User');
 
         $this->actingAs($this->admin)->put(route('users.update', $user), array_merge($this->data, [
@@ -363,7 +363,7 @@ class UserControllerTest extends TestCase
         ]))
             ->assertRedirect(route('users.edit', $user))
             ->assertSessionHasErrors([
-                'error' => 'Unable to change the role of this user.'
+                'error' => 'Unable to change the role of this user.',
             ]);
     }
 

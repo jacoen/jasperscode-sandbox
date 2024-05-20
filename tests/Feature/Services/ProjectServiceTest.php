@@ -20,14 +20,14 @@ class ProjectServiceTest extends TestCase
 
     protected $projectService;
 
-    public function setUp():void
+    public function setUp(): void
     {
         parent::setUp();
 
         $this->projectService = app(ProjectService::class);
 
         Notification::fake();
-    } 
+    }
 
     public function test_it_lists_all_active_projects()
     {

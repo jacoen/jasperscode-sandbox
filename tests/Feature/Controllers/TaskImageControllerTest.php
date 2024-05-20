@@ -13,6 +13,7 @@ class TaskImageControllerTest extends TestCase
     use RefreshDatabase;
 
     protected $task;
+
     protected $file;
 
     public function setUp(): void
@@ -55,6 +56,22 @@ class TaskImageControllerTest extends TestCase
         $this->assertCount(1, $this->task->getMedia('attachments'));
     }
 
+    public function test_a_user_with_the_edit_task_permission_can_delete_an_image_from_a_task()
+    {
+        $image = $this->task->getFirstMedia('attachments');
+
+        $this->actingAs($this->employee)->delete(route('task-image.delete',
+            [
+                'task' => $this->task,
+                'image' => $image,
+            ])
+        )->assertRedirect(route('tasks.show', $this->task))
+            ->assertSessionHas('success', 'The attachment has been removed.');
+
+        Storage::disk('media')->assertMissing('/'.$image->id.'/'.$this->file->getClientOriginalName());
+        $this->assertFileDoesNotExist($image);
+    }
+
     public function test_a_user_with_the_edit_task_permission_cannot_delete_an_image_from_another_task()
     {
         $task = Task::factory()->create(['user_id' => $this->employee->id]);
@@ -72,21 +89,5 @@ class TaskImageControllerTest extends TestCase
         $response->assertSessionHasErrors(['error' => 'Cannot remove this image.']);
 
         $this->assertCount(1, $task->getMedia('attachments'));
-    }
-
-    public function test_a_user_with_the_edit_task_permission_can_delete_an_image_from_a_task()
-    {
-        $image = $this->task->getFirstMedia('attachments');
-
-        $this->actingAs($this->employee)->delete(route('task-image.delete',
-            [
-                'task' => $this->task,
-                'image' => $image,
-            ])
-        )->assertRedirect(route('tasks.show', $this->task))
-            ->assertSessionHas('success', 'The attachment has been removed.');
-        
-        Storage::disk('media')->assertMissing('/'.$image->id.'/'.$this->file->getClientOriginalName());
-        $this->assertFileDoesNotExist($image);
     }
 }

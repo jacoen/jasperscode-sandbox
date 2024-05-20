@@ -42,7 +42,7 @@ class ExpiredProjectReportCommandTest extends TestCase
     {
         $yearWeek = now()->year.'-'.now()->subWeek()->weekOfYear;
         Project::factory()->expiredWithStatus(7)->create();
-        
+
         $this->artisan('project:expiration-report')
             ->expectsOutputToContain($yearWeek)
             ->assertSuccessful();

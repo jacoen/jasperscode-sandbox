@@ -65,7 +65,7 @@ class ProjectObserverTest extends TestCase
 
         $this->assertSoftDeleted($task);
         $this->assertTrue($task->deleted_at >= $this->trashedProject->deleted_at);
-        
+
         $this->trashedProject->restore();
 
         $this->assertNotSoftDeleted($this->trashedProject);
@@ -79,7 +79,7 @@ class ProjectObserverTest extends TestCase
         $task2 = Task::factory()->for($project)->create(['created_at' => now()->subMinutes(3), 'deleted_at' => now()->subMinute()]);
 
         $project->restore();
-        
+
         $this->assertNotSoftDeleted($project);
         $this->assertNotSoftDeleted($task2);
         $this->assertSoftDeleted($task1);

@@ -19,27 +19,29 @@ class TwoFactorControllerTest extends TestCase
         Notification::fake();
     }
 
-    public function test_a_guest_cannot_reach_the_two_factor_verification_page()
+    public function test_a_guest_cannot_visit_the_two_factor_verification_page()
     {
         $this->get(route('verify.create'))
             ->assertRedirect('login');
     }
 
-    public function test_a_guest_cannot_submit_a_two_factor_code()
-    {
-        $this->post(route('verify.store'), [
-            'two_factor_code' => 123456,
-        ])->assertRedirect(route('login'));
-    }
-
-    public function test_a_user_with_two_factor_autentication_can_visit_the_two_factor_verification_page_and_sees_a_masked_email_address()
+    public function test_a_user_with_two_factor_authentication_enabled_and_a_two_factor_code_can_visit_the_two_factor_verification_page()
     {
         $user = User::factory()->withTwoFactorEnabled()->create([
             'email' => 'david.smith@example.com',
         ]);
 
         $this->actingAs($user)->get(route('verify.create'))
-            ->assertOk()
+            ->assertOk();
+    }
+
+    public function test_the_masked_email_address_is_displayed_on_the_verification_page_when_a_user_with_two_factor_enabled_and_a_two_factor_code_visits_the_page()
+    {
+        $user = User::factory()->withTwoFactorEnabled()->create([
+            'email' => 'david.smith@example.com',
+        ]);
+
+        $this->actingAs($user)->get(route('verify.create'))
             ->assertSeeText([
                 'email' => 'd********@example.com',
             ]);
@@ -50,7 +52,7 @@ class TwoFactorControllerTest extends TestCase
         $user = User::factory()->withTwoFactorEnabled()->create();
 
         $this->actingAs($user)->post(route('verify.store'), [
-            'two_factor_code' => ''
+            'two_factor_code' => '',
         ])->assertSessionHasErrors([
             'two_factor_code' => 'The two factor code field is required.',
         ]);
@@ -66,7 +68,7 @@ class TwoFactorControllerTest extends TestCase
         $user = User::factory()->withTwoFactorEnabled()->create();
 
         $this->actingAs($user)->post(route('verify.store'), [
-            'two_factor_code' => 'ab*d_f'
+            'two_factor_code' => 'ab*d_f',
         ])->assertSessionHasErrors([
             'two_factor_code' => 'The two factor code field must be a number.',
         ]);
@@ -83,13 +85,13 @@ class TwoFactorControllerTest extends TestCase
         $secondUser = User::factory()->withTwoFactorEnabled()->create();
 
         $this->actingAs($user)->post(route('verify.store'), [
-            'two_factor_code' => '12345'
+            'two_factor_code' => '12345',
         ])->assertSessionHasErrors([
-            'two_factor_code' => 'The two factor code must be 6 characters long.',
+            'two_factor_code' => 'The two factor code field must be 6 digits.',
         ]);
 
         $this->actingAs($secondUser)->post(route('verify.store'), [
-            'two_factor_code' => '1234567'
+            'two_factor_code' => '1234567',
         ])->assertSessionHasErrors([
             'two_factor_code' => 'The two factor code field must be 6 digits.',
         ]);
@@ -98,7 +100,7 @@ class TwoFactorControllerTest extends TestCase
         $this->assertNotNull($secondUser->fresh()->two_factor_code);
     }
 
-    public function test_the_user_gets_redirected_to_the_home_route_and_their_two_factor_code_get_erased_after_they_enter_their_two_factor_code_correctly()
+    public function test_the_user_with_two_factor_enabled_gets_redirected_to_home_after_a_successful_two_factor_verification()
     {
         $user = User::factory()->withTwoFactorEnabled()->create([
             'two_factor_attempts' => 1,
@@ -108,11 +110,34 @@ class TwoFactorControllerTest extends TestCase
         $this->actingAs($user)->post(route('verify.store'), [
             'two_factor_code' => $user->two_factor_code,
         ])->assertRedirect(route('home'));
+    }
 
-        $user->refresh();
+    public function test_the_two_factor_code_of_a_user_with_two_factor_enabled_are_reset_after_a_successful_two_factor_verification()
+    {
+        $user = User::factory()->withTwoFactorEnabled()->create([
+            'two_factor_attempts' => 1,
+            'last_attempt_at' => now()->subSeconds(30),
+        ]);
+
+        $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => $user->two_factor_code,
+        ]);
 
         $this->assertNull($user->two_factor_code);
         $this->assertNull($user->two_factor_expires_at);
+    }
+
+    public function test_the_two_factor_attempts_of_a_user_with_two_factor_enabled_are_reser_after_a_succesful_two_factor_verification()
+    {
+        $user = User::factory()->withTwoFactorEnabled()->create([
+            'two_factor_attempts' => 1,
+            'last_attempt_at' => now()->subSeconds(30),
+        ]);
+
+        $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => $user->two_factor_code,
+        ]);
+
         $this->assertEquals(0, $user->login_attempt);
         $this->assertNull($user->last_attempt_at);
     }
@@ -136,7 +161,7 @@ class TwoFactorControllerTest extends TestCase
         $this->assertEqualsWithDelta($user->last_attempt_at, now(), 2);
     }
 
-    public function test_the_user_gets_signed_out_and_its_account_gets_locked_when_user_has_exceeded_the_maximum_attempts_for_proving_the_correct_two_factor_code()
+    public function test_the_account_of_the_user_gets_locked_when_the_user_has_exceeded_the_maximum_attempts_for_providing_the_correct_two_factor_code()
     {
         $user = User::factory()->create([
             'two_factor_enabled' => true,
@@ -158,6 +183,24 @@ class TwoFactorControllerTest extends TestCase
         $this->assertEqualsWithDelta($user->locked_until, now()->addMinutes(10), 1);
         $this->assertNull($user->two_factor_code);
         $this->assertNull($user->two_factor_expires_at);
+    }
+
+    public function test_a_user_with_two_factor_enabled_gets_signed_out_when_they_have_exceeded_the_maximum_attempts_for_providing_the_correct_two_factor_code()
+    {
+        $user = User::factory()->create([
+            'two_factor_enabled' => true,
+            'two_factor_code' => '426897',
+            'two_factor_expires_at' => now()->addMinutes(5),
+            'two_factor_attempts' => 4,
+            'last_attempt_at' => now()->subSeconds(10),
+        ]);
+
+        $this->actingAs($user)->post(route('verify.store'), [
+            'two_factor_code' => '123456',
+        ])->assertRedirect(route('login'))
+            ->assertSessionHasErrors([
+                'error' => 'Too many failed attempts. This account will now be locked for a period of 10 minutes.',
+            ]);
 
         $this->assertGuest();
     }
@@ -179,7 +222,7 @@ class TwoFactorControllerTest extends TestCase
         ]);
 
         $oldCode = $user->two_factor_code;
-        
+
         $this->actingAs($user)->get(route('verify.resend'))
             ->assertRedirect(route('verify.create'));
 

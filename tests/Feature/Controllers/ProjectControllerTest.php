@@ -94,11 +94,11 @@ class ProjectControllerTest extends TestCase
     public function test_the_manager_must_exist_in_the_users_table_when_creating_a_project()
     {
         $this->actingAs($this->manager)->post(route('projects.store'), array_merge([
-            'manager_id' => 9999
+            'manager_id' => 9999,
         ]))
-        ->assertSessionHasErrors([
-            'manager_id' => 'The selected manager is invalid.'
-        ]);
+            ->assertSessionHasErrors([
+                'manager_id' => 'The selected manager is invalid.',
+            ]);
     }
 
     public function test_the_title_field_must_be_at_least_3_characters_when_creating_a_project()
@@ -140,7 +140,7 @@ class ProjectControllerTest extends TestCase
             'description' => 'The description field must not be greater than 255 characters.',
         ]);
     }
-    
+
     public function test_the_due_date_must_be_after_the_current_date_when_creating_a_project()
     {
         $dateLastMonth = array_merge($this->data, ['due_date' => now()->subMonth()->format('Y-m-d')]);
@@ -215,9 +215,9 @@ class ProjectControllerTest extends TestCase
     public function test_a_user_with_the_read_project_permission_can_visit_the_project_detail_page()
     {
         $project = Project::factory()->create([
-            'manager_id' => $this->manager->id
+            'manager_id' => $this->manager->id,
         ]);
-        
+
         $this->actingAs($this->employee)->get(route('projects.show', $project))
             ->assertOk()
             ->assertSeeText([
@@ -233,7 +233,7 @@ class ProjectControllerTest extends TestCase
     public function test_a_no_tasks_message_will_be_displayed_when_the_user_visits_the_project_detail_page_of_a_project_without_related_tasks()
     {
         $project = Project::factory()->create([
-            'manager_id' => $this->manager->id
+            'manager_id' => $this->manager->id,
         ]);
 
         $this->actingAs($this->employee)->get(route('projects.show', $project))
@@ -244,12 +244,12 @@ class ProjectControllerTest extends TestCase
     public function test_the_tasks_related_to_the_project_will_be_displayed_when_the_user_visits_the_project_detail_page_of_a_project_with_tasks()
     {
         $project = Project::factory()->create([
-            'manager_id' => $this->manager->id
+            'manager_id' => $this->manager->id,
         ]);
 
         $task = Task::factory()->for($project)->create([
             'author_id' => $this->employee->id,
-            'user_id' => $this->employee->id, 
+            'user_id' => $this->employee->id,
         ]);
 
         $this->actingAs($this->employee)->get(route('projects.show', $project))
@@ -291,7 +291,7 @@ class ProjectControllerTest extends TestCase
     {
         $data = [
             'title' => '',
-            'due_date' =>  '',
+            'due_date' => '',
             'status' => '',
         ];
 
@@ -319,7 +319,7 @@ class ProjectControllerTest extends TestCase
 
         $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, ['manager_id' => 9999]))
             ->assertSessionHasErrors([
-                'manager_id' => 'The selected manager is invalid.'
+                'manager_id' => 'The selected manager is invalid.',
             ]);
 
         $this->assertNotEquals($project->fresh()->manager->id, 9999);
@@ -356,7 +356,7 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
             'due_date' => 12345,
         ]))->assertSessionHasErrors([
-            'due_date' => 'The due date field must be a valid date.'
+            'due_date' => 'The due date field must be a valid date.',
         ]);
 
         $this->assertNotEquals($project->due_date, 12345);
@@ -369,7 +369,7 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
             'due_date' => now()->format('Y-m-d'),
         ]))->assertSessionHasErrors([
-            'due_date' => 'The due date field must be a date after today.'
+            'due_date' => 'The due date field must be a date after today.',
         ]);
 
         $this->assertNotEquals($project->due_date->format('Y-m-d'), now()->format('Y-m-d'));
@@ -382,7 +382,7 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
             'due_date' => now()->addYears(7)->format('Y-m-d'),
         ]))->assertSessionHasErrors([
-            'due_date' => 'The due date field must be a date before 2030-12-31.'
+            'due_date' => 'The due date field must be a date before 2030-12-31.',
         ]);
 
         $this->assertNotEquals($project->fresh()->due_date->format('Y-m-d'), now()->addYears(7)->format('Y-m-d'));
@@ -439,7 +439,7 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
             'status' => 'pending',
         ]))->assertRedirect(route('projects.show', $project))
-        ->assertSessionHas('success', 'The project has been updated.');
+            ->assertSessionHas('success', 'The project has been updated.');
 
         $project->refresh();
         $this->assertEquals($project->title, $this->data['title']);
@@ -471,7 +471,7 @@ class ProjectControllerTest extends TestCase
             'is_pinned' => true,
         ]))->assertRedirect(route('projects.edit', $project))
             ->assertSessionHasErrors([
-                'error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.'
+                'error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.',
             ]);
     }
 
@@ -531,7 +531,7 @@ class ProjectControllerTest extends TestCase
     public function test_a_user_with_the_restore_project_permission_can_visit_the_trashed_projects_page_and_can_see_the_truncated_project_titles()
     {
         $project = Project::factory()->trashed()->create();
-        
+
         $this->actingAs($this->admin)->get(route('projects.trashed'))
             ->assertOk()
             ->assertSeeText([
@@ -585,7 +585,7 @@ class ProjectControllerTest extends TestCase
     public function test_a_user_without_the_right_permissions_cannot_force_delete_a_project()
     {
         $project = Project::factory()->trashed()->create();
-        
+
         $this->actingAs($this->employee)->delete(route('projects.force-delete', $project))
             ->assertForbidden();
 

@@ -20,6 +20,7 @@ class UserServiceTest extends TestCase
     use RefreshDatabase;
 
     protected $userService;
+
     protected array $data;
 
     public function setUp(): void
@@ -103,9 +104,9 @@ class UserServiceTest extends TestCase
     public function test_it_can_update_a_user()
     {
         $role = Role::where('name', 'Manager')->first();
-        $user = User::factory()->create(['name' => 'Jane coburn','email' => 'jane@example.com'])->assignRole('Employee');
+        $user = User::factory()->create(['name' => 'Jane coburn', 'email' => 'jane@example.com'])->assignRole('Employee');
 
-        $data =  [
+        $data = [
             'name' => 'Jane Doe',
             'email' => 'jane@example.com',
         ];
@@ -123,7 +124,7 @@ class UserServiceTest extends TestCase
         $role = Role::where('name', 'Employee')->first();
         $user = User::factory()->create(['email' => 'john@example.com'])->assignRole($role);
 
-        $data =  [
+        $data = [
             'name' => 'Jane Doe',
             'email' => 'jane@example.com',
         ];

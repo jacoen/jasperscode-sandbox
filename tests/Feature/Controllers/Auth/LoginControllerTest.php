@@ -25,7 +25,7 @@ class LoginControllerTest extends TestCase
 
         $this->post('/login', [
             'email' => $user->email,
-            'password' => 'password'
+            'password' => 'password',
         ])->assertSessionHasErrors([
             'error' => 'This account has been temporarily locked. Please try again at a later moment.',
         ]);
@@ -39,17 +39,17 @@ class LoginControllerTest extends TestCase
 
         $this->post('/login', [
             'email' => $user->email,
-            'password' => 'password'
+            'password' => 'password',
         ])->assertRedirect(route('home'));
 
         $this->assertAuthenticatedAs($user);
     }
-    
+
     public function test_when_a_user_without_two_factor_signs_in_no_two_factor_code_will_be_generated()
-    { 
+    {
         $this->post('/login', [
             'email' => $this->employee->email,
-            'password' => 'password'
+            'password' => 'password',
         ])->assertRedirect();
 
         $this->assertNull($this->employee->fresh()->two_factor_code);
@@ -59,7 +59,7 @@ class LoginControllerTest extends TestCase
     {
         $this->post('/login', [
             'email' => $this->admin->email,
-            'password' => 'password'
+            'password' => 'password',
         ])->assertRedirect();
 
         $admin = $this->admin->fresh();
@@ -73,7 +73,7 @@ class LoginControllerTest extends TestCase
     {
         $this->post('/login', [
             'email' => $this->employee->email,
-            'password' => 'password'
+            'password' => 'password',
         ])->assertRedirect();
 
         Notification::assertNothingSentTo($this->employee);
@@ -83,7 +83,7 @@ class LoginControllerTest extends TestCase
     {
         $this->post('/login', [
             'email' => $this->admin->email,
-            'password' => 'password'
+            'password' => 'password',
         ])->assertRedirect();
 
         Notification::assertSentTo($this->admin, TwoFactorCodeNotification::class);

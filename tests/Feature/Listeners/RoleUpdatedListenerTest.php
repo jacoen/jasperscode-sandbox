@@ -78,9 +78,9 @@ class RoleUpdatedListenerTest extends TestCase
 
     public function test_it_does_not_disable_two_factor_when_the_role_of_a_user_with_the_admin_role_gets_changed()
     {
-    
+
         $user = User::factory()->create(['two_factor_enabled' => true])->assignRole('Admin');
-        
+
         $user->syncRoles(['Employee']);
 
         event(new RoleUpdatedEvent($user));
@@ -88,5 +88,4 @@ class RoleUpdatedListenerTest extends TestCase
         $this->assertTrue($user->fresh()->hasRole('Employee'));
         $this->assertTrue($user->fresh()->two_factor_enabled);
     }
-
 }
