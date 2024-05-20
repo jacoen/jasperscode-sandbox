@@ -82,7 +82,11 @@ class TaskController extends Controller
 
     public function update(Task $task, UpdateTaskRequest $request): RedirectResponse
     {
-        $task = $this->taskService->updateTask($task, $request->validated(),  $request->file('attachments'));
+        $task = $this->taskService->updateTask(
+            $task, 
+            $request->validated(),  
+            $request->file('attachments')
+        );
 
         return redirect()->route('tasks.show', $task)
             ->with('success', 'The task '.$task->title.' has been updated.');
@@ -112,18 +116,10 @@ class TaskController extends Controller
     {
         $this->authorize('restore', $task);
 
-        try {
-            $this->taskService->restoreTask($task);
+        $this->taskService->restoreTask($task);
 
-            return redirect()->route('tasks.trashed')
-                ->with('success', 'The task has been restored.');
-        } catch (ProjectDeletedException $e) {
-            return redirect()->route('tasks.trashed')
-                ->withErrors(['error' => $e->getMessage()]);
-        } catch (InvalidProjectStatusException $e) {
-            return redirect()->route('tasks.trashed')
-                ->withErrors(['error' => $e->getMessage()]);
-        }
+        return redirect()->route('tasks.trashed')
+            ->with('success', 'The task has been restored.');
     }
 
     public function forceDelete(Task $task): RedirectResponse
