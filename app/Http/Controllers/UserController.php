@@ -13,7 +13,7 @@ class UserController extends Controller
 {
     private $userService;
 
-    public function __construct($userService)
+    public function __construct(UserService $userService)
     {
         $this->authorizeResource(User::class, 'user');
 

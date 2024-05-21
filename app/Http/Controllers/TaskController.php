@@ -19,7 +19,7 @@ class TaskController extends Controller
     /**
      * @see app\Observers\TaskObserver for the model events
      */
-    public function __construct($taskService)
+    public function __construct(TaskService $taskService)
     {
         $this->authorizeResource(Task::class, 'task');
 
