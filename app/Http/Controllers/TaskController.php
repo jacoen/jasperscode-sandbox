@@ -14,12 +14,16 @@ use Illuminate\View\View;
 
 class TaskController extends Controller
 {
+    private $taskService;
+
     /**
      * @see app\Observers\TaskObserver for the model events
      */
-    public function __construct(private TaskService $taskService)
+    public function __construct($taskService)
     {
         $this->authorizeResource(Task::class, 'task');
+
+        $this->taskService = $taskService;
     }
 
     public function index(): View

@@ -11,9 +11,13 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct(private UserService $userService)
+    private $userService;
+
+    public function __construct($userService)
     {
         $this->authorizeResource(User::class, 'user');
+
+        $this->userService = $userService;
     }
 
     public function index(): View
