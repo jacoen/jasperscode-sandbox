@@ -42,7 +42,7 @@ class ProjectController extends Controller
      */
     public function store(StoreProjectRequest $request): ProjectResource
     {
-        $project = $this->projectService->store($request->validated());
+        $project = $this->projectService->storeProject($request->validated());
 
         return new ProjectResource($project);
     }
@@ -60,7 +60,7 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): ProjectResource
     {
-        $this->projectService->update($project, $request->validated());
+        $this->projectService->updateProject($project, $request->validated());
 
         return new ProjectResource($project);
     }
