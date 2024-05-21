@@ -49,7 +49,7 @@ class ProjectService
     {
         $pinnedProject = Project::where('is_pinned', true)->first();
 
-        if (! auth()->user()->can('pin project') && isset($project->is_pinned) && $validatedData['is_pinned']) {
+        if (! auth()->user()->can('pin project') && $validatedData['is_pinned']) {
             throw new UnauthorizedPinException('You are not authorized to pin a project.', $project);
         }
 
@@ -85,19 +85,22 @@ class ProjectService
     }
     
     public function listExpiredProjects(string $yearWeek = null): LengthAwarePaginator
-    {
-        $query = Project::with('manager')
-        ->where('due_date', '<', now()->startOfDay())
-        ->whereNot('status', 'completed')
-        ->orderByDesc('due_date')
-        ->orderByDesc('id');
+    {   
+        $dates = '';
 
-        $query->when($yearWeek, function($query) use ($yearWeek) {
+        if ($yearWeek) {
             $dates = $this->spliceYearWeek($yearWeek);
-            return $query->whereBetween('due_date', [$dates['startDate'], $dates['endDate']]);
-        });
+        }
 
-        return $query->paginate(15);
+        return Project::with('manager')
+            ->when($yearWeek, function($query) use ($dates) {
+                $query->whereBetween('due_date', [$dates['startDate'], $dates['endDate']]);
+            })
+            ->where('due_date', '<', now()->startOfDay())
+            ->whereNot('status', 'completed')
+            ->orderByDesc('due_date')
+            ->orderByDesc('id')
+            ->paginate(15);
     }
 
     private function spliceYearWeek($yearWeek): array
