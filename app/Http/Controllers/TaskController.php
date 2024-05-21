@@ -64,7 +64,7 @@ class TaskController extends Controller
         if (! $task->project->is_open_or_pending) {
             return redirect()->route('projects.show', $task->project)
                 ->withErrors([
-                    'errors' => 'Could not update the task because the project is inactive.',
+                    'error' => 'Cannot edit the task because the related project is inactive.',
                 ]);
         }
 
