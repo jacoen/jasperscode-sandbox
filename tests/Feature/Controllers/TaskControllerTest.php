@@ -88,6 +88,17 @@ class TaskControllerTest extends TestCase
             ->assertOk();
     }
 
+    public function test_the_user_will_see_an_error_message_when_they_try_to_create_a_task_whilst_the_related_project_is_inactive()
+    {
+        $project = Project::factory()->create(['status' => 'completed']);
+
+        $this->actingAs($this->employee)->get(route('tasks.create', $project))
+            ->assertRedirect(route('projects.show', $project))
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task when the project is inactive.',
+            ]);
+    }
+
     public function test_a_valid_user_must_be_provided_when_creating_a_task()
     {
         $data = [
@@ -231,17 +242,6 @@ class TaskControllerTest extends TestCase
         $this->assertEquals($task->author_id, $this->employee->id);
     }
 
-    public function test_the_user_gets_redirected_to_the_project_detail_page_when_a_create_task_exception_occurs()
-    {
-        $project = Project::factory()->create(['status' => 'closed']);
-
-        $this->actingAs($this->employee)->post(route('tasks.store', $project), $this->data)
-            ->assertRedirect(route('projects.show', $project))
-            ->assertSessionHasErrors([
-                'error' => 'Cannot create a task for an inactive project.',
-            ]);
-    }
-
     public function test_a_guest_cannot_visit_the_task_detail_page()
     {
         $task = Task::factory()->create();
@@ -297,6 +297,18 @@ class TaskControllerTest extends TestCase
         $this->actingAs($this->employee)->get(route('tasks.edit', $task))
             ->assertOk()
             ->assertSeeText($task->title);
+    }
+
+    public function test_the_user_will_see_an_error_message_when_they_want_to_edit_a_task_whilst_the_related_project_is_inactive()
+    {
+        $project = Project::factory()->create(['status' => 'completed']);
+        $task = Task::factory()->for($project)->create();
+
+        $this->actingAs($this->employee)->get(route('tasks.edit', $task))
+            ->assertRedirect(route('projects.show', $project))
+            ->assertSessionHasErrors([
+                'error' => 'Cannot edit the task because the related project is inactive.',
+            ]);
     }
 
     public function test_the_title_and_status_fields_are_required_when_updating_a_task()
