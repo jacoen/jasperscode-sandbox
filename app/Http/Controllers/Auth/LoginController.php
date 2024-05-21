@@ -79,7 +79,7 @@ class LoginController extends Controller
 
             return $this->sendLoginResponse($request);
         }
-        
+
         $this->incrementLoginAttempts($request);
 
         return $this->sendFailedLoginResponse($request);
@@ -94,7 +94,7 @@ class LoginController extends Controller
         }
     }
 
-    protected function logout(Request $request) 
+    protected function logout(Request $request)
     {
         if ($request->user()->two_factor_code) {
             $request->user()->resetTwoFactorCode();

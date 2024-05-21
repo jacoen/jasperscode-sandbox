@@ -36,7 +36,7 @@ class StoreProjectRequest extends FormRequest
             'description' => strip_tags($this->description),
         ]);
     }
-    
+
     public function attributes(): array
     {
         return [

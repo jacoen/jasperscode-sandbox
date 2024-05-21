@@ -31,7 +31,7 @@ class User extends Authenticatable
         'two_factor_expires_at',
         'locked_until',
         'two_factor_attempts',
-        'last_attempt_at'
+        'last_attempt_at',
     ];
 
     /**

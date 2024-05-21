@@ -28,7 +28,7 @@ class StoreTaskRequest extends FormRequest
             'description' => ['nullable', 'string', 'min:3'],
             'attachments' => ['nullable', 'array', 'max:3'],
             'attachments.*' => ['image'],
-            'author_id' => ['required', 'exists:users,id']
+            'author_id' => ['required', 'exists:users,id'],
         ];
     }
 

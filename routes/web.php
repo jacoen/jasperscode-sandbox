@@ -8,7 +8,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\StubController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskImageController;
 use App\Http\Controllers\TwoFactorController;
@@ -102,5 +101,3 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
 
     Route::get('/activities', ActivityController::class)->name('activities.index');
 });
-
-

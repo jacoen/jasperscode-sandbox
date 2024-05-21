@@ -27,14 +27,14 @@ class PermissionRoleSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'delete project']);
         Permission::firstOrCreate(['name' => 'pin project']);
         Permission::firstOrCreate(['name' => 'restore project']);
-        
+
         Permission::firstOrCreate(['name' => 'read task']);
         Permission::firstOrCreate(['name' => 'create task']);
         Permission::firstOrCreate(['name' => 'update task']);
         Permission::firstOrCreate(['name' => 'delete task']);
         Permission::firstOrCreate(['name' => 'restore task']);
         Permission::firstOrCreate(['name' => 'force delete task']);
-        
+
         Permission::firstOrCreate(['name' => 'read activity']);
         Permission::firstOrCreate(['name' => 'read expired projects']);
 
@@ -49,18 +49,18 @@ class PermissionRoleSeeder extends Seeder
             'read project', 'create project', 'update project', 'delete project', 'pin project',
             'restore project',
             'read task', 'create task', 'update task', 'delete task', 'restore task', 'force delete task',
-            'read activity', 'read expired projects'
+            'read activity', 'read expired projects',
         ]);
 
         $manager->givePermissionTo([
             'read project', 'create project', 'update project', 'delete project', 'restore project',
             'read task', 'create task', 'update task', 'delete task', 'restore task', 'force delete task',
-            'read expired projects'
+            'read expired projects',
         ]);
 
         $employee->givePermissionTo([
             'read project',
-            'read task', 'create task', 'update task', 'delete task', 'restore task'
+            'read task', 'create task', 'update task', 'delete task', 'restore task',
         ]);
 
     }
