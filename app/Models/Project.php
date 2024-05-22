@@ -55,6 +55,30 @@ class Project extends Model
         return 'in '.$this->due_date->diffInDays(now()->toDateString()).' days.';
     }
 
+    public function scopeSearch($query, $search)
+    {
+        return $query->when($search, function ($query) use ($search) {
+            $query->where('title', 'LIKE', '%'.$search.'%');
+        });
+    }
+
+    public function scopeFilterStatus($query, $status)
+    {
+        return $query->when($status, function ($query) use ($status) {
+            $query->where('status', $status);
+
+            if ($status !== 'completed') {
+                $query->where('due_date', '>=', now()->startOfDay());
+            }
+        });
+    }
+
+    public function scopeDefaultFilter($query)
+    {
+        return $query->where('due_date', '>=', now()->startOfDay())
+            ->orWhere('status', 'completed');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

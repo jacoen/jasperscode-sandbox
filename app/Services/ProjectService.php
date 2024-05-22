@@ -16,18 +16,14 @@ class ProjectService
     public function listProjects($search = null, $status = null): LengthAwarePaginator
     {
         return Project::with('manager')
-            ->when($search, function ($query) use ($search) {
-                $query->where('title', 'LIKE', '%'.$search.'%');
-            })
-            ->when($status, function ($query) use ($status) {
-                $query->where('status', $status);
+            ->search($search)
+            ->filterStatus($status)
+            ->when(! $search && ! $status, function ($query) {
+                $query->defaultFilter();
             })
             ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
                 $query->orderBy('is_pinned', 'desc');
             })
-            ->whereIn('status', ['open', 'pending', 'closed', 'restored'])
-            ->where('due_date', '>=', now()->startOfDay())
-            ->orWhere('status', 'completed')
             ->whereNot('status', 'expired')
             ->latest('updated_at')
             ->orderBy('id', 'desc')
@@ -78,29 +74,26 @@ class ProjectService
     public function listTrashedProjects(): LengthAwarePaginator
     {
         return Project::onlyTrashed()
-        ->with('manager')
-        ->latest('deleted_at')
-        ->orderBy('id', 'desc')
-        ->paginate();
+            ->with('manager')
+            ->latest('deleted_at')
+            ->orderBy('id', 'desc')
+            ->paginate();
     }
     
     public function listExpiredProjects(string $yearWeek = null): LengthAwarePaginator
-    {   
-        $dates = '';
+    {
+        $query = Project::with('manager')
+        ->where('due_date', '<', now()->startOfDay())
+        ->whereNot('status', 'completed')
+        ->orderByDesc('due_date')
+        ->orderByDesc('id');
 
-        if ($yearWeek) {
+        $query->when($yearWeek, function($query) use ($yearWeek) {
             $dates = $this->spliceYearWeek($yearWeek);
-        }
+            return $query->whereBetween('due_date', [$dates['startDate'], $dates['endDate']]);
+        });
 
-        return Project::with('manager')
-            ->when($yearWeek, function($query) use ($dates) {
-                $query->whereBetween('due_date', [$dates['startDate'], $dates['endDate']]);
-            })
-            ->where('due_date', '<', now()->startOfDay())
-            ->whereNot('status', 'completed')
-            ->orderByDesc('due_date')
-            ->orderByDesc('id')
-            ->paginate(15);
+        return $query->paginate(15);
     }
 
     private function spliceYearWeek($yearWeek): array
