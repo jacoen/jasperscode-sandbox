@@ -58,7 +58,7 @@ class Project extends Model
     public function scopeSearch($query, $search)
     {
         return $query->when($search, function ($query) use ($search) {
-            $query->where('title', 'LIKE', '%'.$search.'%');
+            return $query->where('title', 'LIKE', '%'.$search.'%');  
         });
     }
 

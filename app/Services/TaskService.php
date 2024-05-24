@@ -16,19 +16,15 @@ class TaskService
 {
     public function listTasks($search = null, $status = null, $userId = null): LengthAwarePaginator
     {
-        return Task::with('project.manager', 'author', 'user')
-            ->when($search, function ($query) use ($search) {
-                $query->where('title', 'LIKE', '%'.$search.'%');
-            })
-            ->when($status, function ($query) use ($status) {
-                $query->where('status', $status);
-            })
-            ->when($userId, function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
+        $tasks = Task::with('project.manager', 'author', 'user')
+            ->search($search)
+            ->taskStatusFilter($status)
+            ->filterByUser($userId)
             ->latest('updated_at')
             ->orderBy('id', 'desc')
             ->paginate();
+
+        return $tasks;
     }
 
     public function storeTask(Project $project, array $validData, array $attachments = null): Task
@@ -108,12 +104,8 @@ class TaskService
     public function findTasksByProject($project, $search = null, $status = null): LengthAwarePaginator
     {
         return $project->tasks()
-            ->when($search, function ($query) use ($search) {
-                $query->where('title', 'LIKE', '%'.$search.'%');
-            })
-            ->when($status, function ($query) use ($status) {
-                $query->where('status', $status);
-            })
+            ->search($search)
+            ->taskStatusFilter($status)
             ->with('author', 'user')
             ->latest('updated_at')
             ->orderBy('id', 'desc')
