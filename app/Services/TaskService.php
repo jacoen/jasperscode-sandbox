@@ -81,7 +81,6 @@ class TaskService
             ->latest('deleted_at')
             ->orderBy('id', 'desc')
             ->paginate();
-
     }
 
     public function restoreTask(Task $task): Task
