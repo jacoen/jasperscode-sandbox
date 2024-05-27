@@ -4,6 +4,7 @@ namespace Tests\Feature\Controllers;
 
 use App\Models\Project;
 use App\Models\Task;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -12,7 +13,7 @@ class ProjectControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $data;
+    protected array $data;
 
     public function setUp(): void
     {
@@ -41,7 +42,7 @@ class ProjectControllerTest extends TestCase
     {
         $this->actingAs($this->employee)->get(route('projects.index'))
             ->assertOk()
-            ->assertSeeText(['No projects yet.']);
+            ->assertSeeText('No projects yet.');
     }
 
     public function test_a_user_with_the_read_project_permission_can_see_all_active_projects()
@@ -72,7 +73,8 @@ class ProjectControllerTest extends TestCase
     public function test_a_user_with_the_create_project_permission_can_visit_the_create_project_page()
     {
         $this->actingAs($this->manager)->get(route('projects.create'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSeeText('Create new project');
     }
 
     public function test_the_title_and_due_date_fields_are_required_when_creating_a_project()
@@ -91,17 +93,18 @@ class ProjectControllerTest extends TestCase
         $this->assertEquals(0, Project::count());
     }
 
-    public function test_the_manager_must_exist_in_the_users_table_when_creating_a_project()
+    public function test_the_provided_manager_id_must_exist_in_the_users_table_when_creating_a_project()
     {
         $this->actingAs($this->manager)->post(route('projects.store'), array_merge([
             'manager_id' => 9999,
-        ]))
-            ->assertSessionHasErrors([
-                'manager_id' => 'The selected manager is invalid.',
-            ]);
+        ]))->assertSessionHasErrors([
+            'manager_id' => 'The selected manager is invalid.',
+        ]);
+
+        $this->assertEquals(0, Project::count());
     }
 
-    public function test_the_title_field_must_be_at_least_3_characters_when_creating_a_project()
+    public function test_the_provided_must_be_at_least_3_characters_when_creating_a_project()
     {
         $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
             'title' => 'aa',
@@ -112,7 +115,7 @@ class ProjectControllerTest extends TestCase
         $this->assertEquals(0, Project::count());
     }
 
-    public function test_the_title_field_cannot_be_greater_than_255_characters_when_creating_a_project()
+    public function test_the_provided_cannot_be_greater_than_255_characters_when_creating_a_project()
     {
         $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
             'title' => Str::repeat('abc', 120),
@@ -123,29 +126,32 @@ class ProjectControllerTest extends TestCase
         $this->assertEquals(0, Project::count());
     }
 
-    public function test_the_description_field_must_be_at_least_3_characters_when_creating_a_project()
+    public function test_the_provided_description_must_be_at_least_3_characters_when_creating_a_project()
     {
         $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
             'description' => 'aa',
         ]))->assertSessionHasErrors([
             'description' => 'The description field must be at least 3 characters.',
         ]);
+
+        $this->assertEquals(0, Project::count());
     }
 
-    public function test_the_description_field_cannot_be_greater_than_255_characters_when_creating_a_project()
+    public function test_the_provided_description_cannot_be_greater_than_255_characters_when_creating_a_project()
     {
         $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
             'description' => Str::repeat('abc', 120),
         ]))->assertSessionHasErrors([
             'description' => 'The description field must not be greater than 255 characters.',
         ]);
+
+        $this->assertEquals(0, Project::count());
     }
 
-    public function test_the_due_date_must_be_after_the_current_date_when_creating_a_project()
+    public function test_the_provided_due_date_must_be_greater_than_the_current_date_when_creating_a_project()
     {
         $dateLastMonth = array_merge($this->data, ['due_date' => now()->subMonth()->format('Y-m-d')]);
         $dateNow = array_merge($this->data, ['due_date' => now()->format('Y-m-d')]);
-        $dataNextMonth = array_merge($this->data, ['due_date' => now()->addMonth()->format('Y-m-d')]);
 
         $this->actingAs($this->manager)->post(route('projects.store'), $dateLastMonth)
             ->assertSessionHasErrors(['due_date' => 'The due date field must be a date after today.']);
@@ -153,16 +159,18 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($this->manager)->post(route('projects.store'), $dateNow)
             ->assertSessionHasErrors(['due_date' => 'The due date field must be a date after today.']);
 
-        $this->actingAs($this->manager)->post(route('projects.store'), $dataNextMonth)
-            ->assertRedirect(route('projects.index'))
-            ->assertSessionHas('success', 'A new project has been created.');
+        $this->assertDatabaseCount('projects', 0);
+    }
 
-        $project = Project::first();
+    public function test_the_provided_due_date_must_be_before_january_first_2031_when_creating_a_project()
+    {
+        $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
+            'due_date' => Carbon::create(2031, 1, 1)
+        ]))->assertSessionHasErrors([
+            'due_date' => 'The due date field must be a date before 2030-12-31.',
+        ]);
 
-        $this->assertDatabaseCount('projects', 1);
-        $this->assertNotEquals($dateLastMonth['due_date'], $project->due_date->format('Y-m-d'));
-        $this->assertNotEquals($dateNow['due_date'], $project->due_date->format('Y-m-d'));
-        $this->assertEquals($dataNextMonth['due_date'], $project->due_date->format('Y-m-d'));
+        $this->assertDatabaseCount('projects', 0);
     }
 
     public function test_a_guest_cannot_create_a_project()
@@ -187,10 +195,9 @@ class ProjectControllerTest extends TestCase
             ->assertRedirect(route('projects.index'))
             ->assertSessionHas('success', 'A new project has been created.');
 
-        $this->assertEquals(1, Project::count());
-
         $project = Project::first();
 
+        $this->assertEquals(1, Project::count());
         $this->assertEquals($project->title, $this->data['title']);
         $this->assertEquals($project->description, $this->data['description']);
         $this->assertEquals($project->due_date->format('Y-m-d'), $this->data['due_date']);
@@ -375,21 +382,20 @@ class ProjectControllerTest extends TestCase
         $this->assertNotEquals($project->due_date->format('Y-m-d'), now()->format('Y-m-d'));
     }
 
-    public function test_the_provided_date_must_be_before_the_end_of_2030_when_updating_a_project()
+    public function test_the_provided_due_date_must_be_before_january_first_2031_when_updating_a_project()
     {
         $project = Project::factory()->create();
 
         $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
-            'due_date' => now()->addYears(7)->format('Y-m-d'),
+            'due_date' => Carbon::create(2031, 1, 1),
         ]))->assertSessionHasErrors([
             'due_date' => 'The due date field must be a date before 2030-12-31.',
         ]);
 
         $this->assertNotEquals($project->fresh()->due_date->format('Y-m-d'), now()->addYears(7)->format('Y-m-d'));
-
     }
 
-    public function test_the_provided_status_must_be_valid()
+    public function test_the_provided_status_must_be_valid_when_updating_a_project()
     {
         $project = Project::factory()->create();
 
@@ -528,7 +534,15 @@ class ProjectControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_a_user_with_the_restore_project_permission_can_visit_the_trashed_projects_page_and_can_see_the_truncated_project_titles()
+    
+    public function test_no_projects_message_on_trashed_page_for_a_user_with_the_restore_project_permission()
+    {
+        $this->actingAs($this->admin)->get(route('projects.trashed'))
+            ->assertOk()
+            ->assertSeeText('No trashed projects yet.');
+    }
+
+    public function test_a_user_with_the_restore_project_permission_sees_truncated_titles_on_the_trashed_projects_page()
     {
         $project = Project::factory()->trashed()->create();
 
