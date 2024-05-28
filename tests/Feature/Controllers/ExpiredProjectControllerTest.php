@@ -11,7 +11,7 @@ class ExpiredProjectControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $project;
+    protected Project $project;
 
     public function setUp(): void
     {

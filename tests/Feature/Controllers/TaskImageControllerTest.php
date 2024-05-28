@@ -12,9 +12,9 @@ class TaskImageControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $task;
+    protected Task $task;
 
-    protected $file;
+    protected UploadedFile $file;
 
     public function setUp(): void
     {

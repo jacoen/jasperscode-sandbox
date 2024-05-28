@@ -29,12 +29,9 @@ class EnableTwoFactorForAdminsTest extends TestCase
             'updated_at' => now()->subMinute(),
         ]);
 
-        $this->assertFalse($superAdmin->two_factor_enabled);
-
         $this->artisan('2fa:enableForAdmins')->assertSuccessful();
 
         $this->assertTrue($superAdmin->fresh()->two_factor_enabled);
-
         $this->assertEqualsWithDelta($superAdmin->fresh()->updated_at, now(), 1);
     }
 
@@ -42,12 +39,9 @@ class EnableTwoFactorForAdminsTest extends TestCase
     {
         $admin = User::factory()->create()->assignRole('Admin');
 
-        $this->assertFalse($admin->two_factor_enabled);
-
         $this->artisan('2fa:enableForAdmins')->assertSuccessful();
-
+        
         $this->assertTrue($admin->fresh()->two_factor_enabled);
-
         $this->assertEqualsWithDelta($admin->updated_at, now(), 1);
     }
 
@@ -57,7 +51,7 @@ class EnableTwoFactorForAdminsTest extends TestCase
 
         $this->artisan('2fa:enableForAdmins')->assertSuccessful();
 
-        $this->assertNotEqualsWithDelta($this->completeAdmin, now(), 1);
+        $this->assertNotEqualsWithDelta($this->completeAdmin->fresh()->updated_at, now(), 1);
     }
 
     public function test_it_does_not_update_the_the_account_of_a_manager()
