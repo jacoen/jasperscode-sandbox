@@ -123,7 +123,7 @@ class TaskControllerTest extends TestCase
                 'title' => 'The title field is required.',
             ]);
 
-        $this->assertEquals(0, Task::count());
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_the_provided_title_must_be_at_least_3_characters_long_when_creating_a_task()
@@ -134,7 +134,7 @@ class TaskControllerTest extends TestCase
             'title' => 'The title field must be at least 3 characters.',
         ]);
 
-        $this->assertEquals(0, Task::count());
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_the_provided_title_cannot_be_longer_than_255_characters_when_creating_a_task()
@@ -145,7 +145,7 @@ class TaskControllerTest extends TestCase
             'title' => 'The title field must not be greater than 255 characters.',
         ]);
 
-        $this->assertEquals(0, Task::count());
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_the_provided_description_must_be_at_least_3_characters_long_when_creating_a_task()
@@ -156,7 +156,7 @@ class TaskControllerTest extends TestCase
             'description' => 'The description field must be at least 3 characters.',
         ]);
 
-        $this->assertEquals(0, Task::count());
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_a_user_cannot_upload_anything_other_than_an_image_when_creating_a_task()
@@ -179,7 +179,7 @@ class TaskControllerTest extends TestCase
         Storage::disk('media')->assertMissing($document);
         Storage::disk('media')->assertMissing($pdf);
 
-        $this->assertEquals(0, Task::count());
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_a_user_can_upload_a_maximum_of_3_images_when_creating_a_task()
@@ -210,7 +210,7 @@ class TaskControllerTest extends TestCase
         $this->assertFileDoesNotExist($image3->getClientOriginalName());
         $this->assertFileDoesNotExist($image4->getClientOriginalName());
 
-        $this->assertEquals(0, Task::count());
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_a_guest_cannot_create_a_new_task()
@@ -236,8 +236,8 @@ class TaskControllerTest extends TestCase
             ->assertSessionHas('success', 'A new task has been created.');
 
         $task = Task::first();
-        
-        $this->assertEquals(1, Task::count());
+
+        $this->assertEquals(Task::count(), 1);
 
         $this->assertEquals($task->title, $this->data['title']);
         $this->assertEquals($task->description, $this->data['description']);
@@ -357,7 +357,7 @@ class TaskControllerTest extends TestCase
         $this->assertNotEquals($task->fresh()->user_id, 9999);
     }
 
-    public function test_the_title_must_be_at_least_3_characters_long_when_updating_a_task()
+    public function test_the_provided_title_must_be_at_least_3_characters_long_when_updating_a_task()
     {
         $task = Task::factory()->create();
 
@@ -370,7 +370,7 @@ class TaskControllerTest extends TestCase
         $this->assertNotEquals($task->fresh()->title, 'aa');
     }
 
-    public function test_the_title_cannot_be_longer_than_255_characters_when_updating_a_task()
+    public function test_the_provided_title_cannot_be_longer_than_255_characters_when_updating_a_task()
     {
         $task = Task::factory()->create();
 
@@ -383,7 +383,7 @@ class TaskControllerTest extends TestCase
         $this->assertNotEquals($task->fresh()->title, Str::repeat('abc', 120));
     }
 
-    public function test_description_must_be_at_least_3_characters_long_when_updating_a_task()
+    public function test_provided_description_must_be_at_least_3_characters_long_when_updating_a_task()
     {
         $task = Task::factory()->create();
 
@@ -396,7 +396,7 @@ class TaskControllerTest extends TestCase
         $this->assertNotEquals($task->fresh()->description, 'aa');
     }
 
-    public function test_the_status_must_be_valid_when_updating_a_task()
+    public function test_a_valid_status_must_be_provided_when_updating_a_task()
     {
         $task = Task::factory()->create();
 
@@ -518,7 +518,7 @@ class TaskControllerTest extends TestCase
             ->assertRedirect(route('login'));
 
         $this->assertNotSoftDeleted($task);
-        $this->assertEquals(1, Task::count());
+        $this->assertEquals(Task::count(), 1);
     }
 
     public function test_a_user_without_the_delete_task_permission_cannot_delete_a_task()
@@ -529,7 +529,7 @@ class TaskControllerTest extends TestCase
             ->assertForbidden();
 
         $this->assertNotSoftDeleted($task);
-        $this->assertEquals(1, Task::count());
+        $this->assertEquals(Task::count(), 1);
     }
 
     public function test_a_user_with_the_delete_task_permission_can_delete_a_task()
@@ -541,7 +541,7 @@ class TaskControllerTest extends TestCase
             ->assertSessionHas('success', 'The task has been deleted.');
 
         $this->assertSoftDeleted($task);
-        $this->assertEquals(1, Task::onlyTrashed()->count());
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_a_guest_cannot_visit_the_trashed_task_page()
@@ -556,14 +556,14 @@ class TaskControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_a_user_with_the_restore_task_permission_will_see_a_no_tasks_message_when_there_are_no_trashed_tasks()
+    public function a_user_with_the_restore_task_permission_will_see_a_no_tasks_message_on_an_empty_trashed_tasks_page()
     {
         $this->actingAs($this->employee)->get(route('tasks.trashed'))
             ->assertOk()
             ->assertSeeText('No tasks yet');
     }
 
-    public function test_a_user_with_the_restore_task_permission_can_see_all_the_trashed_tasks_when_visiting_the_trashed_tasks_page()
+    public function test_a_user_with_the_restore_task_permission_can_see_all_the_trashed_tasks_on_the_trashed_tasks_page()
     {
         $task = Task::factory()->trashed()->create();
         $activeTask = Task::factory()->create();
@@ -587,7 +587,7 @@ class TaskControllerTest extends TestCase
         $this->patch(route('tasks.restore', $task))
             ->assertRedirect(route('login'));
 
-        $this->assertEquals(1, Task::onlyTrashed()->count());
+        $this->assertEquals(Task::onlyTrashed()->count(), 1);
     }
 
     public function test_a_user_without_the_restore_task_permission_cannot_restore_a_task()
@@ -597,7 +597,7 @@ class TaskControllerTest extends TestCase
         $this->actingAs($this->user)->patch(route('tasks.restore', $task))
             ->assertForbidden();
 
-        $this->assertEquals(1, Task::onlyTrashed()->count());
+        $this->assertEquals(Task::onlyTrashed()->count(), 1);
     }
 
     public function test_a_user_with_the_restore_task_permission_can_restore_a_task()
@@ -608,36 +608,38 @@ class TaskControllerTest extends TestCase
             ->assertRedirect(route('tasks.trashed'))
             ->assertSessionHas('success', 'The task has been restored.');
 
-        $this->assertEquals(0, Task::onlyTrashed()->count());
+        $this->assertEquals(Task::onlyTrashed()->count(), 0);
     }
 
-    public function test_a_guest_cannot_delete_a_task_pemanently()
+    public function test_a_guest_cannot_permanently_delete_a_task()
     {
         $task = Task::factory()->trashed()->create();
 
         $this->delete(route('tasks.force-delete', $task))
             ->assertRedirect(route('login'));
 
-        $this->assertEquals(1, Task::withTrashed()->count());
+        $this->assertEquals(Task::withTrashed()->count(), 1);
     }
 
-    public function test_a_user_without_correct_permissions_cannot_delete_a_task_permanently()
+    public function test_a_user_without_the_correct_permissions_cannot_permanently_delete_a_task()
     {
         $task = Task::factory()->trashed()->create();
 
         $this->actingAs($this->employee)->delete(route('tasks.force-delete', $task))
             ->assertForbidden();
 
-        $this->assertEquals(1, Task::withTrashed()->count());
+        $this->assertEquals(Task::withTrashed()->count(), 1);
     }
 
-    public function test_a_user_with_the_correct_permissions_can_delete_a_task_permanently()
+    public function test_a_user_with_the_correct_permissions_can_permanently_delete_a_task()
     {
         $task = Task::factory()->trashed()->create();
 
         $this->actingAs($this->admin)->delete(route('tasks.force-delete', $task))
             ->assertRedirect(route('tasks.trashed'))
             ->assertSessionHas('success', 'The task has been permanently deleted.');
+
+        $this->assertEmpty(Task::withTrashed()->get());
     }
 
     public function test_a_guest_cannot_visit_the_admin_task_page()
@@ -651,14 +653,14 @@ class TaskControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_a_user_with_the_admin_role_will_see_the_no_tasks_yet_message_when_they_visit_the_admin_task_page_when_there_are_no_tasks()
+    public function test_the_admin_will_see_a_no_tasks_message_on_an_empty_admin_tasks_page()
     {
         $this->actingAs($this->admin)->get(route('admin.tasks'))
             ->assertOk()
             ->assertSeeText('No tasks yet.');
     }
 
-    public function test_a_user_with_the_admin_role_can_see_all_active_tasks_on_the_admin_task_page()
+    public function test_the_admin_will_see_all_tasks_on_whilst_visiting_the_admin_tasks_page()
     {
         $employeeTask = Task::factory()->create(['user_id' => $this->employee->id]);
         $managerTask = Task::factory()->create(['user_id' => $this->manager->id]);
