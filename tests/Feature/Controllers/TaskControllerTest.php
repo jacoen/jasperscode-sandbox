@@ -15,9 +15,9 @@ class TaskControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $project;
+    protected Project $project;
 
-    protected $data;
+    protected array $data;
 
     public function setUp(): void
     {
@@ -48,7 +48,7 @@ class TaskControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_a_user_with_the_read_task_permission_without_assigned_tasks_will_see_the_no_assigned_tasks_message_when_visiting_the_task_index_page()
+    public function test_a_user_with_the_read_task_permission_will_see_an_no_tasks_message_whilst_visiting_the_task_index_page()
     {
         $task = Task::factory()->for($this->project)->create(['user_id' => $this->manager->id]);
 
@@ -110,6 +110,8 @@ class TaskControllerTest extends TestCase
             ->assertSessionHasErrors([
                 'user_id' => 'The selected user is invalid.',
             ]);
+
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_the_title_field_is_required_to_create_a_task()
@@ -124,7 +126,7 @@ class TaskControllerTest extends TestCase
         $this->assertEquals(0, Task::count());
     }
 
-    public function test_the_title_must_be_at_least_3_characters_long_when_creating_a_task()
+    public function test_the_provided_title_must_be_at_least_3_characters_long_when_creating_a_task()
     {
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), [
             'title' => 'aa',
@@ -135,7 +137,7 @@ class TaskControllerTest extends TestCase
         $this->assertEquals(0, Task::count());
     }
 
-    public function test_the_title_cannot_be_longer_than_255_characters_when_creating_a_task()
+    public function test_the_provided_title_cannot_be_longer_than_255_characters_when_creating_a_task()
     {
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), [
             'title' => Str::repeat('abc', 120),
@@ -146,7 +148,7 @@ class TaskControllerTest extends TestCase
         $this->assertEquals(0, Task::count());
     }
 
-    public function test_the_description_must_be_at_least_3_characters_long_when_creating_a_task()
+    public function test_the_provided_description_must_be_at_least_3_characters_long_when_creating_a_task()
     {
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), array_merge($this->data, [
             'description' => 'aa',
@@ -216,7 +218,7 @@ class TaskControllerTest extends TestCase
         $this->post(route('tasks.store', $this->project), $this->data)
             ->assertRedirect(route('login'));
 
-        $this->assertEquals(0, Task::count());
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_a_user_without_the_create_task_permission_cannot_create_a_new_task()
@@ -224,7 +226,7 @@ class TaskControllerTest extends TestCase
         $this->actingAs($this->user)->post(route('tasks.store', $this->project), $this->data)
             ->assertForbidden();
 
-        $this->assertEquals(0, Task::count());
+        $this->assertEquals(Task::count(), 0);
     }
 
     public function test_a_user_with_the_create_task_permission_can_create_a_new_task()
@@ -233,13 +235,25 @@ class TaskControllerTest extends TestCase
             ->assertRedirect(route('projects.show', $this->project))
             ->assertSessionHas('success', 'A new task has been created.');
 
+        $task = Task::first();
+        
         $this->assertEquals(1, Task::count());
 
-        $task = Task::first();
         $this->assertEquals($task->title, $this->data['title']);
         $this->assertEquals($task->description, $this->data['description']);
         $this->assertEquals($task->user_id, $this->data['user_id']);
         $this->assertEquals($task->author_id, $this->employee->id);
+    }
+
+    public function test_the_user_gets_redirected_to_the_project_detail_page_when_a_create_task_exception_occurs()
+    {
+        $project = Project::factory()->create(['status' => 'closed']);
+
+        $this->actingAs($this->employee)->post(route('tasks.store', $project), $this->data)
+            ->assertRedirect(route('projects.show', $project))
+            ->assertSessionHasErrors([
+                'error' => 'Cannot create a task for an inactive project.',
+            ]);
     }
 
     public function test_a_guest_cannot_visit_the_task_detail_page()
