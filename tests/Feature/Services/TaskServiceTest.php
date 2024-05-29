@@ -21,7 +21,7 @@ class TaskServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $taskService;
+    protected TaskService $taskService;
 
     public function setUp(): void
     {
@@ -37,14 +37,12 @@ class TaskServiceTest extends TestCase
     public function test_it_can_list_all_tasks()
     {
         Task::factory(10)->create();
-        $task = Task::factory()->create(['title' => 'Some title']);
+        $task = Task::factory()->create();
 
         $tasks = $this->taskService->listTasks();
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $tasks);
-
         $this->assertEquals(11, $tasks->count());
-
         $this->assertTrue($tasks->contains($task));
     }
 
@@ -57,9 +55,8 @@ class TaskServiceTest extends TestCase
         $tasks = $this->taskService->listTasks('smaller');
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $tasks);
-
         $this->assertEquals(1, $tasks->count());
-
+        
         $this->assertTrue($tasks->contains($task));
         $this->assertFalse($tasks->contains($secondTask));
     }
@@ -79,7 +76,6 @@ class TaskServiceTest extends TestCase
         $tasks = $this->taskService->listTasks('', 'pending');
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $tasks);
-
         $this->assertEquals(1, $tasks->count());
 
         $this->assertTrue($tasks->contains($pendingTask));
@@ -167,7 +163,7 @@ class TaskServiceTest extends TestCase
         $this->assertInstanceOf(Task::class, $task);
         $this->assertEquals($task->project_id, $project->id);
         $this->assertEquals($task->author_id, $this->employee->id);
-        $this->assertTrue($task->status == 'open');
+        $this->assertEquals($task->status, 'open');
 
         $this->assertDatabaseHas('tasks', $validData);
     }
@@ -223,7 +219,6 @@ class TaskServiceTest extends TestCase
 
         $this->assertNotEquals($task->fresh()->title, $validData['title']);
         $this->assertNotEquals($task->fresh()->description, $validData['description']);
-
         $this->assertDatabaseMissing('tasks', array_merge($validData, ['id' => $task->id]));
     }
 
@@ -243,7 +238,6 @@ class TaskServiceTest extends TestCase
 
         $this->assertNotEquals($task->fresh()->title, $validData['title']);
         $this->assertNotEquals($task->fresh()->description, $validData['description']);
-
         $this->assertDatabaseMissing('tasks', array_merge($validData, ['id' => $task->id]));
     }
 
@@ -263,7 +257,6 @@ class TaskServiceTest extends TestCase
 
         $this->assertNotEquals($task->fresh()->title, $validData['title']);
         $this->assertNotEquals($task->fresh()->description, $validData['description']);
-
         $this->assertDatabaseMissing('tasks', array_merge($validData, ['id' => $task->id]));
     }
 
@@ -284,7 +277,6 @@ class TaskServiceTest extends TestCase
 
         $this->assertEquals($task->title, $validData['title']);
         $this->assertEquals($task->description, $validData['description']);
-
         $this->assertDatabaseHas('tasks', array_merge($validData, ['id' => $task->id]));
     }
 
@@ -378,7 +370,7 @@ class TaskServiceTest extends TestCase
         Notification::assertSentTo($this->employee, TaskAssignedNotification::class);
     }
 
-    public function test_it_can_only_list_all_soft_deleted_tasks()
+    public function test_it_can_list_all_soft_deleted_tasks()
     {
         $activeTask = Task::factory()->create();
         Task::factory(3)->trashed()->create();

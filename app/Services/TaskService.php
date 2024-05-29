@@ -14,7 +14,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class TaskService
 {
-    public function listTasks($search = null, $status = null, $userId = null): LengthAwarePaginator
+    public function listTasks(string $search = null, string $status = null, int $userId = null): LengthAwarePaginator
     {
         $tasks = Task::with('project.manager', 'author', 'user')
             ->search($search)
@@ -100,7 +100,7 @@ class TaskService
         return $task;
     }
 
-    public function findTasksByProject($project, $search = null, $status = null): LengthAwarePaginator
+    public function findTasksByProject(Project $project, string $search = null, string $status = null): LengthAwarePaginator
     {
         return $project->tasks()
             ->search($search)
