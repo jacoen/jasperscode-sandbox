@@ -30,6 +30,7 @@ class ProjectController extends Controller
     public function index(): View
     {
         $projects = $this->projectService->listProjects(
+            auth()->user(),
             request()->input('search'),
             request()->input('status'),
         );
@@ -117,7 +118,7 @@ class ProjectController extends Controller
 
     public function restore(Project $project): RedirectResponse
     {
-        $this->authorize('restore', $project);
+        $this->authorize('restore project', $project);
 
         $project->restore();
 
