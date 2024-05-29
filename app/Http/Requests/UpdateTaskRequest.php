@@ -26,7 +26,7 @@ class UpdateTaskRequest extends FormRequest
             'project' => ['missing'],
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'min:3', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'min:3'],
             'status' => ['required', 'string', Rule::in(config('definitions.statuses'))],
             'attachments' => ['nullable', 'array', 'max:3'],
             'attachments.*' => ['image'],

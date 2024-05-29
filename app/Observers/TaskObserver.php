@@ -11,6 +11,11 @@ class TaskObserver
      */
     public function created(Task $task): void
     {
+        if (! $task->status) {
+            $task->status = 'open';
+            $task->save();
+        }
+
         $task->project->touch();
     }
 

@@ -37,6 +37,5 @@ class Enable2FAForAdmin extends Command
         }
 
         $this->info('Two factor authentication has been enabled for '.$count.' accounts');
-        return;
     }
 }

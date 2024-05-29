@@ -32,7 +32,7 @@ class AccountCreatedNotification extends Notification implements ShouldQueue
             ->line('Via this message we want to notify you that your account has been created.')
             ->line('Now you need to activate your account, you can activate your account by creating a password.')
             ->line('You can click the button below to add your password')
-            ->action('Notification Action', route('activate-account.create', $notifiable->password_token))
+            ->action('Activate your account', route('activate-account.create', $notifiable->password_token))
             ->line('Thank you for using our application!');
     }
 }

@@ -22,7 +22,7 @@ class TwoFactorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'two_factor_code' => ['required', 'numeric', 'integer', 'digits:6'],
+            'two_factor_code' => ['required', 'string', 'numeric', 'digits:6'],
         ];
     }
 }

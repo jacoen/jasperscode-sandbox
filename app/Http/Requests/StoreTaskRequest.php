@@ -25,9 +25,10 @@ class StoreTaskRequest extends FormRequest
             'project' => ['missing'],
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'min:3', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'min:3'],
             'attachments' => ['nullable', 'array', 'max:3'],
             'attachments.*' => ['image'],
+            'author_id' => ['required', 'exists:users,id'],
         ];
     }
 
@@ -35,6 +36,7 @@ class StoreTaskRequest extends FormRequest
     {
         $this->merge([
             'description' => strip_tags($this->description),
+            'author_id' => auth()->id(),
         ]);
     }
 

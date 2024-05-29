@@ -31,7 +31,7 @@ class User extends Authenticatable
         'two_factor_expires_at',
         'locked_until',
         'two_factor_attempts',
-        'last_attempt_at'
+        'last_attempt_at',
     ];
 
     /**
@@ -70,6 +70,11 @@ class User extends Authenticatable
     public function tasks()
     {
         return $this->hasMany(Task::class, 'author_id');
+    }
+
+    public function assignedTasks()
+    {
+        return $this->hasMany(Task::class, 'user_id');
     }
 
     public function generatePasswordToken()

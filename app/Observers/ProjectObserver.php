@@ -6,6 +6,14 @@ use App\Models\Project;
 
 class ProjectObserver
 {
+    public function created(Project $project)
+    {
+        if (! $project->status) {
+            $project->status = 'open';
+            $project->save();
+        }
+    }
+
     public function deleting(Project $project)
     {
         if (! $project->isForceDeleting()) {

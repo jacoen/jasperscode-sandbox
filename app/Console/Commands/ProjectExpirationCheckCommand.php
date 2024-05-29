@@ -6,7 +6,6 @@ use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectExpirationNotification;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class ProjectExpirationCheckCommand extends Command
 {
@@ -32,22 +31,12 @@ class ProjectExpirationCheckCommand extends Command
         $count = 0;
 
         foreach ($this->ActiveProjects() as $project) {
-            $project->timestamps = false;
-            $project->update(['status' => 'expired']);
-            $project->timestamp = true;
+            $pinnedProject = $project->is_pinned ? false : $project->is_pinned;
 
-            if ($project->manager) {
-                $user = User::find($project->manager_id);
-                $this->NotifyManagerExpiredProject($user, $project);
-            }
-            $count++;
-        }
-
-        foreach ($this->expiredPinnedProjects() as $project) {
             $project->timestamps = false;
             $project->update([
-                'status' => 'expired',
-                'is_pinned' => false,
+                $project->status = 'expired',
+                $project->is_pinned = $pinnedProject,
             ]);
             $project->timestamp = true;
 
@@ -57,26 +46,15 @@ class ProjectExpirationCheckCommand extends Command
             }
             $count++;
         }
-        
+
         $this->info('The check has been completed. '.$count.' projects have expired. The status of these projects has been changed to expired.');
-        return;
     }
 
     private function ActiveProjects()
     {
-        $projects = Project::whereIn('status', ['open', 'pending', 'restored'])
+        $projects = Project::with('manager')
+            ->whereIn('status', ['open', 'pending', 'restored'])
             ->where('due_date', '<', now())
-            ->where('is_pinned', false)
-            ->get();
-
-        return $projects;
-    }
-
-    private function expiredPinnedProjects()
-    {
-        $projects = Project::whereIn('status', ['open', 'pending', 'restored'])
-            ->where('due_date', '<', now())
-            ->where('is_pinned', true)
             ->get();
 
         return $projects;

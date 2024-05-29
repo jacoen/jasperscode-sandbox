@@ -22,11 +22,11 @@ class TwoFactorMiddleware
                 if (! $request->routeIs('verify*')) {
                     return redirect()->route('verify.create');
                 }
-    
+
                 if ($user->two_factor_expires_at->lt(now())) {
                     $user->resetTwoFactorCode();
                     auth()->logout();
-    
+
                     return redirect()->route('login')
                         ->withErrors(['error' => 'The two factor code has expired. Please login in again.']);
                 }
@@ -35,6 +35,7 @@ class TwoFactorMiddleware
                     ->withErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.']);
             }
         }
+
         return $next($request);
     }
 }

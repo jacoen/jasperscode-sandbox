@@ -78,14 +78,14 @@ class TaskObserverTest extends TestCase
 
         $this->task->delete();
         $this->assertSoftDeleted($this->task);
-                
+
         $this->task->restore();
 
         $this->assertTrue($this->task->status == 'restored');
         $this->assertEqualsWithDelta($this->task->updated_at, now(), 1);
         $this->assertNotEqualsWithDelta(
-            $this->task->updated_at, 
-            $this->project->fresh()->updated_at, 
+            $this->task->updated_at,
+            $this->project->fresh()->updated_at,
             1
         );
     }

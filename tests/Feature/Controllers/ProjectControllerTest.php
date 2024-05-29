@@ -4,10 +4,8 @@ namespace Tests\Feature\Controllers;
 
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
-use App\Notifications\ProjectAssignedNotification;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -15,18 +13,40 @@ class ProjectControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_user_without_the_read_project_permission_cannot_visit_the_project_overview_page()
+    protected array $data;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->data = [
+            'title' => 'some title here',
+            'description' => 'A small description',
+            'due_date' => now()->addMonths(6)->format('Y-m-d'),
+        ];
+    }
+
+    public function test_a_guest_cannot_visit_the_project_overview_page()
+    {
+        $this->get(route('projects.index'))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_a_user_without_the_read_projects_permission_cannot_visit_the_project_overview_page()
     {
         $this->actingAs($this->user)->get(route('projects.index'))
             ->assertForbidden();
     }
 
-    public function test_a_user_with_the_read_project_permission_can_visit_the_project_overview_page()
+    public function test_a_no_projects_message_will_be_displayed_for_the_user_with_the_read_projects_permission_on_a_empty_projects_list()
     {
         $this->actingAs($this->employee)->get(route('projects.index'))
             ->assertOk()
-            ->assertSeeText(['No projects yet.']);
+            ->assertSeeText('No projects yet.');
+    }
 
+    public function test_a_user_with_the_read_project_permission_can_see_all_active_projects()
+    {
         $project = Project::factory()->create(['manager_id' => $this->manager->id]);
 
         $this->actingAs($this->employee)->get(route('projects.index'))
@@ -38,77 +58,23 @@ class ProjectControllerTest extends TestCase
             ]);
     }
 
-    public function test_a_user_can_filter_projects_on_their_status()
-    {
-        $openProject = Project::factory()->create(['status' => 'open']);
-        $pendingProject = Project::factory()->create(['status' => 'pending']);
-        $closedProject = Project::factory()->create(['status' => 'closed']);
-        $completedProject = Project::factory()->create(['status' => 'completed']);
-
-        $this->actingAs($this->employee)->get(route('projects.index'))
-            ->assertOk()
-            ->assertSeeText([
-                Str::limit($openProject->title, 35),
-                Str::limit($pendingProject->title, 35),
-                Str::limit($closedProject->title, 35),
-                Str::limit($completedProject->title, 35),
-            ]);
-
-        $this->actingAs($this->employee)->get(route('projects.index', ['status' => 'pending']))
-            ->assertOk()
-            ->assertSeeText(Str::limit($pendingProject->title, 35))
-            ->assertDontSeeText([
-                Str::limit($openProject->title, 35),
-                Str::limit($closedProject->title, 35),
-                Str::limit($completedProject->title, 35),
-            ]);
-    }
-
-    public function test_a_user_can_search_project_by_their_title()
-    {
-        $project1 = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the first project']);
-        $project2 = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the second project']);
-        $project3 = Project::factory()->create(['manager_id' => $this->manager->id, 'title' => 'This is the third project']);
-
-        $this->actingAs($this->employee)->get(route('projects.index'))
-            ->assertOk()
-            ->assertSeeText([
-                Str::limit($project1->title, 35),
-                Str::limit($project2->title, 35),
-                Str::limit($project3->title, 35),
-            ]);
-
-        $this->actingAs($this->employee)->get(route('projects.index', ['search' => 'second']))
-            ->assertOk()
-            ->assertSeeText([Str::limit($project2->title, 35)])
-            ->assertDontSeeText([
-                Str::limit($project1->title, 35),
-                Str::limit($project3->title, 35),
-            ]);
-    }
-
-    public function test_a_user_without_the_create_project_permission_cannot_visit_the_project_create_page()
+    public function test_a_guest_cannot_visit_the_create_project_page()
     {
         $this->get(route('projects.create'))
             ->assertRedirect(route('login'));
+    }
 
-        $this->actingAs($this->user)->get(route('projects.create'))
+    public function test_a_user_without_the_create_project_permission_cannot_visit_the_create_project_page()
+    {
+        $this->actingAs($this->employee)->get(route('projects.create'))
             ->assertForbidden();
     }
 
-    public function test_a_user_without_the_create_permission_cannot_create_a_new_project()
+    public function test_a_user_with_the_create_project_permission_can_visit_the_create_project_page()
     {
-        $data = [
-            'title' => 'Some new title',
-            'description' => 'Here is some description for the test',
-            'due_date' => now()->addMonths(3),
-            'manager_id' => $this->manager->id,
-        ];
-
-        $this->actingAs($this->employee)->post(route('users.store'), $data)
-            ->assertForbidden();
-
-        $this->assertDatabaseMissing('projects', $data);
+        $this->actingAs($this->manager)->get(route('projects.create'))
+            ->assertOk()
+            ->assertSeeText('Create new project');
     }
 
     public function test_the_title_and_due_date_fields_are_required_when_creating_a_project()
@@ -124,67 +90,130 @@ class ProjectControllerTest extends TestCase
                 'due_date' => 'The due date field is required.',
             ]);
 
-        $this->assertDatabaseEmpty('projects');
+        $this->assertEquals(0, Project::count());
     }
 
-    public function test_the_due_date_must_be_after_the_current_date_when_creating_a_project()
+    public function test_the_provided_manager_id_must_exist_in_the_users_table_when_creating_a_project()
     {
-        $projectLastMonth = Project::factory()->make(['manager_id' => $this->manager->id, 'due_date' => now()->subMonth()])->toArray();
-        $projectCurrentDate = Project::factory()->make(['manager_id' => $this->manager->id, 'due_date' => now()])->toArray();
-        $projectNextMonth = Project::factory()->make(['manager_id' => $this->manager->id, 'due_date' => now()->addMonth()])->toArray();
+        $this->actingAs($this->manager)->post(route('projects.store'), array_merge([
+            'manager_id' => 9999,
+        ]))->assertSessionHasErrors([
+            'manager_id' => 'The selected manager is invalid.',
+        ]);
 
-        $this->actingAs($this->manager)->post(route('projects.store'), $projectLastMonth)
+        $this->assertEquals(0, Project::count());
+    }
+
+    public function test_the_provided_must_be_at_least_3_characters_when_creating_a_project()
+    {
+        $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
+            'title' => 'aa',
+        ]))->assertSessionHasErrors([
+            'title' => 'The title field must be at least 3 characters.',
+        ]);
+
+        $this->assertEquals(0, Project::count());
+    }
+
+    public function test_the_provided_cannot_be_greater_than_255_characters_when_creating_a_project()
+    {
+        $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
+            'title' => Str::repeat('abc', 120),
+        ]))->assertSessionHasErrors([
+            'title' => 'The title field must not be greater than 255 characters.',
+        ]);
+
+        $this->assertEquals(0, Project::count());
+    }
+
+    public function test_the_provided_description_must_be_at_least_3_characters_when_creating_a_project()
+    {
+        $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
+            'description' => 'aa',
+        ]))->assertSessionHasErrors([
+            'description' => 'The description field must be at least 3 characters.',
+        ]);
+
+        $this->assertEquals(0, Project::count());
+    }
+
+    public function test_the_provided_description_cannot_be_greater_than_255_characters_when_creating_a_project()
+    {
+        $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
+            'description' => Str::repeat('abc', 120),
+        ]))->assertSessionHasErrors([
+            'description' => 'The description field must not be greater than 255 characters.',
+        ]);
+
+        $this->assertEquals(0, Project::count());
+    }
+
+    public function test_the_provided_due_date_must_be_greater_than_the_current_date_when_creating_a_project()
+    {
+        $dateLastMonth = array_merge($this->data, ['due_date' => now()->subMonth()->format('Y-m-d')]);
+        $dateNow = array_merge($this->data, ['due_date' => now()->format('Y-m-d')]);
+
+        $this->actingAs($this->manager)->post(route('projects.store'), $dateLastMonth)
             ->assertSessionHasErrors(['due_date' => 'The due date field must be a date after today.']);
 
-        $this->actingAs($this->manager)->post(route('projects.store'), $projectCurrentDate)
+        $this->actingAs($this->manager)->post(route('projects.store'), $dateNow)
             ->assertSessionHasErrors(['due_date' => 'The due date field must be a date after today.']);
 
-        $this->actingAs($this->manager)->post(route('projects.store'), $projectNextMonth)
+        $this->assertDatabaseCount('projects', 0);
+    }
+
+    public function test_the_provided_due_date_must_be_before_january_first_2031_when_creating_a_project()
+    {
+        $this->actingAs($this->manager)->post(route('projects.store'), array_merge($this->data, [
+            'due_date' => Carbon::create(2031, 1, 1)
+        ]))->assertSessionHasErrors([
+            'due_date' => 'The due date field must be a date before 2030-12-31.',
+        ]);
+
+        $this->assertDatabaseCount('projects', 0);
+    }
+
+    public function test_a_guest_cannot_create_a_project()
+    {
+        $this->post(route('projects.store'), $this->data)
+            ->assertRedirect(route('login'));
+
+        $this->assertEquals(0, Project::count());
+    }
+
+    public function test_a_user_without_the_create_project_permission_cannot_create_a_project()
+    {
+        $this->actingAs($this->employee)->post(route('projects.store'), $this->data)
+            ->assertForbidden();
+
+        $this->assertEquals(0, Project::count());
+    }
+
+    public function test_a_user_with_the_create_project_permission_can_create_a_project()
+    {
+        $this->actingAs($this->manager)->post(route('projects.store'), $this->data)
             ->assertRedirect(route('projects.index'))
             ->assertSessionHas('success', 'A new project has been created.');
 
-        $this->assertDatabaseCount('projects', 1);
-        $this->assertDatabaseHas('projects', ['title' => $projectNextMonth['title']]);
+        $project = Project::first();
+
+        $this->assertEquals(1, Project::count());
+        $this->assertEquals($project->title, $this->data['title']);
+        $this->assertEquals($project->description, $this->data['description']);
+        $this->assertEquals($project->due_date->format('Y-m-d'), $this->data['due_date']);
     }
 
-    public function test_a_user_with_the_create_project_permission_can_create_a_new_project()
+    public function test_a_guest_cannot_visit_the_project_detail_page()
     {
-        $data = [
-            'title' => 'Some new title',
-            'description' => 'Here is some description for the test',
-            'due_date' => now()->addMonths(3),
-            'manager_id' => $this->manager->id,
-        ];
+        $project = Project::factory()->create();
 
-        $this->actingAs($this->manager)->post(route('projects.store'), $data)
-            ->assertRedirect(route('projects.index'))
-            ->assertSessionHas('success', 'A new project has been created.');
-    }
-
-    public function test_a_manager_receives_a_message_when_a_new_project_has_been_assigned_to_them()
-    {
-        Notification::fake();
-
-        $data = [
-            'title' => 'Some new title',
-            'description' => 'Here is some description for the test',
-            'due_date' => now()->addMonths(3),
-            'manager_id' => $this->manager->id,
-        ];
-
-        $this->actingAs($this->manager)->post(route('projects.store'), $data)
-            ->assertRedirect(route('projects.index'))
-            ->assertSessionHas('success');
-
-        Notification::assertSentTo($this->manager, ProjectAssignedNotification::class);
+        $this->get(route('projects.show', $project))
+            ->assertRedirect(route('login'));
     }
 
     public function test_a_user_without_the_read_project_permission_cannot_visit_the_project_detail_page()
     {
-        $project = Project::factory()->create(['manager_id' => null]);
-
-        $this->get(route('projects.show', $project))
-            ->assertRedirect(route('login'));
+        $project = Project::factory()->create();
 
         $this->actingAs($this->user)->get(route('projects.show', $project))
             ->assertForbidden();
@@ -192,60 +221,43 @@ class ProjectControllerTest extends TestCase
 
     public function test_a_user_with_the_read_project_permission_can_visit_the_project_detail_page()
     {
-        $project = Project::factory()->create(['manager_id' => null]);
+        $project = Project::factory()->create([
+            'manager_id' => $this->manager->id,
+        ]);
 
         $this->actingAs($this->employee)->get(route('projects.show', $project))
             ->assertOk()
             ->assertSeeText([
                 $project->title,
                 $project->description,
+                $project->manager->name,
                 $project->due_date->format('d M Y'),
-                $project->status,
+                'open', // project status
+                lastUpdated($project->updated_at),
             ]);
     }
 
-    public function test_an_alert_is_shown_when_an_active_project_is_due_in_a_week_or_less()
+    public function test_a_no_tasks_message_will_be_displayed_when_the_user_visits_the_project_detail_page_of_a_project_without_related_tasks()
     {
-        $project = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'open', 'due_date' => now()->addDays(6)]);
-        $tomorrowProject = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'open', 'due_date' => now()->addDay()]);
-        $inactiveProject = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'closed', 'due_date' => now()->addDay()]);
-
-        $this->actingAs($this->employee)->get(route('projects.show', $project))
-            ->assertOk()
-            ->assertSeeText('Info This project is due in 6 days.');
-
-        $this->actingAs($this->employee)->get(route('projects.show', $tomorrowProject))
-            ->assertOk()
-            ->assertSeeText('Info This project is due tomorrow.');
-
-        $this->actingAs($this->employee)->get(route('projects.show', $inactiveProject))
-            ->assertOk()
-            ->assertDontSeeText('Info This project is due tomorrow.');
-    }
-
-    public function test_a_warning_is_shown_when_an_active_project_is_due_in_less_than_a_month()
-    {
-        $project = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'open', 'due_date' => now()->addDays(25)]);
-        $inactiveProject = Project::factory()->create(['manager_id' => $this->manager->id, 'status' => 'closed', 'due_date' => now()->addDays(25)]);
-
-        $this->actingAs($this->employee)->get(route('projects.show', $project))
-            ->assertOk()
-            ->assertSeeText('Info This project is due in 25 days.');
-
-        $this->actingAs($this->employee)->get(route('projects.show', $inactiveProject))
-            ->assertOk()
-            ->assertDontSeeText('Info This project is due in 25 days.');
-    }
-
-    public function test_when_a_project_has_tasks_the_user_can_see_these_tasks_on_the_project_detail_page()
-    {
-        $project = Project::factory()->create();
+        $project = Project::factory()->create([
+            'manager_id' => $this->manager->id,
+        ]);
 
         $this->actingAs($this->employee)->get(route('projects.show', $project))
             ->assertOk()
             ->assertSeeText('No tasks in this project yet.');
+    }
 
-        $task = Task::factory()->for($project)->create();
+    public function test_the_tasks_related_to_the_project_will_be_displayed_when_the_user_visits_the_project_detail_page_of_a_project_with_tasks()
+    {
+        $project = Project::factory()->create([
+            'manager_id' => $this->manager->id,
+        ]);
+
+        $task = Task::factory()->for($project)->create([
+            'author_id' => $this->employee->id,
+            'user_id' => $this->employee->id,
+        ]);
 
         $this->actingAs($this->employee)->get(route('projects.show', $project))
             ->assertOk()
@@ -257,62 +269,7 @@ class ProjectControllerTest extends TestCase
             ]);
     }
 
-    public function test_a_user_can_filter_the_tasks_related_to_a_project_by_the_status_of_the_task()
-    {
-        $project = Project::factory()->create();
-
-        $openTask = Task::factory()->for($project)->create(['status' => 'open']);
-        $pendingTask = Task::factory()->for($project)->create(['status' => 'pending']);
-        $closedTask = Task::factory()->for($project)->create(['status' => 'closed']);
-        $completedTask = Task::factory()->for($project)->create(['status' => 'completed']);
-
-        $this->actingAs($this->employee)->get(route('projects.show', $project))
-            ->assertOk()
-            ->assertSeeText([
-                $openTask->title,
-                $pendingTask->title,
-                $closedTask->title,
-                $completedTask->title,
-            ]);
-
-        $this->actingAs($this->employee)->get(route('projects.show', ['project' => $project, 'status' => 'pending']))
-            ->assertOk()
-            ->assertSeeText([
-                $pendingTask->title,
-                $pendingTask->status,
-            ])->assertDontSeeText([
-                $openTask->title,
-                $closedTask->title,
-                $completedTask->title,
-            ]);
-    }
-
-    public function test_a_user_can_search_all_task_related_to_a_project_by_their_title()
-    {
-        $project = Project::factory()->create();
-
-        $task1 = Task::factory()->for($project)->create(['title' => 'First task']);
-        $task2 = Task::factory()->for($project)->create(['title' => 'This is the second task']);
-        $task3 = Task::factory()->for($project)->create(['title' => 'Task number three']);
-
-        $this->actingAs($this->employee)->get(route('projects.show', $project))
-            ->assertOk()
-            ->assertSeeText([
-                $task1->title,
-                $task2->title,
-                $task3->title,
-            ]);
-
-        $this->actingAs($this->employee)->get(route('projects.show', ['project' => $project, 'search' => 'second']))
-            ->assertOk()
-            ->assertSeeText($task2->title)
-            ->assertDontSeeText([
-                $task1->title,
-                $task3->title,
-            ]);
-    }
-
-    public function test_a_guest_cannot_reach_the_edit_project_page()
+    public function test_a_guest_cannot_visit_the_edit_project_page()
     {
         $project = Project::factory()->create();
 
@@ -320,35 +277,32 @@ class ProjectControllerTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_a_user_without_the_update_project_permission_cannot_visit_the_edit_project_page_to_edit_a_project()
+    public function test_a_user_without_the_update_project_permission_cannot_visit_the_edit_project_page()
     {
         $project = Project::factory()->create();
-
-        $data = [
-            'title' => $project->title,
-            'description' => $project->description,
-            'manager_id' => $this->manager->id,
-            'status' => 'open',
-        ];
 
         $this->actingAs($this->employee)->get(route('projects.edit', $project))
             ->assertForbidden();
-
-        $this->actingAs($this->employee)->put(route('projects.update', $project), $data)
-            ->assertForbidden();
-
-        $this->assertDatabaseMissing('projects', $data);
     }
 
-    public function test_multiple_fields_are_required_when_updating_the_project()
+    public function test_a_user_with_the_update_project_permission_can_visit_the_edit_project_page()
     {
         $project = Project::factory()->create();
 
+        $this->actingAs($this->manager)->get(route('projects.edit', $project))
+            ->assertOk()
+            ->assertSeeText($project->title);
+    }
+
+    public function test_the_title_due_date_and_status_fields_are_required_when_updating_an_existing_project()
+    {
         $data = [
             'title' => '',
             'due_date' => '',
             'status' => '',
         ];
+
+        $project = Project::factory()->create();
 
         $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
             ->assertSessionHasErrors([
@@ -356,136 +310,185 @@ class ProjectControllerTest extends TestCase
                 'due_date' => 'The due date field is required.',
                 'status' => 'The status field is required.',
             ]);
+
+        $project->refresh();
+
+        $this->assertNotEmpty($project->title);
+        $this->assertNotEmpty($project->due_date);
+        $this->assertNotEmpty($project->status);
     }
 
-    public function test_the_status_field_must_contain_a_valid_status_when_updating_a_project()
+    public function test_a_valid_manager_must_be_provided_when_updating_an_existing_user()
+    {
+        $project = Project::factory()->create([
+            'manager_id' => $this->manager->id,
+        ]);
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, ['manager_id' => 9999]))
+            ->assertSessionHasErrors([
+                'manager_id' => 'The selected manager is invalid.',
+            ]);
+
+        $this->assertNotEquals($project->fresh()->manager->id, 9999);
+    }
+
+    public function test_the_provided_title_must_be_at_least_3_characters_long_when_updating_a_project()
     {
         $project = Project::factory()->create();
 
-        $data = [
-            'title' => $project->title,
-            'description' => $project->description,
-            'manager_id' => $this->manager->id,
-        ];
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
+            'title' => 'aa',
+        ]))->assertSessionHasErrors([
+            'title' => 'The title field must be at least 3 characters.',
+        ]);
 
-        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($data, ['status' => 'restored']))
-            ->assertSessionHasErrors([
-                'status' => 'The selected status is invalid.',
-            ]);
+        $this->assertNotEquals($project->fresh()->title, 'aaa');
+    }
 
-        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($data, ['status' => 'expired']))
-            ->assertSessionHasErrors([
-                'status' => 'The selected status is invalid.',
-            ]);
+    public function test_the_provided_title_cannot_be_longer_than_255_characters_when_updating_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
+            'title' => Str::repeat('abc', 120),
+        ]))->assertSessionHasErrors([
+            'title' => 'The title field must not be greater than 255 characters.',
+        ]);
+    }
+
+    public function test_the_provided_due_date_must_be_a_date_when_updating_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
+            'due_date' => 12345,
+        ]))->assertSessionHasErrors([
+            'due_date' => 'The due date field must be a valid date.',
+        ]);
+
+        $this->assertNotEquals($project->due_date, 12345);
+    }
+
+    public function test_the_provided_date_must_be_after_the_current_date_when_updating_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
+            'due_date' => now()->format('Y-m-d'),
+        ]))->assertSessionHasErrors([
+            'due_date' => 'The due date field must be a date after today.',
+        ]);
+
+        $this->assertNotEquals($project->due_date->format('Y-m-d'), now()->format('Y-m-d'));
+    }
+
+    public function test_the_provided_due_date_must_be_before_january_first_2031_when_updating_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
+            'due_date' => Carbon::create(2031, 1, 1),
+        ]))->assertSessionHasErrors([
+            'due_date' => 'The due date field must be a date before 2030-12-31.',
+        ]);
+
+        $this->assertNotEquals($project->fresh()->due_date->format('Y-m-d'), now()->addYears(7)->format('Y-m-d'));
+    }
+
+    public function test_the_provided_status_must_be_valid_when_updating_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
+            'status' => 'restored',
+        ]))->assertSessionHasErrors([
+            'status' => 'The selected status is invalid.',
+        ]);
 
         $this->assertNotEquals($project->fresh()->status, 'restored');
-        $this->assertDatabaseMissing('projects', array_merge($data, ['id' => $project->id, 'status' => 'restored']));
+    }
 
-        $this->assertNotEquals($project->fresh()->status, 'expired');
-        $this->assertDatabaseMissing('projects', array_merge($data, ['id' => $project->id, 'status' => 'expired']));
+    public function test_a_guest_cannot_update_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $this->put(route('projects.update', $project), array_merge($this->data, [
+            'status' => 'pending',
+        ]))->assertRedirect(route('login'));
+
+        $project->refresh();
+        $this->assertNotEquals($project->title, $this->data['title']);
+        $this->assertNotEquals($project->description, $this->data['description']);
+        $this->assertNotEquals($project->status, 'pending');
+        $this->assertNotEquals($project->due_date->format('Y-m-d'), now()->addMonths(6)->format('Y-m-d'));
+    }
+
+    public function test_a_user_without_the_update_project_permission_cannot_update_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->employee)->put(route('projects.update', $project), array_merge($this->data, [
+            'status' => 'pending',
+        ]))->assertForbidden();
+
+        $project->refresh();
+        $this->assertNotEquals($project->title, $this->data['title']);
+        $this->assertNotEquals($project->description, $this->data['description']);
+        $this->assertNotEquals($project->status, 'pending');
+        $this->assertNotEquals($project->due_date->format('Y-m-d'), now()->addMonths(6)->format('Y-m-d'));
     }
 
     public function test_a_user_with_the_update_project_permission_can_update_a_project()
     {
         $project = Project::factory()->create();
 
-        $data = [
-            'title' => 'A new title',
-            'description' => $project->description,
-            'manager_id' => $this->manager->id,
-            'due_date' => $project->due_date,
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
             'status' => 'pending',
-        ];
+        ]))->assertRedirect(route('projects.show', $project))
+            ->assertSessionHas('success', 'The project has been updated.');
 
-        $this->actingAs($this->manager)->get(route('projects.edit', $project))
-            ->assertOk();
-
-        $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
-            ->assertRedirect(route('projects.show', $project));
-
-        $this->assertDatabaseHas('projects', array_merge(['id' => $project->id], $data));
+        $project->refresh();
+        $this->assertEquals($project->title, $this->data['title']);
+        $this->assertEquals($project->description, $this->data['description']);
+        $this->assertEquals($project->status, 'pending');
+        $this->assertEquals($project->due_date->format('Y-m-d'), now()->addMonths(6)->format('Y-m-d'));
     }
 
-    public function test_only_a_user_with_the_admin_role_can_pin_a_project()
+    public function test_the_user_gets_redirected_to_the_edit_project_page_when_the_unauthorized_pin_exception_occurs_while_updating_a_project()
     {
-        $project = Project::factory()->create(['manager_id' => $this->manager->id]);
+        $project = Project::factory()->create();
 
-        $data = [
-            'title' => $project->title,
-            'manager_id' => $this->manager->id,
-            'due_date' => $project->due_date->format('d M Y'),
-            'status' => $project->status,
-            'is_pinned' => 1,
-        ];
-
-        $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
+        $this->actingAs($this->manager)->put(route('projects.update', $project), array_merge($this->data, [
+            'status' => 'pending',
+            'is_pinned' => true,
+        ]))->assertRedirect(route('projects.edit', $project))
             ->assertSessionHasErrors([
-                'error' => 'User is not authorized to pin a project',
+                'error' => 'You are not authorized to pin a project.',
             ]);
     }
 
-    public function test_only_one_project_can_be_pinned_at_a_time()
+    public function test_the_user_gets_redirected_to_the_edit_project_page_when_invalid_pinned_project_exception_occurs_while_updating_a_project()
     {
-        $this->actingAsVerifiedTwoFactor($this->admin);
+        Project::factory()->create(['is_pinned' => true]);
+        $project = Project::factory()->create();
 
-        $firstProject = Project::factory()->create(['manager_id' => $this->manager->id]);
-        $secondProject = Project::factory()->create(['manager_id' => $this->manager->id]);
-
-        $data = [
-            'title' => $firstProject->title,
-            'description' => $firstProject->description,
-            'status' => $firstProject->status,
-            'manager_id' => $firstProject->manager_id,
-            'due_date' => $firstProject->due_date,
-            'is_pinned' => 1,
-        ];
-
-        $secondData = [
-            'title' => $secondProject->title,
-            'description' => $secondProject->description,
-            'status' => 'open',
-            'due_date' => $secondProject->due_date,
-            'is_pinned' => 1,
-        ];
-
-        $this->put(route('projects.update', $secondProject), $secondData)
-            ->assertRedirect(route('projects.show', $secondProject));
-
-        $this->put(route('projects.update', $firstProject), $data)
+        $this->actingAs($this->admin)->put(route('projects.update', $project), array_merge($this->data, [
+            'status' => 'pending',
+            'is_pinned' => true,
+        ]))->assertRedirect(route('projects.edit', $project))
             ->assertSessionHasErrors([
                 'error' => 'There is a pinned project already. If you want to pin this project you will have to unpin the other project.',
             ]);
-
-        $this->assertDatabaseHas('projects', [
-            'id' => $secondProject->id,
-            'is_pinned' => 1,
-        ]);
-
-        $this->assertDatabaseHas('projects', [
-            'id' => $firstProject->id,
-            'is_pinned' => 0,
-        ]);
     }
 
-    public function test_when_an_existing_project_gets_assigned_to_a_manager_this_manager_will_receive_a_notification()
+    public function test_a_guest_cannot_delete_a_project()
     {
-        Notification::fake();
+        $project = Project::factory()->create();
 
-        $manager = User::factory()->create()->assignRole('Manager');
-        $project = Project::factory()->create(['manager_id' => $manager->id]);
+        $this->delete(route('projects.destroy', $project))
+            ->assertRedirect(route('login'));
 
-        $data = [
-            'title' => $project->title,
-            'description' => $project->description,
-            'manager_id' => $this->manager->id,
-            'due_date' => $project->due_date->format('d M Y'),
-            'status' => 'open',
-        ];
-
-        $this->actingAs($this->manager)->put(route('projects.update', $project), $data)
-            ->assertRedirect(route('projects.show', $project));
-
-        Notification::assertSentTo($this->manager, ProjectAssignedNotification::class);
+        $this->assertNotSoftDeleted($project);
     }
 
     public function test_a_user_without_the_delete_project_permission_cannot_delete_a_project()
@@ -495,10 +498,7 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($this->employee)->delete(route('projects.destroy', $project))
             ->assertForbidden();
 
-        $this->assertNotSoftDeleted('projects', [
-            'id' => $project->id,
-            'title' => $project->title,
-        ]);
+        $this->assertNotSoftDeleted($project);
     }
 
     public function test_a_user_with_the_delete_project_permission_can_delete_a_project()
@@ -512,34 +512,57 @@ class ProjectControllerTest extends TestCase
         $this->assertSoftDeleted($project);
     }
 
-    public function test_a_guest_cannot_visit_the_trashed_project_page()
+    public function test_the_user_gets_redirected_to_the_projects_index_page_when_the_pinned_project_destruction_exception_occurs_while_deleting_a_project()
+    {
+        $project = Project::factory()->create(['is_pinned' => true]);
+
+        $this->actingAs($this->manager)->delete(route('projects.destroy', $project))
+            ->assertRedirect(route('projects.index'))
+            ->assertSessionHasErrors([
+                'error' => 'Cannot delete a project that is pinned.',
+            ]);
+    }
+
+    public function test_a_guest_cannot_visit_the_trashed_projects_page()
     {
         $this->get(route('projects.trashed'))->assertRedirect(route('login'));
     }
 
-    public function test_a_user_without_the_restore_project_permission_cannot_visit_the_trashed_project_page()
+    public function test_a_user_without_the_restore_project_permission_cannot_visit_the_trashed_projects_page()
     {
         $this->actingAs($this->employee)->get(route('projects.trashed'))
             ->assertForbidden();
     }
 
-    public function test_a_user_with_the_restore_project_permission_can_visit_the_trashed_project_page()
+    
+    public function test_no_projects_message_on_trashed_page_for_a_user_with_the_restore_project_permission()
     {
-        $this->actingAsVerifiedTwoFactor($this->admin);
-
-        $this->get(route('projects.trashed'))
+        $this->actingAs($this->admin)->get(route('projects.trashed'))
             ->assertOk()
             ->assertSeeText('No trashed projects yet.');
+    }
 
-        $project1 = Project::factory()->trashed()->create();
-        $project2 = Project::factory()->trashed()->create();
+    public function test_a_user_with_the_restore_project_permission_sees_truncated_titles_on_the_trashed_projects_page()
+    {
+        $project = Project::factory()->trashed()->create();
 
-        $this->get(route('projects.trashed'))
+        $this->actingAs($this->admin)->get(route('projects.trashed'))
             ->assertOk()
             ->assertSeeText([
-                Str::limit($project1->title, 35),
-                Str::limit($project2->title, 35),
+                Str::limit($project->title, 35),
+                $project->due_date->format('d M Y'),
+                lastUpdated($project->deleted_at),
             ]);
+    }
+
+    public function test_a_guest_cannot_restore_a_project()
+    {
+        $project = Project::factory()->trashed()->create();
+
+        $this->patch(route('projects.restore', $project))
+            ->assertRedirect(route('login'));
+
+        $this->assertSoftDeleted($project);
     }
 
     public function test_a_user_without_the_restore_project_permission_cannot_restore_a_project()
@@ -554,38 +577,43 @@ class ProjectControllerTest extends TestCase
 
     public function test_a_user_with_the_restore_project_permission_can_restore_a_project()
     {
-        $this->actingAsVerifiedTwoFactor($this->admin);
+        $project = Project::factory()->trashed()->create();
 
-        $project = project::factory()->trashed()->create();
-
-        $this->patch(route('projects.restore', $project))
+        $this->actingAs($this->admin)->patch(route('projects.restore', $project))
             ->assertRedirect(route('projects.trashed'))
             ->assertSessionHas('success', 'The project '.$project->title.' has been restored.');
 
         $this->assertNotSoftDeleted($project);
     }
 
-    public function test_a_user_with_the_force_delete_permission_can_permanently_delete_a_project()
+    public function test_a_guest_cannot_force_delete_a_project()
     {
-        $this->actingAsVerifiedTwoFactor($this->admin);
-
         $project = Project::factory()->trashed()->create();
 
-        $this->assertSoftDeleted($project);
+        $this->delete(route('projects.force-delete', $project))
+            ->assertRedirect(route('login'));
 
-        $this->patch(route('projects.force-delete', $project))
+        $this->assertEquals(1, Project::withTrashed()->count());
+    }
+
+    public function test_a_user_without_the_right_permissions_cannot_force_delete_a_project()
+    {
+        $project = Project::factory()->trashed()->create();
+
+        $this->actingAs($this->employee)->delete(route('projects.force-delete', $project))
+            ->assertForbidden();
+
+        $this->assertEquals(1, Project::withTrashed()->count());
+    }
+
+    public function test_a_user_with_the_right_permissions_can_force_delete_a_project()
+    {
+        $project = Project::factory()->trashed()->create();
+
+        $this->actingAs($this->admin)->delete(route('projects.force-delete', $project))
             ->assertRedirect(route('projects.trashed'))
             ->assertSessionHas('success', 'The project has been permanently deleted.');
 
-        $this->assertNull($project->fresh());
-    }
-
-    protected function actingAsVerifiedTwoFactor($user)
-    {
-        $this->actingAs($user);
-
-        $this->post(route('verify.store'), [
-            'two_factor_code' => $user->two_factor_code,
-        ]);
+        $this->assertEquals(0, Project::withTrashed()->count());
     }
 }

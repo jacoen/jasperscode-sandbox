@@ -11,7 +11,7 @@ class ResetPasswordControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $data;
+    protected array $data;
 
     public function setUp(): void
     {
@@ -30,7 +30,7 @@ class ResetPasswordControllerTest extends TestCase
 
         $token = Password::broker()->createToken($user);
 
-        $this->post(route('password.update'),  array_merge($this->data, ['token' => $token]))
+        $this->post(route('password.update'), array_merge($this->data, ['token' => $token]))
             ->assertRedirect();
 
         $this->assertAuthenticatedAs($user);
@@ -43,7 +43,7 @@ class ResetPasswordControllerTest extends TestCase
 
         $token = Password::broker()->createToken($user);
 
-        $this->post(route('password.update'),  array_merge($this->data, ['token' => $token]))
+        $this->post(route('password.update'), array_merge($this->data, ['token' => $token]))
             ->assertRedirect();
 
         $user->refresh();
@@ -57,7 +57,7 @@ class ResetPasswordControllerTest extends TestCase
 
         $token = Password::broker()->createToken($user);
 
-        $this->post(route('password.update'),  array_merge($this->data, ['token' => $token]))
+        $this->post(route('password.update'), array_merge($this->data, ['token' => $token]))
             ->assertRedirect();
 
         $user->refresh();
@@ -71,7 +71,7 @@ class ResetPasswordControllerTest extends TestCase
 
         $token = Password::broker()->createToken($user);
 
-        $this->post(route('password.update'),  array_merge($this->data, ['token' => $token]))
+        $this->post(route('password.update'), array_merge($this->data, ['token' => $token]))
             ->assertRedirect();
 
         $this->assertNull($user->fresh()->two_factor_code);

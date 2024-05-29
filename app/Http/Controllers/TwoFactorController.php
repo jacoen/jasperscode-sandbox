@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\TwoFactorRequest;
 use App\Notifications\TwoFactorCodeNotification;
 
@@ -26,7 +25,7 @@ class TwoFactorController extends Controller
         if ($request->two_factor_code !== $user->two_factor_code) {
             $this->incrementAttempt($user);
 
-            if ($user->two_factor_attempts >= 5 ) {
+            if ($user->two_factor_attempts >= 5) {
                 return $this->handleExceededAttempts($user);
             }
 
@@ -34,7 +33,7 @@ class TwoFactorController extends Controller
                 'two_factor_code' => 'The two factor code you have entered does not match.',
             ]);
         }
-        
+
         if ($user->two_factor_attempts >= 1 && $user->last_attempt_at !== null) {
             $user->resetTwoFactorAttempts();
         }

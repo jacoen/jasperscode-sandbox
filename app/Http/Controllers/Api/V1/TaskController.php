@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\InvalidProjectStatusException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
-use App\Notifications\TaskAssignedNotification;
+use App\Services\TaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends Controller
 {
-    public function __construct()
+    public function __construct(private TaskService $taskService)
     {
         $this->authorizeResource(Task::class, 'task');
     }
@@ -27,16 +26,10 @@ class TaskController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
-        $tasks = Task::with('project', 'project.manager', 'author', 'user')
-            ->when(request()->search, function ($query) {
-                $query->where('title', 'LIKE', '%'.request()->search.'%');
-            })
-            ->when(request()->status, function ($query) {
-                $query->where('status', request()->status);
-            })
-            ->latest('updated_at')
-            ->latest('id')
-            ->paginate();
+        $tasks = $this->taskService->listTasks(
+            request()->input('search'),
+            request()->input('status'),
+        );
 
         return TaskResource::collection($tasks);
     }
@@ -46,28 +39,15 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request, Project $project): TaskResource|JsonResponse
     {
-        if (! $project->is_open_or_pending) {
+        try {
+            $task = $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
+
+            return new TaskResource($task);
+        } catch (InvalidProjectStatusException $e) {
             return response()->json([
-                'message' => 'Cannot create a task when the project is not open or pending.',
+                'error' => $e->getMessage(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-
-        $data = Arr::add($request->validated(), 'author_id', auth()->id());
-        $task = $project->tasks()->create($data);
-
-        if ($attachments = $request->file('attachments')) {
-            foreach ($attachments as $attachment) {
-                $task->addMedia($attachment)
-                    ->usingName($task->title)
-                    ->toMediaCollection('attachments');
-            }
-        }
-
-        if (isset($request->user_id) && auth()->id() != $request->user_id) {
-            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
-        }
-
-        return new TaskResource($task);
     }
 
     /**
@@ -85,28 +65,15 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, Task $task): TaskResource|JsonResponse
     {
-        if (! $task->project->is_open_or_pending) {
+        try {
+            $data = $this->taskService->updateTask($task, $request->validated(), $request->file('attachments'));
+
+            return new TaskResource($data);
+        } catch (InvalidProjectStatusException $e) {
             return response()->json([
-                'message' => 'Cannot update the task when the project is not open or pending.',
+                'message' => $e->getMessage(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-
-        $task->update($request->validated());
-
-        if ($attachments = $request->file('attachments')) {
-            $task->clearMediaCollection();
-            foreach ($attachments as $attachment) {
-                $task->addMedia($attachment)
-                    ->usingName($task->title)
-                    ->toMediaCollection('attachments');
-            }
-        }
-
-        if ($task->wasChanged('user_id') && isset($request->user_id) && auth()->id() != $request->user_id) {
-            User::find($request->user_id)->notify(new TaskAssignedNotification($task));
-        }
-
-        return new TaskResource($task);
     }
 
     /**
@@ -123,11 +90,7 @@ class TaskController extends Controller
     {
         $this->authorize('restore task', Task::class);
 
-        $tasks = Task::onlyTrashed()
-            ->with('author', 'user')
-            ->latest('deleted_at')
-            ->latest('id')
-            ->paginate();
+        $tasks = $this->taskService->trashedTasks();
 
         return TaskResource::collection($tasks);
     }
@@ -136,38 +99,28 @@ class TaskController extends Controller
     {
         $this->authorize('restore task', $task);
 
-        if (! $task->trashed()) {
+        try {
+            $this->taskService->restoreTask($task);
+
+            return new TaskResource($task);
+        } catch (InvalidProjectStatusException $e) {
             return response()->json([
-                'message' => 'This task cannot be restored, because it has not been deleted.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+                'message' => $e->getMessage(),
+            ]);
         }
-
-        if ($task->project->trashed()) {
-            return response()->json([
-                'message' => 'Could not restore this task because the project has been trashed.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $task->restore();
-
-        return new TaskResource($task);
     }
 
     public function userTasks(): AnonymousResourceCollection
     {
         $this->authorize('read task', Task::class);
 
-        $tasks = Task::with('project', 'project.manager', 'author', 'user')
-            ->when(request()->search, function ($query) {
-                $query->where('title', 'LIKE', '%'.request()->search.'%');
-            })
-            ->when(request()->status, function ($query) {
-                $query->where('status', request()->status);
-            })
-            ->where('user_id', auth()->id())
-            ->latest('updated_at')
-            ->latest('id')
-            ->paginate();
+        $tasks = $this->taskService->listTasks(
+            request()->input('search'),
+            request()->input('status'),
+            auth()->id()
+        );
+
+        return TaskResource::collection($tasks);
 
         return TaskResource::collection($tasks);
     }

@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
-use Carbon\Carbon;
+use App\Services\ProjectService;
 
 class ExpiredProjectController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware(['permission:read expired projects']);
@@ -16,33 +14,10 @@ class ExpiredProjectController extends Controller
     /**
      * Handle the incoming request.
      */
-    public function __invoke()
+    public function __invoke(ProjectService $projectService)
     {
-        $yearWeek = request()->input('yearWeek');
-
-        $projects = Project::with('manager')
-            ->when($yearWeek, function($query) use ($yearWeek) {
-                [$startWeek, $endweek] = $this->spliceYearWeek($yearWeek);
-                $query->whereBetween('due_date', [
-                    $startWeek,
-                    $endweek
-                ]);
-            })
-            ->where('due_date', '<', now()->startOfDay())
-            ->orderByDesc('due_date')
-            ->orderByDesc('id')
-            ->paginate(15);
+        $projects = $projectService->listExpiredProjects(request()->input('yearWeek'));
 
         return view('projects.expired', compact('projects'));
-    }
-
-    protected function spliceYearWeek($yearWeek)
-    {
-        [$year, $week] = explode('-', $yearWeek);
-
-        $startWeek = Carbon::now()->setISODate($year, $week)->startOfWeek();
-        $endWeek = Carbon::now()->setISODate($year, $week)->endOfWeek();
-
-        return [$startWeek, $endWeek];
     }
 }
