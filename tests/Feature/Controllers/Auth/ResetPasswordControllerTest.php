@@ -11,7 +11,7 @@ class ResetPasswordControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $data;
+    protected array $data;
 
     public function setUp(): void
     {

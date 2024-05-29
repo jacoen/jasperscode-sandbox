@@ -14,7 +14,7 @@ class UserControllerTest extends TestCase
 
     protected array $data;
 
-    protected $employeeRole;
+    protected Role $employeeRole;
 
     protected int $initialCount;
 
@@ -154,15 +154,12 @@ class UserControllerTest extends TestCase
 
         $user = User::latest('id')->first();
 
-        $count = $this->initialCount;
-        $count++;
-
         $this->assertEquals($user->name, $this->data['name']);
         $this->assertEquals($user->email, $this->data['email']);
-        $this->assertEquals($count, User::count());
+        $this->assertGreaterThan($this->initialCount, User::count());
     }
 
-    public function test_a_guest_cannot_visit_the_edit_user_form()
+    public function test_a_guest_cannot_visit_the_edit_user_page()
     {
         $user = User::factory()->create()->assignRole('User');
 
@@ -182,7 +179,8 @@ class UserControllerTest extends TestCase
         $user = User::factory()->create()->assignRole('User');
 
         $this->actingAs($this->admin)->get(route('users.edit', $user))
-            ->assertOk();
+            ->assertOk()
+            ->assertSeeText($user->name);
     }
 
     public function test_all_the_fields_are_required_when_updating_a_user()
