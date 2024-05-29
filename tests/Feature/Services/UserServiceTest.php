@@ -19,7 +19,7 @@ class UserServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $userService;
+    protected UserService $userService;
 
     protected array $data;
 
@@ -65,7 +65,7 @@ class UserServiceTest extends TestCase
         $this->assertEqualsWithDelta($user->token_expires_at, now()->addHour(), 2);
     }
 
-    public function test_it_assign_a_default_role_to_the_user_when_no_user_role_has_been_selected_while_creating_a_user_account()
+    public function test_it_assign_a_default_role_to_the_user_when_no_user_role_has_been_provided_while_creating_a_user_account()
     {
         $user = $this->userService->store($this->data);
 
@@ -94,7 +94,7 @@ class UserServiceTest extends TestCase
         Event::assertListening(RoleUpdatedEvent::class, RoleUpdatedListener::class);
     }
 
-    public function test_it_send_a_notification_the_the_user_after_their_account_has_been_created()
+    public function test_it_send_a_notification_to_the_the_user_after_their_account_has_been_created()
     {
         $user = $this->userService->store($this->data);
 
