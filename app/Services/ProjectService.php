@@ -13,7 +13,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProjectService
 {
-    public function listProjects($search = null, $status = null): LengthAwarePaginator
+    public function listProjects(User $user, string $search = null, string $status = null): LengthAwarePaginator
     {
         return Project::with('manager')
             ->search($search)
@@ -21,7 +21,7 @@ class ProjectService
             ->when(! $search && ! $status, function ($query) {
                 $query->defaultFilter();
             })
-            ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
+            ->when($user->hasRole(['Admin', 'Super Admin']), function ($query) {
                 $query->orderBy('is_pinned', 'desc');
             })
             ->whereNot('status', 'expired')
@@ -96,7 +96,7 @@ class ProjectService
         return $query->paginate(15);
     }
 
-    private function spliceYearWeek($yearWeek): array
+    private function spliceYearWeek(string $yearWeek): array
     {
         $parts = explode('-', $yearWeek);
         $year =  (int)$parts[0];

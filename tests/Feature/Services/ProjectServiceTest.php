@@ -18,7 +18,7 @@ class ProjectServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $projectService;
+    protected ProjectService $projectService;
 
     public function setUp(): void
     {
@@ -31,12 +31,10 @@ class ProjectServiceTest extends TestCase
 
     public function test_it_lists_all_active_projects()
     {
-        $this->actingAs($this->manager);
-
         Project::factory(10)->create();
         $project = Project::factory()->create(['title' => 'A special project']);
 
-        $projects = $this->projectService->listProjects();
+        $projects = $this->projectService->listProjects($this->manager);
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $projects);
 
@@ -46,12 +44,10 @@ class ProjectServiceTest extends TestCase
 
     public function test_it_can_search_projects_by_title()
     {
-        $this->actingAs($this->manager);
-
         $stockProject = Project::factory()->create();
         $project = Project::factory()->create(['title' => 'A very special title for this project']);
 
-        $projects = $this->projectService->listProjects('special');
+        $projects = $this->projectService->listProjects($this->manager, 'special');
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $projects);
 
@@ -62,14 +58,12 @@ class ProjectServiceTest extends TestCase
 
     public function test_it_can_filter_projects_by_status()
     {
-        $this->actingAs($this->manager);
-
         $openProject = Project::factory()->create(['status' => 'open']);
         $pendingProject = Project::factory()->create(['status' => 'pending']);
         $closedProject = Project::factory()->create(['status' => 'closed']);
         $completedProject = Project::factory()->create(['status' => 'completed']);
 
-        $projects = $this->projectService->listProjects('', 'completed');
+        $projects = $this->projectService->listProjects($this->manager, '', 'completed');
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $projects);
 
@@ -82,17 +76,14 @@ class ProjectServiceTest extends TestCase
 
     public function test_it_lists_the_pinned_project_first_if_an_admin_is_signed_in()
     {
-        $this->actingAs($this->admin);
-
         Project::factory(4)->create(['manager_id' => $this->manager->id]);
         $pinnedProject = Project::factory()->create(['manager_id' => $this->manager->id, 'is_pinned' => true]);
         Project::factory()->create(['manager_id' => $this->manager->id]);
 
-        $projects = $this->projectService->listProjects();
+        $projects = $this->projectService->listProjects($this->admin);
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $projects);
         $this->assertCount(6, $projects);
-
         $this->assertEquals($pinnedProject->id, $projects->first()->id);
     }
 
@@ -108,7 +99,6 @@ class ProjectServiceTest extends TestCase
 
         $this->assertInstanceOf(Project::class, $project);
         $this->assertEquals($project->fresh()->status, 'open');
-
         $this->assertDatabaseHas('projects', $data);
     }
 
@@ -139,15 +129,15 @@ class ProjectServiceTest extends TestCase
 
         $this->expectException(UnauthorizedPinException::class);
         $this->expectExceptionMessage('You are not authorized to pin a project.');
+
         $this->projectService->updateproject($project, $data);
 
         $this->assertNotEquals($project->fresh()->title, $data['title']);
         $this->assertFalse($project->fresh()->is_pinned);
-
         $this->assertDatabaseMissing('projects', array_merge($data, ['id' => $project->id]));
     }
 
-    public function test_it_throws_an_exception_when_a_project_gets_pinned_if_there_already_is_a_pinned_project_when_updating_a_project()
+    public function test_it_throws_an_exception_when_a_project_gets_pinned_while_there_already_is_a_pinned_project_when_updating_a_project()
     {
         $this->actingAs($this->admin);
         $project = Project::factory()->create();
@@ -164,7 +154,6 @@ class ProjectServiceTest extends TestCase
         $this->projectService->updateproject($project, $data);
 
         $this->assertFalse($project->is_pinned);
-
         $this->assertDatabaseMissing('projects', array_merge($data, ['id' => $project->id]));
     }
 
@@ -182,11 +171,10 @@ class ProjectServiceTest extends TestCase
         $this->projectService->updateProject($project, $data);
 
         $this->assertEquals($project->title, $data['title']);
-
         $this->assertDatabaseHas('projects', array_merge($data, ['id' => $project->id]));
     }
 
-    public function test_it_notifies_a_user_when_an_existing_project_has_been_reassigned_to_them()
+    public function test_it_sends_a_notification_to_a_user_when_an_existing_project_has_been_reassigned_to_them()
     {
         $this->actingAs($this->manager);
         $newManager = User::factory()->create()->assignRole('Manager');
@@ -235,7 +223,6 @@ class ProjectServiceTest extends TestCase
         $projects = $this->projectService->listTrashedProjects();
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $projects);
-
         $this->assertCount(5, $projects);
         $this->assertTrue($projects->contains($trashedProject));
         $this->assertFalse($projects->contains($activeProject));
@@ -254,7 +241,6 @@ class ProjectServiceTest extends TestCase
         $projects = $this->projectService->listExpiredProjects();
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $projects);
-
         $this->assertCount(5, $projects);
         $this->assertTrue($projects->contains($openExpiredProject));
         $this->assertFalse($projects->contains($completedProject));
