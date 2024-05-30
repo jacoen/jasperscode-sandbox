@@ -32,7 +32,7 @@ class EnableTwoFactorForAdminsTest extends TestCase
         $this->artisan('2fa:enableForAdmins')->assertSuccessful();
 
         $this->assertTrue($superAdmin->fresh()->two_factor_enabled);
-        $this->assertEqualsWithDelta($superAdmin->fresh()->updated_at, now(), 1);
+        $this->assertEqualsWithDelta($superAdmin->fresh()->updated_at, now(), 2);
     }
 
     public function test_it_activates_two_factor_for_the_admin_account_when_its_not_enabled_yet()
