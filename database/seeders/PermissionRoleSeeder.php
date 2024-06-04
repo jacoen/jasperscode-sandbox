@@ -27,7 +27,7 @@ class PermissionRoleSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'delete project']);
         Permission::firstOrCreate(['name' => 'pin project']);
         Permission::firstOrCreate(['name' => 'restore project']);
-
+        
         Permission::firstOrCreate(['name' => 'read task']);
         Permission::firstOrCreate(['name' => 'create task']);
         Permission::firstOrCreate(['name' => 'update task']);

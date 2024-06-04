@@ -43,7 +43,6 @@ class ProfileController extends Controller
 
         if ($user->two_factor_enabled) {
             auth()->logout();
-
             return redirect()->route('login')
                 ->with('success', 'Two factor authentication has been enabled. Please sign in again.');
         }

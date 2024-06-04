@@ -10,10 +10,6 @@ class TwoFactorMiddlewareTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $request;
-
-    protected $middleware;
-
     public function test_it_allows_access_for_logged_in_user_without_two_factor_authentication_to_continue()
     {
         $this->actingAs($this->user)->get(route('home'))

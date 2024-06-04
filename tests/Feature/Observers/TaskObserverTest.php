@@ -78,7 +78,6 @@ class TaskObserverTest extends TestCase
 
         $this->task->delete();
         $this->assertSoftDeleted($this->task);
-
         $this->task->restore();
 
         $this->assertTrue($this->task->status == 'restored');

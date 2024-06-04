@@ -35,7 +35,7 @@ class TwoFactorMiddleware
                     ->withErrors(['error' => 'Could not verify your two factor because you have not enabled two factor authentication or you have no two factor code.']);
             }
         }
-
+        
         return $next($request);
     }
 }
