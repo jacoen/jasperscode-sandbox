@@ -16,9 +16,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends Controller
 {
-    public function __construct(private TaskService $taskService)
+    private TaskService $taskService;
+
+    public function __construct(TaskService $taskService)
     {
         $this->authorizeResource(Task::class, 'task');
+
+        $this->taskService = $taskService;
     }
 
     /**
@@ -119,8 +123,6 @@ class TaskController extends Controller
             request()->input('status'),
             auth()->id()
         );
-
-        return TaskResource::collection($tasks);
 
         return TaskResource::collection($tasks);
     }
