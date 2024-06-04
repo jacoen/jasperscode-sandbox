@@ -1,13 +1,13 @@
 <x-mail::message>
-# Hallo {{ $user }},
+# {{ __('emails.common.greeting', ['user' => $user]) }},
 
-Hier ontvangt u uw twee staps verificatie code.
-Uw code is <br>
-<code>{{ $two_factor_code }}</code>.
-Deze code zal over 5 minuten verlopen. 
-Als u niet probeerde in te loggen kunt u dit bericht negeren.
+{{ __('emails.two-factor.intro') }}
+{{ __('emails.two-factor.code-label')}}  
+**{{ $two_factor_code }}**<br>
+{{ __('emails.two-factor.expiration') }}
+{{ __('emails.two-factor.ignore') }}
 
-Met vriendelijke groet,<br>
+{{ __('emails.common.regards') }}  
 
 {{ config('app.name') }}
 </x-mail::message>

@@ -25,10 +25,10 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::apiResource('/projects', ProjectController::class);
     Route::put('/projects/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('projects.restore');
 
-    Route::apiResource('/tasks', TaskController::class)->except(['store', 'restore', 'userTasks']);
+    Route::apiResource('/tasks', TaskController::class)->except(['store']);
     Route::post('/projects/{project}/tasks', [TaskController::class, 'store']);
     Route::put('/tasks/{task}/restore', [TaskController::class, 'restore'])->withTrashed()->name('tasks.restore');
-    Route::get('/user/tasks', [TaskController::class, 'userTasks'])->name('tasks.user');
+    Route::get('/admin/tasks', [TaskController::class, 'adminTasks'])->name('tasks.user');
 
     Route::get('/projects/{project}/tasks', ProjectTaskController::class);
 

@@ -7,8 +7,8 @@ use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
-use App\Models\User;
-use App\Notifications\ProjectAssignedNotification;
+use App\Services\ProjectService;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response as HttpResponse;
@@ -16,12 +16,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProjectController extends Controller
 {
+    private ProjectService $projectService;
+
     /**
      * @see app\Observers\ProjectObserver for the model events
      */
-    public function __construct()
+    public function __construct(ProjectService $projectService)
     {
         $this->authorizeResource(Project::class, 'project');
+
+        $this->projectService = $projectService;
     }
 
     /**
@@ -29,19 +33,10 @@ class ProjectController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
-        $projects = Project::with('manager')
-            ->when(request()->search, function ($query) {
-                $query->where('title', 'like', '%'.request()->search.'%');
-            })
-            ->when(request()->status, function ($query) {
-                $query->where('status', request()->status);
-            })
-            ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
-                $query->orderBy('is_pinned', 'desc');
-            })
-            ->latest('updated_at')
-            ->latest('id')
-            ->paginate(15);
+        $projects = $this->projectService->listProjects(
+            request()->input('search'),
+            request()->input('status'),
+        );
 
         return ProjectResource::collection($projects);
     }
@@ -51,11 +46,7 @@ class ProjectController extends Controller
      */
     public function store(StoreProjectRequest $request): ProjectResource
     {
-        $project = Project::create($request->validated());
-
-        if (isset($request->manager_id) && auth()->id() != $project->manager_id) {
-            User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
-        }
+        $project = $this->projectService->storeProject($request->validated());
 
         return new ProjectResource($project);
     }
@@ -73,37 +64,27 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): ProjectResource
     {
-        $project->update($request->validated());
-
-        if (isset($request->manager_id) && $project->wasChanged('manager_id') && auth()->id() != $project->manager_id) {
-            User::find($project->manager_id)->notify(new ProjectAssignedNotification($project));
-        }
+        $this->projectService->updateProject($project, $request->validated());
 
         return new ProjectResource($project);
     }
 
     public function destroy(Project $project): HttpResponse|JsonResponse
     {
-        if ($project->is_pinned) {
-            return response()->json([
-                'message' => 'Project could not be deleted because it was pinned. Remove the pin from the project before deleting it.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        try {
+            $this->projectService->destroy($project);
+
+            return response()->json('', Response::HTTP_NO_CONTENT);
+        } catch (RequestException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-
-        $project->delete();
-
-        return response('', Response::HTTP_NO_CONTENT);
     }
 
     public function trashed(): AnonymousResourceCollection
     {
         $this->authorize('restore project', Project::class);
 
-        $projects = Project::onlyTrashed()
-            ->with('manager')
-            ->latest('deleted_at')
-            ->latest('id')
-            ->paginate();
+        $projects = $this->projectService->listTrashedProjects();
 
         return ProjectResource::collection($projects);
     }

@@ -56,4 +56,25 @@ class Task extends Model implements Hasmedia
             ->logOnly(['title', 'description', 'status', 'author.name', 'user.name', 'project.title'])
             ->logOnlyDirty();
     }
+
+    public function scopeSearch($query, $search)
+    {
+        return $query->when($search, function ($query) use ($search) {
+            return $query->where('title', 'LIKE', '%'.$search.'%');  
+        });
+    }
+
+    public function scopeTaskStatusFilter($query, $status)
+    {
+        return $query->when($status, function ($query) use ($status) {
+            return $query->where('status', $status);
+        });
+    }
+
+    public function scopeFilterByUser($query, $userId)
+    {
+        return $query->when($userId, function ($query) use ($userId) {
+            return $query->where('user_id', $userId);
+        });
+    }
 }

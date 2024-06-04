@@ -42,4 +42,11 @@ class UpdateProjectRequest extends FormRequest
     {
         return filter_var($booleable, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
     }
+
+    public function attributes(): array
+    {
+        return [
+            'manager_id' => 'manager',
+        ];
+    }
 }

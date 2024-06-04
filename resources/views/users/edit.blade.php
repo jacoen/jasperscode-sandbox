@@ -29,10 +29,10 @@
                             <option value="" selected>Select a role...</option>
                         @endif
                         @foreach($roles as $role)     
-                                    <option value="{{ $role->id }}" {{ old('role', $user->roles)->contains($role->id) ? 'selected' : '' }}>
-                                        {{ $role->name }}
-                                    </option>
-                                @endforeach
+                            <option value="{{ $role->id }}" {{ old('role', $userRole) == $role->id ? 'selected' : '' }}>
+                                {{ $role->name }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 

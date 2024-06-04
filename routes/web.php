@@ -76,7 +76,7 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
     Route::resource('/projects', ProjectController::class);
     Route::controller(ProjectController::class)->prefix('/projects')->name('projects.')->group(function () {
         Route::patch('/{project}/restore', [ProjectController::class, 'restore'])->withTrashed()->name('restore');
-        Route::patch('{project}/force_delete', 'forceDelete')->withTrashed()->name('force-delete');
+        Route::delete('{project}/force_delete', 'forceDelete')->withTrashed()->name('force-delete');
     });
 
     Route::resource('/tasks', TaskController::class)->except(['create', 'store']);
@@ -88,7 +88,7 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
         });
 
         Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
-        Route::patch('/tasks/{task}/force_delete', 'forceDelete')->withTrashed()->name('tasks.force-delete');
+        Route::delete('/tasks/{task}/force_delete', 'forceDelete')->withTrashed()->name('tasks.force-delete');
         Route::get('/admin/tasks', 'adminTasks')->name('admin.tasks');
     });
 
@@ -101,5 +101,3 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
 
     Route::get('/activities', ActivityController::class)->name('activities.index');
 });
-
-

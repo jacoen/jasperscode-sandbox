@@ -1,11 +1,12 @@
 <x-mail::message>
-# Hallo {{ $user }},
+# {{ __('emails.common.greeting', ['user' => $user]) }},
 
-Via dit bericht willen wij u op de hoogte brengen dat de eind datum van uw project binnen een maand verstrijkt.<br />
-De eind datum van het project:  {{ $project->title }} is op {{ $project->due_date->format('d-m-Y')}}.<br />
+{{ __('emails.project-warning.notification') }}  
 
-Wij hopen dat u hiermee voldoende bent ge&Iuml;nformeerd.<br />
+{{ __('emails.project-warning.due_date', ['title' => $project->title, 'due_date' => $project->due_date->format('d-m-Y')])}}  
 
-Met vriendelijke groet,<br>
+{{ __('emails.common.closing') }}  
+
+{{ __('emails.common.regards') }}  
 {{ config('app.name') }}
 </x-mail::message>
