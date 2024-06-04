@@ -33,6 +33,7 @@ class TaskController extends Controller
         $tasks = $this->taskService->listTasks(
             request()->input('search'),
             request()->input('status'),
+            auth()->id(),
         );
 
         return TaskResource::collection($tasks);
@@ -114,14 +115,13 @@ class TaskController extends Controller
         }
     }
 
-    public function userTasks(): AnonymousResourceCollection
+    public function AdminTasks(): AnonymousResourceCollection
     {
         $this->authorize('read task', Task::class);
 
         $tasks = $this->taskService->listTasks(
             request()->input('search'),
-            request()->input('status'),
-            auth()->id()
+            request()->input('status')
         );
 
         return TaskResource::collection($tasks);
