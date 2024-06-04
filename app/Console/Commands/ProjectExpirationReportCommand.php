@@ -52,7 +52,7 @@ class ProjectExpirationReportCommand extends Command
         $endOfWeek = now()->endOfWeek()->subWeek();
 
         return Project::whereBetween('due_date', [$startOfWeek, $endOfWeek])
-            ->whereNotIn('status', ['closed', 'completed',])
+            ->whereNotIn('status', ['closed', 'completed'])
             ->count();
     }
 
