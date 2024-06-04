@@ -1,16 +1,17 @@
 <x-mail::message>
-# {{ __('expiration-report.greeting', ['user' => $user]) }},
+# {{ __('emails.common.greeting', ['user' => $user]) }},
 
-{{ __('expiration-report.notification') }}
-{{ __('expiration-report.total_expired', ['count' => $count]) }}<br>
-{{ __('expiration-report.check_projects') }}
+{{ __('emails.expiration-report.notification') }}
+
+{{ __('emails.expiration-report.total_expired', ['count' => $count]) }}<br>
+{{ __('emails.expiration-report.check_projects') }}
 
 <x-mail::button :url="route('projects.expired', ['yearWeek' => $yearWeek])">
-{{ __('expiration-report.button_text') }}
+{{ __('emails.expiration-report.button_text') }}
 </x-mail::button>
 
-{{ __('expiration-report.closing') }}
+{{ __('emails.common.closing') }}  
 
-{{ __('expiration-report.regard') }}<br>
+{{ __('emails.common.regards') }}  
 {{ config('app.name') }}
 </x-mail::message>
