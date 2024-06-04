@@ -65,8 +65,8 @@ class TwoFactorController extends Controller
 
     private function handleExceededAttempts($user)
     {
-        auth()->user()->lockUser();
-        auth()->user()->resetTwoFactorCode();
+        $user->lockUser();
+        $user->resetTwoFactorCode();
         auth()->logout();
 
         return redirect()->route('login')
