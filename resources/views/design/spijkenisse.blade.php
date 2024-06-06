@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
     <head>
 		<title>Basic HTML5 document</title>
 		<meta charset="UTF-8">
@@ -8,7 +8,7 @@
 		<script>
 		</script>
 	</head>
-	<body class="font-sans antialiased">
+	<body class="font-sans antialiased h-full">
 		<div class="flex flex-col min-h-screen bg-[#f0f0f0]">
 			<header class="h-16">
 				<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -24,22 +24,22 @@
 					<aside class="block w-40 fixed top-20 left-26 transition-top transition-all duration-100">
                         <div class="my-2 mx-1 text-right text-lg font-semibold">
                             <div class="py-2">
-                                <a href="#" class="px-3 py-1 font-semibold rounded-md hover:bg-gray-800 hover:text-white">
+                                <a href="#" class="{{ request()->routeIs('design') ? 'bg-[#ffb005] text-white font-bold' : 'text-gray-800 font-bold hover:bg-gray-800 hover:text-white transition duration-300 ease-in-out'}} px-3 py-1 font-semibold rounded-md">
                                     Home
                                 </a>
                             </div>
                             <div class="py-2">
-                                <a href="#" class="px-3 py-1 font-semibold rounded-md hover:bg-gray-800 hover:text-white">
+                                <a href="#" class="px-3 py-1 font-semibold rounded-md hover:bg-gray-800 hover:text-white transition duration-300 ease-in-out'">
                                     About
                                 </a>
                             </div>
                             <div class="py-2">
-                                <a href="#" class="px-3 py-1 font-semibold rounded-md hover:bg-gray-800 hover:text-white">
+                                <a href="#" class="px-3 py-1 font-semibold rounded-md hover:bg-gray-800 hover:text-white transition duration-300 ease-in-out'">
                                     Blog
                                 </a>
                             </div>
                             <div class="py-2">
-                                <a href="#" class="px-3 py-1 font-semibold rounded-md hover:bg-gray-800 hover:text-white">
+                                <a href="#" class="px-3 py-1 font-semibold rounded-md hover:bg-gray-800 hover:text-white transition duration-300 ease-in-out'">
                                     Contact
                                 </a>
                             </div>
