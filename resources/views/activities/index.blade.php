@@ -27,7 +27,7 @@
                             <td>{{ $activity->event }}</td>
                             <td>{{ $activity->subject_type }}</td>
                             <td>{{ $activity->subject_id }}</td>
-                            <td>{{ $activity->causer->name }}</td>
+                            <td>{{ $activity->causer->name ?? 'N/A' }}</td>
                             <td>
                                 @if (array_key_exists('old', $activity->properties->toArray()))
                                     @foreach ($activity->changes['old'] as $key => $value )
