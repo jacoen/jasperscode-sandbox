@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
+use App\Http\Controllers\DesignController;
 use App\Http\Controllers\ExpiredProjectController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
@@ -101,3 +102,5 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
 
     Route::get('/activities', ActivityController::class)->name('activities.index');
 });
+
+Route::get('/design/{design}', DesignController::class)->name('design');
