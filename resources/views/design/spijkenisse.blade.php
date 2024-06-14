@@ -11,6 +11,7 @@
 	<body class="font-sans antialiased h-full">
 		<div class="flex flex-col min-h-screen bg-[#f0f0f0]">
 			<header class="h-16">
+      
 				<div class="max-w-7xl mx-auto py-6 px-4 lg:px-8 flex justify-between items-center">
 					<h1 class="text-4xl px-2 font-bold mb-2 text-[#ffb005] md:ml-36 ">
 						{Spijkenisse};
