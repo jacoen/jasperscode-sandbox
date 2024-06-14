@@ -5,8 +5,8 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<script src="https://cdn.tailwindcss.com"></script>
-		<script>
-		</script>
+
+		@vite(['resources/js/app.js'])
 	</head>
 	<body class="font-sans antialiased h-full">
 		<div class="flex flex-col min-h-screen bg-[#f0f0f0]">
@@ -75,10 +75,9 @@
                         </div>
                     </aside>
 
-					<main class="flex flex-1 overflow-y-auto mb-4 w-full leading-tight text-lg md:ml-40 px-4 mx-auto max-w-6xl">
-
+					<main class="flex flex-1 overflow-y-auto mb-6 sm:mb-8 w-full leading-tight text-lg md:ml-40 px-4 mx-auto max-w-6xl">
 						<div class="bg-white shadow-lg rounded-md px-4 pt-3">
-							<h1 class="block text-center text-2xl font-extrabold text-slate-800 tracking-tight mb-3">
+							<h1 class="block text-center text-2xl font-extrabold tracking-tight mb-3">
 								Welkom bij coderdojo Spijkenisse
 							</h1>
 							<p class="mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent a ex non libero mollis tristique. Proin sollicitudin ipsum sit amet augue rhoncus lacinia. Vivamus a placerat felis, eget porttitor velit. Vestibulum libero nisl, mollis facilisis suscipit ac, blandit eu turpis. Duis ac egestas nibh, quis pretium eros. Morbi sed ante sagittis, elementum magna vel, laoreet est. Praesent faucibus interdum commodo. Morbi euismod interdum lacus, vitae tincidunt justo ultrices eu. Nunc vestibulum accumsan erat ac sodales. Maecenas quis accumsan lectus. Cras magna leo, malesuada eu urna nec, dictum ultricies massa. Pellentesque ac eros ut orci aliquam consectetur eu sit amet est. Donec semper lacus orci, vitae viverra risus accumsan vel. Fusce tristique lobortis malesuada. Proin id malesuada libero, in vestibulum nunc. Maecenas in nisi lorem. </p>
@@ -238,64 +237,5 @@
                 </div>
             </footer>
 		</div>
-
-		<script>
-            document.addEventListener("DOMContentLoaded", function () {
-                let open = false;
-                const menuIcon = document.getElementById('menuIcon');
-                const closeIcon = document.getElementById('closeIcon');
-                const mobileNav = document.getElementById('mobileNav');
-                const toggleButton = document.getElementById('toggleButton');
-
-                window.addEventListener('scroll', function() {
-                    var header = document.querySelector('header');
-                    var aside = document.querySelector('aside');
-                    
-                    if (window.scrollY > header.offsetHeight) {
-                        aside.classList.add('top-0');
-                        aside.classList.remove('top-20');
-                    } else {
-                        aside.classList.add('top-20');
-                        aside.classList.remove('top-0');
-                    }
-                });
-
-                window.toggleNav = function () {
-                    open = !open;
-                    if (open) {
-                        menuIcon.classList.remove('inline-flex');
-                        menuIcon.classList.add('hidden');
-
-                        closeIcon.classList.remove('hidden');
-                        closeIcon.classList.add('inline-flex');
-
-                        mobileNav.classList.remove('hidden');
-                        mobileNav.classList.add('block');
-                    } else {
-                        menuIcon.classList.remove('hidden');
-                        menuIcon.classList.add('inline-flex');
-
-                        closeIcon.classList.remove('inline-flex');
-                        closeIcon.classList.add('hidden');
-                        
-                        mobileNav.classList.remove('block');
-                        mobileNav.classList.add('hidden');
-                    }
-                };
-
-                document.addEventListener('click', function (event) {
-                    if (!toggleButton.contains(event.target) && !menuIcon.contains(event.target) && !closeIcon.contains(event.target)) {
-                        mobileNav.classList.remove('block');
-                        mobileNav.classList.add('hidden');
-
-                        closeIcon.classList.remove('inline-flex');
-                        closeIcon.classList.add('hidden');
-
-                        menuIcon.classList.remove('hidden');
-                        menuIcon.classList.add('inline-flex');
-                    }
-                });
-            });
-        </script>
 	</body>
 </html>
