@@ -17,6 +17,13 @@ class UnauthorizedPinException extends Exception
 
     public function render(Request $request)
     {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'error' => 'Not authorized',
+                'message' => $this->getMessage(),
+            ], 403);
+        }
+
         return redirect()->route('projects.edit', $this->project)
             ->withErrors([
                 'error' => $this->getMessage(),

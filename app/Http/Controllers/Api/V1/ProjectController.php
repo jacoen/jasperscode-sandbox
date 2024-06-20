@@ -34,6 +34,7 @@ class ProjectController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $projects = $this->projectService->listProjects(
+            auth()->user(),
             request()->input('search'),
             request()->input('status'),
         );
@@ -71,13 +72,9 @@ class ProjectController extends Controller
 
     public function destroy(Project $project): HttpResponse|JsonResponse
     {
-        try {
-            $this->projectService->destroy($project);
+        $this->projectService->destroy($project);
 
-            return response()->json('', Response::HTTP_NO_CONTENT);
-        } catch (RequestException $e) {
-            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return response()->json('', Response::HTTP_NO_CONTENT);
     }
 
     public function trashed(): AnonymousResourceCollection
@@ -93,10 +90,10 @@ class ProjectController extends Controller
     {
         $this->authorize('restore project', $project);
 
-        if (! $project->trashed()) {
+        if (!$project->trashed()) {
             return response()->json([
-                'message' => 'This project cannot be restored, because it has not been deleted.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+                'message' => 'Project has not been deleted.',
+            ], 422);
         }
 
         $project->restore();
