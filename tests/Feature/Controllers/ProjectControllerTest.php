@@ -519,7 +519,7 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($this->manager)->delete(route('projects.destroy', $project))
             ->assertRedirect(route('projects.index'))
             ->assertSessionHasErrors([
-                'error' => 'Cannot delete a project that is pinned.',
+                'error' => 'Cannot delete a pinned project.',
             ]);
     }
 
