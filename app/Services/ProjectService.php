@@ -65,7 +65,7 @@ class ProjectService
     public function destroy(Project $project): void
     {
         if ($project->is_pinned) {
-            throw new PinnedProjectDestructionException('Cannot delete a project that is pinned.');
+            throw new PinnedProjectDestructionException('Cannot delete a pinned project.');
         }
 
         $project->delete();
