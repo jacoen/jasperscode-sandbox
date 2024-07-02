@@ -44,15 +44,9 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request, Project $project): TaskResource|JsonResponse
     {
-        try {
-            $task = $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
+        $task = $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
 
-            return new TaskResource($task);
-        } catch (InvalidProjectStatusException $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return new TaskResource($task);
     }
 
     /**
@@ -70,15 +64,9 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, Task $task): TaskResource|JsonResponse
     {
-        try {
-            $data = $this->taskService->updateTask($task, $request->validated(), $request->file('attachments'));
+        $data = $this->taskService->updateTask($task, $request->validated(), $request->file('attachments'));
 
-            return new TaskResource($data);
-        } catch (InvalidProjectStatusException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return new TaskResource($data);
     }
 
     /**
