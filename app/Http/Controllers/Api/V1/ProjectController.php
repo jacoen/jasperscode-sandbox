@@ -8,10 +8,8 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Services\ProjectService;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Http\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProjectController extends Controller
@@ -70,7 +68,7 @@ class ProjectController extends Controller
         return new ProjectResource($project);
     }
 
-    public function destroy(Project $project): HttpResponse|JsonResponse
+    public function destroy(Project $project): JsonResponse
     {
         $this->projectService->destroy($project);
 

@@ -5,8 +5,6 @@ namespace Tests\Feature\Controllers\Api;
 use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Validation\UnauthorizedException;
 use Tests\TestCase;
 
 class ProjectControllerTest extends TestCase

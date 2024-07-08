@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Exceptions\InvalidProjectStatusException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
@@ -62,7 +61,7 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTaskRequest $request, Task $task): TaskResource|JsonResponse
+    public function update(UpdateTaskRequest $request, Task $task): TaskResource
     {
         $data = $this->taskService->updateTask($task, $request->validated(), $request->file('attachments'));
 
@@ -92,16 +91,10 @@ class TaskController extends Controller
     {
         $this->authorize('restore task', $task);
 
-        try {
-            $this->taskService->restoreTask($task);
+        $this->taskService->restoreTask($task);
 
-            return new TaskResource($task);
-        } catch (InvalidProjectStatusException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ]);
-        }
-    }
+        return new TaskResource($task);
+}
 
     public function AdminTasks(): AnonymousResourceCollection
     {
