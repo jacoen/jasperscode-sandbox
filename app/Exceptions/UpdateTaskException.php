@@ -18,6 +18,12 @@ class UpdateTaskException extends Exception
 
     public function render(Request $request)
     {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $this->getMessage(),
+            ], 422);
+        }
+
         return redirect()->route('tasks.show', $this->task)
             ->withErrors([
                 'error' => $this->getMessage(),

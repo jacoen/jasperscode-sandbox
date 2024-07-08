@@ -74,7 +74,7 @@ class Task extends Model implements Hasmedia
     public function scopeFilterByUser($query, $userId)
     {
         return $query->when($userId, function ($query) use ($userId) {
-            return $query->where('user_id', $userId);
+            return $query->where('user_id', $userId)->orWhere('author_id', $userId);
         });
     }
 }

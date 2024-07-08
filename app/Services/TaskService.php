@@ -77,7 +77,7 @@ class TaskService
     public function trashedTasks(): LengthAwarePaginator
     {
         return Task::onlyTrashed()
-            ->with('project')
+            ->with('project', 'author', 'user')
             ->latest('deleted_at')
             ->orderBy('id', 'desc')
             ->paginate();

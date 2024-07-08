@@ -87,16 +87,18 @@ class TaskServiceTest extends TestCase
 
     public function test_it_can_filter_tasks_by_the_user()
     {
-        $managerTask = Task::factory()->create(['author_id' => $this->employee->id, 'user_id' => $this->manager->id]);
-        $employeeTask = Task::factory()->create(['author_id' => $this->manager->id, 'user_id' => $this->employee->id]);
+        $employeeTask = Task::factory()->for($this->employee, 'author')->create(['title' => 'Manager task']);
+        $managerTask = Task::factory()->for($this->manager, 'author')->create(['title' => 'Employee task']);
+        $assignedTask = Task::factory()->for($this->employee, 'user')->create();
 
         $tasks = $this->taskService->listTasks('', '', $this->employee->id);
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $tasks);
 
-        $this->assertEquals(1, $tasks->count());
+        $this->assertEquals(2, $tasks->count());
 
         $this->assertTrue($tasks->contains($employeeTask));
+        $this->assertTrue($tasks->contains($assignedTask));
         $this->assertFalse($tasks->contains($managerTask));
     }
 
