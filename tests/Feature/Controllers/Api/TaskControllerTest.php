@@ -6,7 +6,6 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -63,9 +62,12 @@ class TaskControllerTest extends TestCase
         $assignedTask = Task::factory()->for($this->project)->create([
             'user_id' => $this->employee->id,
         ]);
+        
+        Task::factory()->create();
 
         $this->actingAs($this->employee)->getJson('/api/v1/tasks')
             ->assertOk()
+            ->assertJsonCount(2, 'data')
             ->assertJsonFragment([
                 'id' => $authoredTask->id,
                 'title' => $authoredTask->title,
@@ -526,8 +528,11 @@ class TaskControllerTest extends TestCase
             'user_id' => $this->employee->id,
         ]);
 
+        $activeTask = Task::factory()->create();
+
         $this->actingAs($this->manager)->get('/api/v1/trashed/tasks')
             ->assertOk()
+            ->assertJsonCount(1, 'data')
             ->assertJsonFragment([
                 'id' => $task->id,
                 'title' => $task->title,
@@ -538,7 +543,7 @@ class TaskControllerTest extends TestCase
                     'human' => $task->deleted_at->diffForHumans(),
                     'date_time' => $task->deleted_at->toDateTimeString(),
                 ],
-            ]);
+            ])->assertJsonMissing($activeTask->toArray());
 
         $this->assertEquals(1, Task::onlyTrashed()->count());
     }
@@ -597,6 +602,7 @@ class TaskControllerTest extends TestCase
     {
         $this->actingAs($this->admin)->getJson('/api/v1/admin/tasks')
             ->assertOk()
+            ->assertJsonCount(0, 'data')
             ->assertJsonFragment([
                 'data' => [],
             ]);
@@ -610,6 +616,7 @@ class TaskControllerTest extends TestCase
         $response = $this->actingAs($this->admin)->getJson('/api/v1/admin/tasks');
 
         $response->assertOk()
+            ->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.id', $secondTask->id)
             ->assertJsonPath('data.1.id', $task->id);
     }
