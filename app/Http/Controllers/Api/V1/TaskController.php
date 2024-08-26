@@ -15,13 +15,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends Controller
 {
-    private TaskService $taskService;
+    
 
-    public function __construct(TaskService $taskService)
+    public function __construct(private TaskService $taskService)
     {
         $this->authorizeResource(Task::class, 'task');
-
-        $this->taskService = $taskService;
     }
 
     /**
@@ -41,7 +39,7 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTaskRequest $request, Project $project): TaskResource|JsonResponse
+    public function store(StoreTaskRequest $request, Project $project): TaskResource
     {
         $task = $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
 
@@ -87,7 +85,7 @@ class TaskController extends Controller
         return TaskResource::collection($tasks);
     }
 
-    public function restore(Task $task): TaskResource|JsonResponse
+    public function restore(Task $task): TaskResource
     {
         $this->authorize('restore task', $task);
 

@@ -14,16 +14,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProjectController extends Controller
 {
-    private ProjectService $projectService;
-
     /**
      * @see app\Observers\ProjectObserver for the model events
      */
-    public function __construct(ProjectService $projectService)
+    public function __construct(private ProjectService $projectService)
     {
         $this->authorizeResource(Project::class, 'project');
-
-        $this->projectService = $projectService;
     }
 
     /**
