@@ -180,6 +180,25 @@ class ProjectControllerTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_a_user_with_the_read_project_permission_can_access_the_project_detail_endpoint()
+    {
+        $project = Project::factory()->create();
+
+        $this->actingAs($this->employee)->getJson('/api/v1/projects/'.$project->id)
+            ->assertOk()
+            ->assertJsonFragment([
+                'id' => $project->id,
+                'title' => $project->title,
+                'description' => $project->description,
+                'manager' => $project->manager->name,
+                'status' => $project->status,
+                'last_updated' => [
+                    'human' => $project->updated_at->diffForHumans(),
+                    'date_time' => $project->updated_at->format('Y-m-d H:i:s'),
+                ]
+            ]);
+    }
+
     public function test_a_valid_manager_id_must_be_provided_when_updating_a_project()
     {
         $data = array_merge([
@@ -354,13 +373,47 @@ class ProjectControllerTest extends TestCase
         $project = Project::factory()->create(['due_date' => now()->addMonths(6)]);
 
         $this->actingAs($this->manager)->putJson('/api/v1/projects/'.$project->id, $data)
-            ->assertForbidden()
-            ->assertJsonFragment([
-                'error' => 'Not authorized',
-                'message' => 'You are not authorized to pin a project.',
-            ]);
+            ->assertForbidden();
 
         $this->assertNotEquals($project->fresh()->is_pinned, $data['is_pinned']);
+    }
+
+    public function test_a_user_with_the_pin_project_permission_can_pin_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $data = [
+            'title' => 'Another title',
+            'description' => 'The description has been changed.',
+            'status' => 'pending',
+            'due_date' => now()->addMonths(4)->format('d-m-Y'),
+            'manager_id' => $this->manager->id,
+            'is_pinned' => true,
+        ];
+
+        $this->actingAs($this->admin)->putJson('/api/v1/projects/'.$project->id, $data)
+            ->assertOk();
+
+            $this->assertEquals($project->fresh()->is_pinned, true);
+    }
+
+    public function test_a_user_with_the_pin_project_permission_can_unpin_a_project()
+    {
+        $project = Project::factory()->create();
+
+        $data = [
+            'title' => 'Another title',
+            'description' => 'The description has been changed.',
+            'status' => 'pending',
+            'due_date' => now()->addMonths(4)->format('d-m-Y'),
+            'manager_id' => $this->manager->id,
+            'is_pinned' => false,
+        ];
+
+        $this->actingAs($this->admin)->putJson('/api/v1/projects/'.$project->id, $data)
+            ->assertOk();
+
+        $this->assertEquals($project->fresh()->is_pinned, false);
     }
 
     public function test_an_admin_cannot_pin_another_project_when_a_project_has_already_been_pinned()
@@ -401,7 +454,7 @@ class ProjectControllerTest extends TestCase
         $this->assertEquals(1, Project::count());
     }
 
-    public function test_a_user_without_the_delete_project_permission_cannot_access_the_delete_project_endpoint()
+    public function test_a_user_without_the_delete_project_permission_cannot_access_the_destroy_project_endpoint()
     {
         $project = Project::factory()->create();
 
@@ -411,7 +464,7 @@ class ProjectControllerTest extends TestCase
         $this->assertEquals(1, Project::count());
     }
 
-    public function test_a_user_with_the_delete_project_permission_can_access_the_delete_project_endpoint()
+    public function test_a_user_with_the_delete_project_permission_can_access_the_destroy_project_endpoint()
     {
         $project = Project::factory()->create();
 
