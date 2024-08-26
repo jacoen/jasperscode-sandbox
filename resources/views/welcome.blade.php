@@ -17,10 +17,10 @@
 
                     <p class="text-break">
                         Voor het maken van de projecten heb ik bijna altijd gebruik gemaakt van het Laravel framework in combinate met MariaDB. Voor de voorkant van de applicaties heb ik in het verleden gebruik gemaakt van Tailwindcss,
-                        in mijn meer recente projecten maak ik gebruik van Bootstrap. In het gavel van deze site heb ik gberuik gemaakt van
+                        in mijn meer recente projecten maak ik gebruik van Bootstrap.
                     </p>
                     <p class="text-break">
-                        Tijdens het maken van de verschillende heb ik ook gebruik gemaakt van (Laravel) packages. Een aantal voorbeelden hiervan zijn:
+                        Tijdens het ontwikkelen van de verschillende heb ik ook gebruik gemaakt van (Laravel) packages. Een aantal voorbeelden hiervan zijn:
                         <ul>
                             <li>Laravel-permission van spatie</li>
                             <li>Laravel-medialibrary van Spatie</li>
@@ -29,7 +29,11 @@
                         </ul>
                     </p>
 
-                    <p>Hier is een link naar mijn <a href="https://gitlab.com/j.coenraad">Gitlab profiel</a>, hier staan een aantal van mijn projecten.</p>
+                    Via de links hieronder kunt u voorbeelden van mijn code vinden
+                    <ul>
+                        <li><a href="https://github.com/jacoen">Github</a></li>
+                        <li><a href="https://gitlab.com/j.coenraad">Gitlab</li>
+                    </ul>
             </div>
         </div>
     </div>
