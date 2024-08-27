@@ -190,12 +190,13 @@ class TaskControllerTest extends TestCase
         $image4 = UploadedFile::fake()->image('test4.jpg');
 
         $taskData = array_merge($this->data,
-            ['attachments' => [
-                $image1,
-                $image2,
-                $image3,
-                $image4,
-            ],
+            [
+                'attachments' => [
+                    $image1,
+                    $image2,
+                    $image3,
+                    $image4,
+                ],
             ]);
 
         $this->actingAs($this->employee)->post(route('tasks.store', $this->project), $taskData)

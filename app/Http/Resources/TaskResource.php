@@ -17,7 +17,7 @@ class TaskResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'description' => $this->when(! $request->routeIs('api.tasks.index') && ! $request->routeIs('tasks.trashed'), function () {
+            'description' => $this->when(! $request->routeIs('api.tasks.index') && ! $request->routeIs('api.tasks.trashed') && ! $request->routeIs('api.tasks.admin'), function () {
                 return $this->description;
             }),
             'status' => $this->status,
@@ -32,7 +32,7 @@ class TaskResource extends JsonResource
             'deleted_at' => $this->when($request->routeIs('api.tasks.trashed'), function () {
                 return new DateTimeResource($this->deleted_at);
             }),
-            'attachments' => $this->when(! $request->routeIs('api.tasks.index') && ! $request->routeIs('tasks.trashed'), function () {
+            'attachments' => $this->when(! $request->routeIs('api.tasks.index') && ! $request->routeIs('api.tasks.trashed'), function () {
                 return MediaResource::collection($this->getMedia('attachments'));
             }),
         ];

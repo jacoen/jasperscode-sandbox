@@ -92,14 +92,18 @@ class ProjectServiceTest extends TestCase
         $data = [
             'title' => 'Some new title',
             'description' => 'Here is some description for the test',
-            'due_date' => now()->addMonths(3)->format('Y-m-d'),
+            'due_date' => now()->addMonths(3)->format('Y-m-d H:i:s'),
         ];
 
         $project = $this->projectService->storeProject($data);
 
         $this->assertInstanceOf(Project::class, $project);
         $this->assertEquals($project->fresh()->status, 'open');
-        $this->assertDatabaseHas('projects', $data);
+        $this->assertDatabaseHas('projects', [
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'due_date' => $data['due_date'],
+        ]);
     }
 
     public function test_it_sends_a_notification_when_the_newly_created_project_has_been_assigned_to_a_manager()
@@ -198,7 +202,7 @@ class ProjectServiceTest extends TestCase
         $project = Project::factory()->create(['is_pinned' => true]);
 
         $this->expectException(PinnedProjectDestructionException::class);
-        $this->expectExceptionMessage('Cannot delete a project that is pinned.');
+        $this->expectExceptionMessage('Cannot delete a pinned project.');
         $this->projectService->destroy($project);
 
         $this->assertNotSoftDeleted($project);

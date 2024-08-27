@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Exceptions\InvalidProjectStatusException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
@@ -16,13 +15,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends Controller
 {
-    private TaskService $taskService;
+    
 
-    public function __construct(TaskService $taskService)
+    public function __construct(private TaskService $taskService)
     {
         $this->authorizeResource(Task::class, 'task');
-
-        $this->taskService = $taskService;
     }
 
     /**
@@ -42,17 +39,11 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTaskRequest $request, Project $project): TaskResource|JsonResponse
+    public function store(StoreTaskRequest $request, Project $project): TaskResource
     {
-        try {
-            $task = $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
+        $task = $this->taskService->storeTask($project, $request->validated(), $request->file('attachments'));
 
-            return new TaskResource($task);
-        } catch (InvalidProjectStatusException $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return new TaskResource($task);
     }
 
     /**
@@ -68,17 +59,11 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTaskRequest $request, Task $task): TaskResource|JsonResponse
+    public function update(UpdateTaskRequest $request, Task $task): TaskResource
     {
-        try {
-            $data = $this->taskService->updateTask($task, $request->validated(), $request->file('attachments'));
+        $data = $this->taskService->updateTask($task, $request->validated(), $request->file('attachments'));
 
-            return new TaskResource($data);
-        } catch (InvalidProjectStatusException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return new TaskResource($data);
     }
 
     /**
@@ -100,20 +85,14 @@ class TaskController extends Controller
         return TaskResource::collection($tasks);
     }
 
-    public function restore(Task $task): TaskResource|JsonResponse
+    public function restore(Task $task): TaskResource
     {
         $this->authorize('restore task', $task);
 
-        try {
-            $this->taskService->restoreTask($task);
+        $this->taskService->restoreTask($task);
 
-            return new TaskResource($task);
-        } catch (InvalidProjectStatusException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ]);
-        }
-    }
+        return new TaskResource($task);
+}
 
     public function AdminTasks(): AnonymousResourceCollection
     {

@@ -8,24 +8,18 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Services\ProjectService;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Http\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProjectController extends Controller
 {
-    private ProjectService $projectService;
-
     /**
      * @see app\Observers\ProjectObserver for the model events
      */
-    public function __construct(ProjectService $projectService)
+    public function __construct(private ProjectService $projectService)
     {
         $this->authorizeResource(Project::class, 'project');
-
-        $this->projectService = $projectService;
     }
 
     /**
@@ -34,6 +28,7 @@ class ProjectController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $projects = $this->projectService->listProjects(
+            auth()->user(),
             request()->input('search'),
             request()->input('status'),
         );
@@ -69,15 +64,11 @@ class ProjectController extends Controller
         return new ProjectResource($project);
     }
 
-    public function destroy(Project $project): HttpResponse|JsonResponse
+    public function destroy(Project $project): JsonResponse
     {
-        try {
-            $this->projectService->destroy($project);
+        $this->projectService->destroy($project);
 
-            return response()->json('', Response::HTTP_NO_CONTENT);
-        } catch (RequestException $e) {
-            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        return response()->json('', Response::HTTP_NO_CONTENT);
     }
 
     public function trashed(): AnonymousResourceCollection
@@ -93,10 +84,10 @@ class ProjectController extends Controller
     {
         $this->authorize('restore project', $project);
 
-        if (! $project->trashed()) {
+        if (!$project->trashed()) {
             return response()->json([
-                'message' => 'This project cannot be restored, because it has not been deleted.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+                'message' => 'Project has not been deleted.',
+            ], 422);
         }
 
         $project->restore();
