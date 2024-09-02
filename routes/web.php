@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\RequestNewTokenController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DesignController;
 use App\Http\Controllers\ExpiredProjectController;
 use App\Http\Controllers\HomeController;
@@ -91,6 +92,11 @@ Route::middleware(['auth', 'twofactor'])->group(function () {
         Route::patch('/{task}/restore', 'restore')->withTrashed()->name('tasks.restore');
         Route::delete('/tasks/{task}/force_delete', 'forceDelete')->withTrashed()->name('tasks.force-delete');
         Route::get('/admin/tasks', 'adminTasks')->name('admin.tasks');
+    });
+
+    Route::controller(CompanyController::class)->name('companies.')->prefix('/companies')->group(function () {
+        Route::get('', 'index')->name('index');
+        Route::get('/{company}', 'show')->name('show');
     });
 
     Route::prefix('trashed')->group(function () {
