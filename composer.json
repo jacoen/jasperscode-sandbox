@@ -14,7 +14,8 @@
         "mailchimp/marketing": "^3.0",
         "spatie/laravel-activitylog": "^4.7",
         "spatie/laravel-medialibrary": "^10.12",
-        "spatie/laravel-permission": "^5.10"
+        "spatie/laravel-permission": "^5.10",
+        "plesk/ext-laravel-integration": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
