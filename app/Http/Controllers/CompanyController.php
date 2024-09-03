@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CompanyRequest;
 use App\Models\Company;
 use App\Services\ProjectService;
 use Illuminate\Http\Request;
@@ -23,15 +24,18 @@ class CompanyController extends Controller
      */
     public function create()
     {
-        //
+        return view('companies.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CompanyRequest $request)
     {
-        //
+        Company::create($request->validated());
+
+        return redirect()->route('companies.index')
+            ->with('success', 'The new company has been created.');
     }
 
     /**
@@ -49,15 +53,18 @@ class CompanyController extends Controller
      */
     public function edit(Company $company)
     {
-        //
+        return view('companies.edit', compact('company'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Company $company)
+    public function update(CompanyRequest $request, Company $company)
     {
-        //
+        $company->update($request->validated());
+
+        return redirect()->route('companies.show', $company)
+            ->with('success', 'The company has been updated.');
     }
 
     /**
@@ -65,6 +72,9 @@ class CompanyController extends Controller
      */
     public function destroy(Company $company)
     {
-        //
+        $company->delete();
+
+        return redirect()->route('companies.index')
+            ->with('success', 'The selected company has been destroyed');
     }
 }

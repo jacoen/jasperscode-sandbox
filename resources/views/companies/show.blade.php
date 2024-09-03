@@ -11,7 +11,7 @@
                     {{ $company->name }}
                 </h2>
                 <div>
-                    <a href="#" class="btn btn-info fw-semibold text-white">
+                    <a href="{{ route('companies.edit', $company) }}" class="btn btn-info fw-semibold text-white">
                         Edit company
                     </a> 
                 </div>
