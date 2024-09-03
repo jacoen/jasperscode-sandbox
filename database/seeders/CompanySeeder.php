@@ -1,0 +1,27 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Company;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class CompanySeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        Company::firstOrCreate([
+            'name' => 'Jasperscode',
+            'country' => 'The Netherlands',
+            'city' => 'Test city',
+            'address' => 'Test straat 431',
+            'postal_code' => '9931 ZZ',
+            'phone' => '0881234567',
+            'contact_name' => 'John Doe',
+            'contact_email' => 'john@example.com',
+        ]);
+    }
+}

@@ -66,6 +66,13 @@
       0 => 'Termwind\\Laravel\\TermwindServiceProvider',
     ),
   ),
+  'plesk/ext-laravel-integration' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'PleskExtLaravel\\Providers\\ConsoleServiceProvider',
+    ),
+  ),
   'spatie/laravel-activitylog' => 
   array (
     'providers' => 
