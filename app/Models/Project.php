@@ -14,12 +14,17 @@ class Project extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
 
-    protected $fillable = ['manager_id', 'title', 'description', 'due_date', 'status', 'is_pinned'];
+    protected $fillable = ['company_id', 'manager_id', 'title', 'description', 'due_date', 'status', 'is_pinned'];
 
     protected $casts = [
         'due_date' => 'date',
         'is_pinned' => 'boolean',
     ];
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     public function manager(): BelongsTo
     {

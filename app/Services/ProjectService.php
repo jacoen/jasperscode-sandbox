@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\InvalidPinnedProjectException;
 use App\Exceptions\PinnedProjectDestructionException;
 use App\Exceptions\UnauthorizedPinException;
+use App\Models\Company;
 use App\Models\Project;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
@@ -94,6 +95,17 @@ class ProjectService
         });
 
         return $query->paginate(15);
+    }
+
+    public function findProjectsByCompany(Company $company): LengthAwarePaginator
+    {
+        return $company->projects()->with('manager')
+            ->when(auth()->user()->hasRole(['Admin', 'Super Admin']), function ($query) {
+                $query->orderBy('is_pinned', 'desc');
+            })
+            ->latest('updated_at')
+            ->orderBy('id', 'desc')
+            ->paginate(10);
     }
 
     private function spliceYearWeek(string $yearWeek): array

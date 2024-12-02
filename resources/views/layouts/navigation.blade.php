@@ -17,6 +17,14 @@
         </li>
     @endcan
 
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('companies.index') }}">
+            <svg class="nav-icon">
+            </svg>
+            {{ __('Companies') }}
+        </a>
+    </li>
+
 
     @can('read project')
         <li class="nav-item">
