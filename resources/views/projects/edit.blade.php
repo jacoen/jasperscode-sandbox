@@ -53,7 +53,7 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="due_date" class="form-label">Due date</label>
-                        <input type="date" id="due_date" name="due_date" class="form-control @error('due_date') is-invalid @enderror" value="{{ old('due_date', $project->due_date->format('Y-m-d')) }}">
+                        <input type="date" id="due_date" name="due_date" class="form-control @error('due_date') is-invalid @enderror" value="{{ old('due_date', $project->due_date->format('d-m-Y')) }}">
                     </div>    
                 </div>
 
